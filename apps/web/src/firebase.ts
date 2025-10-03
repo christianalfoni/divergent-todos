@@ -1,6 +1,14 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  getFirestore,
+  type FirestoreDataConverter,
+  QueryDocumentSnapshot,
+  type SnapshotOptions,
+  Timestamp,
+  collection,
+  FieldValue,
+} from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 // import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
 
@@ -21,6 +29,68 @@ export const functions = getFunctions(app);
 
 // Example callable usage:
 // export const doPrivilegedThing = httpsCallable(functions, 'doPrivilegedThing')
+
+// Todo type definition
+export interface Todo {
+  id: string;
+  userId: string;
+  description: string;
+  completed: boolean;
+  date: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Firestore data format (with Timestamps instead of Dates)
+interface TodoFirestore {
+  userId: string;
+  description: string;
+  completed: boolean;
+  date: Timestamp;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+// Firestore converter for Todo
+const todoConverter: FirestoreDataConverter<Todo> = {
+  toFirestore: (
+    todo: Todo & { createdAt: FieldValue; updatedAt: FieldValue }
+  ): TodoFirestore => {
+    return {
+      userId: todo.userId,
+      description: todo.description,
+      completed: todo.completed,
+      date: Timestamp.fromDate(todo.date),
+      createdAt:
+        todo.createdAt instanceof Date
+          ? Timestamp.fromDate(todo.createdAt)
+          : todo.createdAt,
+      updatedAt:
+        todo.updatedAt instanceof Date
+          ? Timestamp.fromDate(todo.updatedAt)
+          : todo.updatedAt,
+    };
+  },
+  fromFirestore: (
+    snapshot: QueryDocumentSnapshot<TodoFirestore>,
+    options?: SnapshotOptions
+  ): Todo => {
+    const data = snapshot.data(options);
+    return {
+      id: snapshot.id,
+      userId: data.userId,
+      description: data.description,
+      completed: data.completed,
+      date: data.date.toDate(),
+      createdAt: data.createdAt.toDate(),
+      updatedAt: data.updatedAt.toDate(),
+    };
+  },
+};
+
+export const todosCollection = collection(db, "todos").withConverter(
+  todoConverter
+);
 
 /*
 // App Check (optional; more common on web)
