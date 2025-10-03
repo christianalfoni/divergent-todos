@@ -1,0 +1,13 @@
+{
+  "name": "divergent-todos",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*", "functions"],
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:desktop": "pnpm --filter desktop dev",
+    "build:web": "pnpm --filter web build",
+    "build:desktop": "pnpm --filter desktop build"
+  },
+  "packageManager": "pnpm@10.9.0"
+}

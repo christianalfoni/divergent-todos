@@ -118,6 +118,11 @@ dist
 
 # Firebase cache directory
 .firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Electron
+build/
 
 # TernJS port file
 .tern-port
