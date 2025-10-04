@@ -1,6 +1,8 @@
 import { useEffect, useState, useMemo } from 'react'
 import { DndContext, DragOverlay } from '@dnd-kit/core'
 import DayCell from './DayCell'
+import TimeBoxDialog from './TimeBoxDialog'
+import WeekendDialog from './WeekendDialog'
 import { useAuthentication } from './hooks/useAuthentication'
 import { useTodoDragAndDrop } from './hooks/useTodoDragAndDrop'
 import { getWeekdaysForThreeWeeks, isToday, getDateId } from './utils/calendar'
@@ -11,11 +13,21 @@ interface CalendarProps {
   onAddTodo: (todo: Omit<Todo, 'id'>) => void
   onToggleTodoComplete: (todoId: string) => void
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void
+  onUpdateTodo: (todoId: string, text: string) => void
+  onDeleteTodo: (todoId: string) => void
 }
 
-export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMoveTodo }: CalendarProps) {
+const isWeekend = () => {
+  const day = new Date().getDay()
+  return day === 0 || day === 6 // Sunday or Saturday
+}
+
+export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMoveTodo, onUpdateTodo, onDeleteTodo }: CalendarProps) {
   const [authentication] = useAuthentication()
   const [showThreeWeeks, setShowThreeWeeks] = useState(true)
+  const [timeBoxTodo, setTimeBoxTodo] = useState<Todo | null>(null)
+  const [showWeekendDialog, setShowWeekendDialog] = useState(false)
+  const [, setVisibilityTrigger] = useState(0)
   const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), [])
 
   const {
@@ -53,6 +65,32 @@ export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMov
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Force re-render when tab becomes visible
+        setVisibilityTrigger(prev => prev + 1)
+
+        // Check if it's weekend and show dialog
+        if (isWeekend()) {
+          setShowWeekendDialog(true)
+        } else {
+          setShowWeekendDialog(false)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  // Check weekend status on mount
+  useEffect(() => {
+    if (isWeekend()) {
+      setShowWeekendDialog(true)
+    }
+  }, [])
+
   return (
     <DndContext
       sensors={sensors}
@@ -61,30 +99,8 @@ export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMov
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-screen w-screen flex flex-col overflow-hidden bg-white dark:bg-gray-900">
-        <div className="grid grid-cols-5 gap-px border-b border-gray-300 bg-gray-200 text-center text-xs/6 font-semibold text-gray-700 dark:border-white/5 dark:bg-white/15 dark:text-gray-300">
-          <div className="flex justify-center bg-white py-2 dark:bg-gray-900">
-            <span>M</span>
-            <span className="sr-only sm:not-sr-only">on</span>
-          </div>
-          <div className="flex justify-center bg-white py-2 dark:bg-gray-900">
-            <span>T</span>
-            <span className="sr-only sm:not-sr-only">ue</span>
-          </div>
-          <div className="flex justify-center bg-white py-2 dark:bg-gray-900">
-            <span>W</span>
-            <span className="sr-only sm:not-sr-only">ed</span>
-          </div>
-          <div className="flex justify-center bg-white py-2 dark:bg-gray-900">
-            <span>T</span>
-            <span className="sr-only sm:not-sr-only">hu</span>
-          </div>
-          <div className="flex justify-center bg-white py-2 dark:bg-gray-900">
-            <span>F</span>
-            <span className="sr-only sm:not-sr-only">ri</span>
-          </div>
-        </div>
-        <div className={`grid grid-cols-5 ${showThreeWeeks ? 'grid-rows-3' : 'grid-rows-1'} flex-1 gap-px bg-gray-200 dark:bg-white/15`}>
+      <div className="h-full w-full flex flex-col overflow-hidden">
+        <div className={`grid grid-cols-5 ${showThreeWeeks ? 'grid-rows-3' : 'grid-rows-1'} flex-1 divide-x divide-y divide-gray-200 dark:divide-white/10`}>
           {weekdays.map((date, index) => {
             const dayId = getDateId(date)
             return (
@@ -96,6 +112,9 @@ export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMov
                 todos={getTodosForDate(date)}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
+                onUpdateTodo={onUpdateTodo}
+                onDeleteTodo={onDeleteTodo}
+                onOpenTimeBox={setTimeBoxTodo}
                 isBeingDraggedOver={hoveredDayId === dayId}
               />
             )
@@ -105,6 +124,16 @@ export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMov
       <DragOverlay dropAnimation={null}>
         {null}
       </DragOverlay>
+      <TimeBoxDialog
+        open={!!timeBoxTodo}
+        todo={timeBoxTodo}
+        onClose={() => setTimeBoxTodo(null)}
+        onComplete={onToggleTodoComplete}
+      />
+      <WeekendDialog
+        open={showWeekendDialog}
+        onClose={() => setShowWeekendDialog(false)}
+      />
     </DndContext>
   )
 }

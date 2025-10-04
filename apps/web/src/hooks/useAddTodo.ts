@@ -3,6 +3,7 @@ import { todosCollection } from "../firebase";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
 import { useRef } from "react";
+import { generateKeyBetween } from "fractional-indexing";
 
 export type AddTodoState =
   | {
@@ -24,23 +25,30 @@ export function useAddTodo() {
 
   userRef.current = authentication.user;
 
-  return pipe<AddTodoState, { description: string; date: Date }>()
+  return pipe<
+    AddTodoState,
+    { description: string; date: Date; lastPosition: string | null }
+  >()
     .setState({ isAdding: true, error: null })
-    .async(({ description, date }) => {
+    .async(({ description, date, lastPosition }) => {
       const todoDoc = doc(todosCollection);
 
       if (!userRef.current) {
         throw new Error("can not add todo without a user");
       }
 
-      return setDoc(todoDoc, {
-        completed: false,
-        createdAt: serverTimestamp(),
-        date,
-        updatedAt: serverTimestamp(),
-        description,
-        id: todoDoc.id,
+      // Generate position for new todo at the end of the day
+      const position = generateKeyBetween(lastPosition, null);
+
+      // Bypass converter to use serverTimestamp() directly
+      return setDoc(doc(todosCollection.firestore, "todos", todoDoc.id), {
         userId: userRef.current.uid,
+        description,
+        completed: false,
+        date,
+        position,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
     })
     .map(() => ({ isAdding: false, error: null }))

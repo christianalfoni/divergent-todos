@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import {
-  closestCenter,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
@@ -23,7 +23,8 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        delay: 200,
+        tolerance: 5,
       },
     })
   )
@@ -108,6 +109,6 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-    collisionDetection: closestCenter,
+    collisionDetection: pointerWithin,
   }
 }

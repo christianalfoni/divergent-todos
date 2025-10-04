@@ -18,14 +18,17 @@
     "@heroicons/react": "^2.2.0",
     "date-fns": "^4.1.0",
     "firebase": "^12.3.0",
+    "fractional-indexing": "^3.2.0",
     "framer-motion": "^12.23.22",
-    "pipesy": "^0.0.1",
+    "howler": "^2.2.4",
+    "pipesy": "^0.0.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.36.0",
     "@tailwindcss/vite": "^4.1.14",
+    "@types/howler": "^2.2.12",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",

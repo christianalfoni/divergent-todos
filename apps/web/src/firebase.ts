@@ -37,6 +37,7 @@ export interface Todo {
   description: string;
   completed: boolean;
   date: Date;
+  position: string; // Fractional index for ordering
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +48,7 @@ interface TodoFirestore {
   description: string;
   completed: boolean;
   date: Timestamp;
+  position: string; // Fractional index for ordering
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -61,6 +63,7 @@ const todoConverter: FirestoreDataConverter<Todo> = {
       description: todo.description,
       completed: todo.completed,
       date: Timestamp.fromDate(todo.date),
+      position: todo.position,
       createdAt:
         todo.createdAt instanceof Date
           ? Timestamp.fromDate(todo.createdAt)
@@ -82,6 +85,7 @@ const todoConverter: FirestoreDataConverter<Todo> = {
       description: data.description,
       completed: data.completed,
       date: data.date.toDate(),
+      position: data.position,
       createdAt: data.createdAt.toDate(),
       updatedAt: data.updatedAt.toDate(),
     };

@@ -26,21 +26,29 @@ export function useEditTodo() {
 
   return pipe<
     EditTodoState,
-    Pick<Todo, "id" | "completed" | "date" | "description">
+    Pick<Todo, "id" | "completed" | "date" | "description"> & {
+      position?: string;
+    }
   >()
     .setState({ isEditing: true, error: null })
-    .async(({ id, description, completed, date }) => {
+    .async(({ id, description, completed, date, position }) => {
       const todoDoc = doc(todosCollection, id);
 
       if (!userRef.current) {
         throw new Error("can not edit todo without a user");
       }
 
-      return updateDoc(todoDoc, {
+      const updates: Record<string, unknown> = {
         completed,
         description,
         date,
-      });
+      };
+
+      if (position !== undefined) {
+        updates.position = position;
+      }
+
+      return updateDoc(todoDoc, updates);
     })
     .map(() => ({ isEditing: false, error: null }))
     .catch((err) => ({ isEditing: false, error: String(err) }))

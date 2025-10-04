@@ -16,11 +16,12 @@ export function useTodos() {
       const q = query(
         todosCollection,
         where("userId", "==", authentication.user!.uid),
-        orderBy("date", "asc")
+        orderBy("date", "asc"),
+        orderBy("position", "asc")
       );
 
-      return onSnapshot(q, (snapshot) => {
-        emit(snapshot.docs.map((doc) => doc.data()));
+      return onSnapshot(q, { includeMetadataChanges: false }, (snapshot) => {
+        emit(snapshot.docs.map((doc) => doc.data({ serverTimestamps: 'estimate' })));
       });
     });
 
