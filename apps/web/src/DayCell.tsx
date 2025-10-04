@@ -26,7 +26,7 @@ function isValidUrl(text: string): boolean {
   }
 }
 
-export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, isBeingDraggedOver }: DayCellProps) {
+export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
   const [attachedUrl, setAttachedUrl] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const dayId = date.toISOString().split('T')[0]
@@ -76,10 +76,6 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
   const handleBlur = () => {
     setAttachedUrl('')
     setIsAddingTodo(false)
-  }
-
-  const handleToggleComplete = (todoId: string) => {
-    onToggleTodoComplete(todoId)
   }
 
   const dayNumber = date.getDate()
@@ -180,7 +176,11 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
                   onPaste={handlePaste}
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
-                  ref={(el) => el && el.focus()}
+                  ref={(el) => {
+                    if (el) {
+                      el.focus();
+                    }
+                  }}
                 />
               </div>
               <div className="flex h-5 shrink-0 items-center">

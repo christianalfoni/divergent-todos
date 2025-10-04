@@ -50,8 +50,8 @@ export function useSignIn() {
         await signInWithPopup(auth, provider);
       }
     })
-    .map(() => ({ isSigningIn: false, error: null }))
+    .map(() => ({ isSigningIn: false, error: null } as const))
     .catch((err) => ({ isSigningIn: false, error: String(err) }))
     .setState()
-    .use({ isSigningIn: false, error: null });
+    .use({ isSigningIn: false, error: null } as const);
 }

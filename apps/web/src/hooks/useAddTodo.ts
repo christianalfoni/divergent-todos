@@ -51,7 +51,7 @@ export function useAddTodo() {
         updatedAt: serverTimestamp(),
       });
     })
-    .map(() => ({ isAdding: false, error: null }))
+    .map(() => ({ isAdding: false, error: null } as const))
     .catch((err) => ({ isAdding: false, error: String(err) }))
-    .use({ isAdding: false, error: null });
+    .use({ isAdding: false, error: null } as const);
 }

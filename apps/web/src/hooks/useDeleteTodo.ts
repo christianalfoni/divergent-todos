@@ -35,7 +35,7 @@ export function useDeleteTodo() {
 
       return deleteDoc(todoDoc);
     })
-    .map(() => ({ isDeleting: false, error: null }))
+    .map(() => ({ isDeleting: false, error: null } as const))
     .catch((err) => ({ isDeleting: false, error: String(err) }))
-    .use({ isDeleting: false, error: null });
+    .use({ isDeleting: false, error: null } as const);
 }

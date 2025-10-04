@@ -50,7 +50,7 @@ export function useEditTodo() {
 
       return updateDoc(todoDoc, updates);
     })
-    .map(() => ({ isEditing: false, error: null }))
+    .map(() => ({ isEditing: false, error: null } as const))
     .catch((err) => ({ isEditing: false, error: String(err) }))
-    .use({ isEditing: false, error: null });
+    .use({ isEditing: false, error: null } as const);
 }

@@ -22,7 +22,6 @@ export default function TodoItem({
   const [isEditing, setIsEditing] = useState(false);
   const [attachedUrl, setAttachedUrl] = useState<string>(todo.url || "");
   const containerRef = useRef<HTMLDivElement>(null);
-  const lastClickTimeRef = useRef<number>(0);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,

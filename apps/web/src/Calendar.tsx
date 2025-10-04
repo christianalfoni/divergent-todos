@@ -32,7 +32,6 @@ export default function Calendar({ todos, onAddTodo, onToggleTodoComplete, onMov
 
   const {
     sensors,
-    activeTodo,
     hoveredDayId,
     handleDragStart,
     handleDragOver,

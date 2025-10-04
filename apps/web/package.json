@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
@@ -21,7 +22,7 @@
     "fractional-indexing": "^3.2.0",
     "framer-motion": "^12.23.22",
     "howler": "^2.2.4",
-    "pipesy": "^0.0.3",
+    "pipesy": "^0.0.4",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

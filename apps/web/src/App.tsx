@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { } from "react";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
@@ -22,9 +22,9 @@ export interface Todo {
 
 function AuthenticatedApp() {
   const firebaseTodos = useTodos();
-  const [addTodoState, addTodo] = useAddTodo();
-  const [editTodoState, editTodo] = useEditTodo();
-  const [deleteTodoState, deleteTodo] = useDeleteTodo();
+  const [, addTodo] = useAddTodo();
+  const [, editTodo] = useEditTodo();
+  const [, deleteTodo] = useDeleteTodo();
   const hittingWood = useHittingWood();
 
   // Convert Firebase todos to App todos format
@@ -134,19 +134,10 @@ function AuthenticatedApp() {
 }
 
 function AppContent() {
-  const [version, setVersion] = useState<string>("");
   const [authentication] = useAuthentication();
 
   // Initialize theme system
   useTheme();
-
-  useEffect(() => {
-    // Works only when running inside Electron
-    window.native
-      ?.getVersion?.()
-      .then(setVersion)
-      .catch(() => {});
-  }, []);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
