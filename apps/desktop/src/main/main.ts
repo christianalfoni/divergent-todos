@@ -177,7 +177,7 @@ ipcMain.handle('auth:startGoogleSignIn', async () => {
       throw new Error(`Failed to start auth: ${response.statusText}`)
     }
 
-    const { authorizeUrl, sid } = await response.json()
+    const { authorizeUrl, sid } = await response.json() as { authorizeUrl: string; sid: string }
 
     // Store session locally
     const sessionPromise = new Promise<string>((resolve, reject) => {
@@ -212,11 +212,11 @@ ipcMain.handle('auth:startGoogleSignIn', async () => {
     })
 
     if (!exchangeResponse.ok) {
-      const error = await exchangeResponse.json()
+      const error = await exchangeResponse.json() as { error?: string }
       throw new Error(error.error || 'Failed to exchange token')
     }
 
-    const { customToken } = await exchangeResponse.json()
+    const { customToken } = await exchangeResponse.json() as { customToken: string }
     return customToken
   } catch (error) {
     console.error('Auth flow error:', error)
