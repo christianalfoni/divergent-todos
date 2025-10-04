@@ -6,24 +6,65 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'apps/web/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/firebase-hosting-merge.yml'
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for tag checking
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./apps/web/package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Check if tag exists
+        id: check_tag
+        run: |
+          if git rev-parse "web-v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag web-v${{ steps.version.outputs.version }} already exists, skipping deployment"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag web-v${{ steps.version.outputs.version }} does not exist, will deploy"
+          fi
+
       - uses: pnpm/action-setup@v4
+        if: steps.check_tag.outputs.exists == 'false'
         with:
           version: 10.9.0
+
       - uses: actions/setup-node@v4
+        if: steps.check_tag.outputs.exists == 'false'
         with:
           node-version: '20'
           cache: 'pnpm'
+
       - run: pnpm install --frozen-lockfile
+        if: steps.check_tag.outputs.exists == 'false'
+
       - run: pnpm build:web
+        if: steps.check_tag.outputs.exists == 'false'
+
       - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: steps.check_tag.outputs.exists == 'false'
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DIVERGENT_TODOS }}
           channelId: live
           projectId: divergent-todos
           entryPoint: apps/web
+
+      - name: Create version tag
+        if: steps.check_tag.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "web-v${{ steps.version.outputs.version }}"
+          git push origin "web-v${{ steps.version.outputs.version }}"

@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, shell } from 'electron'
+import { autoUpdater } from 'electron-updater'
 import path from 'node:path'
 import crypto from 'node:crypto'
 
@@ -78,6 +79,41 @@ function handleAuthCallback(url: string) {
   authSessions.delete(sid)
 }
 
+// Configure auto-updater
+autoUpdater.autoDownload = false // Don't auto-download, let user decide
+autoUpdater.autoInstallOnAppQuit = true
+
+// Auto-updater events
+autoUpdater.on('checking-for-update', () => {
+  console.log('Checking for updates...')
+  win?.webContents.send('update:checking')
+})
+
+autoUpdater.on('update-available', (info) => {
+  console.log('Update available:', info.version)
+  win?.webContents.send('update:available', info)
+})
+
+autoUpdater.on('update-not-available', (info) => {
+  console.log('Update not available:', info.version)
+  win?.webContents.send('update:not-available', info)
+})
+
+autoUpdater.on('error', (err) => {
+  console.error('Update error:', err)
+  win?.webContents.send('update:error', err.message)
+})
+
+autoUpdater.on('download-progress', (progressObj) => {
+  console.log(`Download progress: ${progressObj.percent.toFixed(2)}%`)
+  win?.webContents.send('update:download-progress', progressObj)
+})
+
+autoUpdater.on('update-downloaded', (info) => {
+  console.log('Update downloaded:', info.version)
+  win?.webContents.send('update:downloaded', info)
+})
+
 async function createWindow() {
   win = new BrowserWindow({
     width: 1200,
@@ -94,12 +130,35 @@ async function createWindow() {
     await win.loadURL('http://localhost:5173') // Vite dev server (renderer)
     win.webContents.openDevTools({ mode: 'detach' })
   } else {
-    await win.loadFile(path.join(__dirname, '../../web/index.html'))
+    await win.loadFile(path.join(process.resourcesPath, 'web/index.html'))
+  }
+
+  // Check for updates after app loads (only in production)
+  if (app.isPackaged) {
+    setTimeout(() => {
+      autoUpdater.checkForUpdates()
+    }, 3000) // Wait 3 seconds after launch
   }
 }
 
 // Example typed IPC
 ipcMain.handle('app:getVersion', () => app.getVersion())
+
+// Update IPC handlers
+ipcMain.handle('update:check', async () => {
+  if (!app.isPackaged) {
+    return { available: false, message: 'Updates only available in production' }
+  }
+  return await autoUpdater.checkForUpdates()
+})
+
+ipcMain.handle('update:download', async () => {
+  return await autoUpdater.downloadUpdate()
+})
+
+ipcMain.handle('update:install', () => {
+  autoUpdater.quitAndInstall()
+})
 
 // Auth IPC handlers
 ipcMain.handle('auth:startGoogleSignIn', async () => {

@@ -3,6 +3,7 @@ import { signOut } from 'firebase/auth';
 import { useAuthentication } from './hooks/useAuthentication';
 import { auth } from './firebase';
 import { useTheme, type Theme } from './hooks/useTheme';
+import UpdateNotification from './UpdateNotification';
 
 export default function TopBar() {
   const [authentication] = useAuthentication();
@@ -71,6 +72,9 @@ export default function TopBar() {
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
+            {/* Update notification */}
+            <UpdateNotification />
+
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
