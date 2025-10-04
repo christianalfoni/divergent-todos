@@ -1,6 +1,12 @@
 {
   "name": "desktop",
   "version": "1.0.0",
+  "description": "A secure Electron + React + Firebase todo application",
+  "homepage": "https://github.com/christianalfoni/divergent-todos",
+  "author": {
+    "name": "Christian Alfoni",
+    "email": "christianalfoni@gmail.com"
+  },
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {
