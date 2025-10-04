@@ -1,3 +1,6 @@
 packages:
-  - 'apps/*'
-  - 'functions'
+  - apps/*
+  - functions
+
+onlyBuiltDependencies:
+  - electron

@@ -11,7 +11,8 @@
     "dev:desktop": "pnpm --filter desktop dev",
     "build:web": "pnpm --filter web build",
     "build:desktop": "pnpm --filter desktop build",
-    "deploy:rules": "pnpm --filter web deploy:rules"
+    "deploy:rules": "pnpm --filter web deploy:rules",
+    "deploy:functions": "pnpm --filter functions deploy:functions"
   },
   "packageManager": "pnpm@10.9.0"
 }

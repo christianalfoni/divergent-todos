@@ -17,7 +17,10 @@ interface ImportMeta {
 declare global {
   interface Window {
     native?: {
-      getVersion?: () => Promise<string>
+      getVersion: () => Promise<string>
+      auth: {
+        startGoogleSignIn: () => Promise<string>
+      }
     }
   }
 }

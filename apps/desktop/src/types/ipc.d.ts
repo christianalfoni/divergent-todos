@@ -2,8 +2,11 @@ export {}
 
 declare global {
   interface Window {
-    native: {
+    native?: {
       getVersion: () => Promise<string>
+      auth: {
+        startGoogleSignIn: () => Promise<string>
+      }
     }
   }
 }

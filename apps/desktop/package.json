@@ -2,10 +2,10 @@
   "name": "desktop",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/main/main.js",
+  "main": "dist-electron/main.js",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "vite --host",
+    "build": "tsc && vite build",
     "start": "electron ."
   },
   "devDependencies": {
