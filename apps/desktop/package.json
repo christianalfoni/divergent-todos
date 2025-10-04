@@ -1,0 +1,72 @@
+{
+  "name": "desktop",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist-electron/main.js",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc && vite build",
+    "start": "electron .",
+    "package": "electron-builder --publish never"
+  },
+  "build": {
+    "appId": "com.divergent.todos",
+    "productName": "Divergent Todos",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "!dist-electron/renderer/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "christianalfoni",
+      "repo": "divergent-todos"
+    },
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "artifactName": "${productName}-mac-${arch}.${ext}"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "artifactName": "${productName}-win-${arch}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility",
+      "artifactName": "${productName}-linux-${arch}.${ext}"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^24.6.2",
+    "@vitejs/plugin-react": "^5.0.4",
+    "electron": "^35.0.0",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9",
+    "vite-plugin-electron": "^0.29.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  }
+}

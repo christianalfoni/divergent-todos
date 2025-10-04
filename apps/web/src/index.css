@@ -1,0 +1,159 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-logo: "Inter", var(--font-sans);
+}
+
+@layer theme {
+  /* Light mode (default) colors */
+  :root {
+    /* Background colors */
+    --color-bg-nav: rgb(255 255 255); /* white - for TopBar */
+    --color-bg-primary: rgb(255 255 255); /* white */
+    --color-bg-secondary: rgb(249 250 251); /* gray-50 */
+    --color-bg-tertiary: rgb(243 244 246); /* gray-100 */
+    --color-bg-hover: rgb(0 0 0 / 0.02); /* subtle hover */
+    --color-bg-menu-hover: rgb(243 244 246); /* gray-100 - for menu item hover */
+    --color-bg-dialog: rgb(255 255 255); /* white - for dialog panels */
+    --color-bg-dialog-footer: rgb(249 250 251); /* gray-50 - for dialog footer */
+    --color-bg-button-secondary: rgb(0 0 0 / 0.05); /* gray-950/5 - for secondary buttons */
+    --color-bg-button-secondary-hover: rgb(0 0 0 / 0.1); /* gray-950/10 - for secondary button hover */
+
+    /* Text colors */
+    --color-text-primary: rgb(17 24 39); /* gray-900 */
+    --color-text-secondary: rgb(107 114 128); /* gray-500 */
+    --color-text-tertiary: rgb(156 163 175); /* gray-400 */
+    --color-text-inverse: rgb(255 255 255); /* white */
+    --color-text-menu: rgb(55 65 81); /* gray-700 - for menu items */
+
+    /* Border colors */
+    --color-border-primary: rgb(229 231 235); /* gray-200 */
+    --color-border-secondary: rgb(209 213 219); /* gray-300 */
+
+    /* Accent colors */
+    --color-accent-primary: rgb(79 70 229); /* indigo-600 */
+    --color-accent-hover: rgb(99 102 241); /* indigo-500 */
+    --color-accent-light: rgb(238 242 255); /* indigo-100 */
+    --color-accent-text: rgb(79 70 229); /* indigo-600 */
+    --color-accent-text-hover: rgb(99 102 241); /* indigo-500 */
+    --color-accent-muted: rgb(129 140 248); /* indigo-400 */
+
+    /* Warning/Alert colors */
+    --color-warning-bg: rgb(254 243 199); /* amber-100 */
+    --color-warning-text: rgb(217 119 6); /* amber-600 */
+    --color-warning-button: rgb(217 119 6); /* amber-600 */
+    --color-warning-button-hover: rgb(245 158 11); /* amber-500 */
+
+    /* Error colors */
+    --color-error-text: rgb(220 38 38); /* red-600 */
+
+    /* Overlay colors */
+    --color-overlay: rgb(107 114 128 / 0.75); /* gray-500/75 */
+    --color-outline: rgb(0 0 0 / 0.05); /* black/5 */
+  }
+
+  /* Dark mode colors */
+  .dark {
+    /* Background colors */
+    --color-bg-nav: rgb(17 24 39); /* gray-900 - for TopBar */
+    --color-bg-primary: rgb(31 41 55); /* gray-800 */
+    --color-bg-secondary: rgb(17 24 39); /* gray-900 */
+    --color-bg-tertiary: rgb(55 65 81); /* gray-700 */
+    --color-bg-hover: rgb(255 255 255 / 0.03); /* subtle hover */
+    --color-bg-menu-hover: rgb(255 255 255 / 0.05); /* white/5 - for menu item hover */
+    --color-bg-dialog: rgb(31 41 55); /* gray-800 - for dialog panels */
+    --color-bg-dialog-footer: rgb(55 65 81 / 0.25); /* gray-700/25 - for dialog footer */
+    --color-bg-button-secondary: rgb(255 255 255 / 0.1); /* white/10 - for secondary buttons */
+    --color-bg-button-secondary-hover: rgb(255 255 255 / 0.2); /* white/20 - for secondary button hover */
+
+    /* Text colors */
+    --color-text-primary: rgb(255 255 255); /* white */
+    --color-text-secondary: rgb(156 163 175); /* gray-400 */
+    --color-text-tertiary: rgb(107 114 128); /* gray-500 */
+    --color-text-inverse: rgb(17 24 39); /* gray-900 */
+    --color-text-menu: rgb(209 213 219); /* gray-300 - for menu items */
+
+    /* Border colors */
+    --color-border-primary: rgb(255 255 255 / 0.1); /* white/10 */
+    --color-border-secondary: rgb(255 255 255 / 0.05); /* white/5 */
+
+    /* Accent colors */
+    --color-accent-primary: rgb(99 102 241); /* indigo-500 */
+    --color-accent-hover: rgb(129 140 248); /* indigo-400 */
+    --color-accent-light: rgb(99 102 241 / 0.1); /* indigo-500/10 */
+    --color-accent-text: rgb(129 140 248); /* indigo-400 */
+    --color-accent-text-hover: rgb(165 180 252); /* indigo-300 */
+    --color-accent-muted: rgb(99 102 241); /* indigo-500 */
+
+    /* Warning/Alert colors */
+    --color-warning-bg: rgb(245 158 11 / 0.1); /* amber-500/10 */
+    --color-warning-text: rgb(251 191 36); /* amber-400 */
+    --color-warning-button: rgb(245 158 11); /* amber-500 */
+    --color-warning-button-hover: rgb(251 191 36); /* amber-400 */
+
+    /* Error colors */
+    --color-error-text: rgb(248 113 113); /* red-400 */
+
+    /* Overlay colors */
+    --color-overlay: rgb(17 24 39 / 0.5); /* gray-900/50 */
+    --color-outline: rgb(255 255 255 / 0.1); /* white/10 */
+  }
+
+  /* Ocean Theme - Cool blues and teals */
+  [data-theme="ocean"] {
+    --color-accent-primary: rgb(14 116 144); /* cyan-700 */
+    --color-accent-hover: rgb(8 145 178); /* cyan-600 */
+    --color-accent-light: rgb(207 250 254); /* cyan-100 */
+    --color-accent-text: rgb(14 116 144); /* cyan-700 */
+    --color-accent-text-hover: rgb(8 145 178); /* cyan-600 */
+    --color-accent-muted: rgb(34 211 238); /* cyan-400 */
+  }
+
+  [data-theme="ocean"].dark {
+    --color-accent-primary: rgb(34 211 238); /* cyan-400 */
+    --color-accent-hover: rgb(103 232 249); /* cyan-300 */
+    --color-accent-light: rgb(34 211 238 / 0.1); /* cyan-400/10 */
+    --color-accent-text: rgb(103 232 249); /* cyan-300 */
+    --color-accent-text-hover: rgb(165 243 252); /* cyan-200 */
+    --color-accent-muted: rgb(34 211 238); /* cyan-400 */
+  }
+
+  /* Forest Theme - Earthy greens */
+  [data-theme="forest"] {
+    --color-accent-primary: rgb(22 101 52); /* green-800 */
+    --color-accent-hover: rgb(21 128 61); /* green-700 */
+    --color-accent-light: rgb(220 252 231); /* green-100 */
+    --color-accent-text: rgb(22 101 52); /* green-800 */
+    --color-accent-text-hover: rgb(21 128 61); /* green-700 */
+    --color-accent-muted: rgb(74 222 128); /* green-400 */
+  }
+
+  [data-theme="forest"].dark {
+    --color-accent-primary: rgb(74 222 128); /* green-400 */
+    --color-accent-hover: rgb(134 239 172); /* green-300 */
+    --color-accent-light: rgb(74 222 128 / 0.1); /* green-400/10 */
+    --color-accent-text: rgb(134 239 172); /* green-300 */
+    --color-accent-text-hover: rgb(187 247 208); /* green-200 */
+    --color-accent-muted: rgb(74 222 128); /* green-400 */
+  }
+
+  /* Sunset Theme - Warm oranges and pinks */
+  [data-theme="sunset"] {
+    --color-accent-primary: rgb(194 65 12); /* orange-700 */
+    --color-accent-hover: rgb(234 88 12); /* orange-600 */
+    --color-accent-light: rgb(254 243 199); /* orange-100 */
+    --color-accent-text: rgb(194 65 12); /* orange-700 */
+    --color-accent-text-hover: rgb(234 88 12); /* orange-600 */
+    --color-accent-muted: rgb(251 146 60); /* orange-400 */
+  }
+
+  [data-theme="sunset"].dark {
+    --color-accent-primary: rgb(251 146 60); /* orange-400 */
+    --color-accent-hover: rgb(253 186 116); /* orange-300 */
+    --color-accent-light: rgb(251 146 60 / 0.1); /* orange-400/10 */
+    --color-accent-text: rgb(253 186 116); /* orange-300 */
+    --color-accent-text-hover: rgb(254 215 170); /* orange-200 */
+    --color-accent-muted: rgb(251 146 60); /* orange-400 */
+  }
+}
