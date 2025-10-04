@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import type { Todo } from "./App";
 
 interface TodoItemProps {
@@ -106,12 +107,12 @@ export default function TodoItem({
                 type="checkbox"
                 checked={todo.completed}
                 readOnly
-                className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-50 disabled:checked:bg-gray-50 forced-colors:appearance-auto dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/5"
+                className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
               />
               <svg
                 fill="none"
                 viewBox="0 0 14 14"
-                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-gray-500 dark:group-has-disabled/checkbox:stroke-gray-400"
+                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
               >
                 <path
                   d="M3 8L6 11L11 3.5"
@@ -129,7 +130,7 @@ export default function TodoItem({
               role="textbox"
               aria-label="Edit todo"
               suppressContentEditableWarning
-              className="block w-full text-xs/5 font-semibold text-gray-900 dark:text-white focus:outline-none bg-transparent"
+              className="block w-full text-xs/5 font-semibold text-[var(--color-text-primary)] focus:outline-none bg-transparent"
               onPaste={handlePaste}
               onKeyDown={handleKeyDown}
               ref={(el) => {
@@ -157,8 +158,8 @@ export default function TodoItem({
                 stroke="currentColor"
                 className={`w-4 h-4 ${
                   attachedUrl
-                    ? "text-indigo-600 dark:text-indigo-500"
-                    : "text-gray-300 dark:text-white/10"
+                    ? "text-[var(--color-accent-primary)]"
+                    : "text-[var(--color-text-tertiary)]"
                 }`}
               >
                 <path
@@ -168,7 +169,7 @@ export default function TodoItem({
                 />
               </svg>
               {attachedUrl && (
-                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-gray-300 dark:border-white/10">
+                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-[var(--color-border-primary)]">
                   {attachedUrl}
                 </div>
               )}
@@ -184,46 +185,52 @@ export default function TodoItem({
       ref={setNodeRef}
       style={style}
       className={`mt-2 relative ${
-        isDragging ? "opacity-50 z-50 bg-white dark:bg-gray-900" : ""
+        isDragging ? "z-50" : ""
       }`}
     >
       <div
         {...attributes}
         {...listeners}
         onDoubleClick={handleDoubleClick}
-        className="group/todo relative flex gap-3 text-xs/5 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 px-3 py-1 cursor-grab active:cursor-grabbing"
+        className={`group/todo relative flex gap-3 text-xs/5 transition-colors hover:bg-[var(--color-bg-hover)] px-3 py-1 cursor-grab active:cursor-grabbing select-none focus:outline-none ${
+          isDragging ? "bg-[var(--color-bg-hover)]" : ""
+        }`}
       >
         <div className="flex h-5 shrink-0 items-center" onDoubleClick={(e) => e.stopPropagation()}>
-          <div className="group/checkbox grid size-4 grid-cols-1">
-            <input
-              id={`todo-${todo.id}`}
-              name="todo"
-              type="checkbox"
-              checked={todo.completed}
-              onChange={() => onToggleTodoComplete(todo.id)}
-              className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-50 disabled:checked:bg-gray-50 forced-colors:appearance-auto dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/5"
-            />
-            <svg
-              fill="none"
-              viewBox="0 0 14 14"
-              className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-gray-500 dark:group-has-disabled/checkbox:stroke-gray-400"
-            >
-              <path
-                d="M3 8L6 11L11 3.5"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="opacity-0 group-has-checked/checkbox:opacity-100"
+          {isDragging ? (
+            <ArrowsRightLeftIcon className="size-4 text-[var(--color-text-secondary)]" />
+          ) : (
+            <div className="group/checkbox grid size-4 grid-cols-1">
+              <input
+                id={`todo-${todo.id}`}
+                name="todo"
+                type="checkbox"
+                checked={todo.completed}
+                onChange={() => onToggleTodoComplete(todo.id)}
+                className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
               />
-            </svg>
-          </div>
+              <svg
+                fill="none"
+                viewBox="0 0 14 14"
+                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
+              >
+                <path
+                  d="M3 8L6 11L11 3.5"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="opacity-0 group-has-checked/checkbox:opacity-100"
+                />
+              </svg>
+            </div>
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p
             className={`font-semibold select-none ${
               todo.completed
-                ? "line-through text-gray-500 dark:text-gray-400"
-                : "text-indigo-600 dark:text-indigo-400"
+                ? "line-through text-[var(--color-text-secondary)]"
+                : "text-[var(--color-accent-text)]"
             }`}
           >
             {todo.text}
@@ -244,8 +251,8 @@ export default function TodoItem({
                   stroke="currentColor"
                   className={`w-4 h-4 ${
                     todo.completed
-                      ? "text-gray-500 dark:text-gray-400"
-                      : "text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300"
+                      ? "text-[var(--color-text-secondary)]"
+                      : "text-[var(--color-accent-text)] hover:text-[var(--color-accent-text-hover)]"
                   }`}
                 >
                   <path
@@ -255,7 +262,7 @@ export default function TodoItem({
                   />
                 </svg>
               </button>
-              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-gray-300 dark:border-white/10">
+              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-[var(--color-border-primary)]">
                 {todo.url}
               </div>
             </div>
@@ -275,7 +282,7 @@ export default function TodoItem({
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            className="w-4 h-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           >
             <path
               strokeLinecap="round"
@@ -299,7 +306,7 @@ export default function TodoItem({
             viewBox="0 0 24 24"
             strokeWidth={1.5}
             stroke="currentColor"
-            className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            className="w-4 h-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
           >
             <path
               strokeLinecap="round"

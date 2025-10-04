@@ -77,32 +77,32 @@ export default function TimeBoxDialog({
     <Dialog open={open} onClose={isTimerActive ? () => {} : onClose} className="relative z-10">
       <DialogBackdrop
         transition
-        className={`fixed inset-0 ${isTimerActive ? 'backdrop-blur-md bg-gray-500/90' : 'bg-gray-500/75'} transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in dark:bg-gray-900/50`}
+        className={`fixed inset-0 ${isTimerActive ? 'backdrop-blur-md' : ''} bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in`}
       />
 
       <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:bg-gray-800 dark:outline dark:-outline-offset-1 dark:outline-white/10"
+            className="relative transform overflow-hidden rounded-lg bg-[var(--color-bg-dialog)] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:outline dark:-outline-offset-1 dark:outline-white/10"
           >
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 dark:bg-gray-800">
+            <div className="bg-[var(--color-bg-dialog)] px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
               <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-indigo-100 sm:mx-0 sm:size-10 dark:bg-indigo-500/10">
+                <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-light)] sm:mx-0 sm:size-10">
                   <ClockIcon
                     aria-hidden="true"
-                    className="size-6 text-indigo-600 dark:text-indigo-400"
+                    className="size-6 text-[var(--color-accent-text)]"
                   />
                 </div>
                 <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                   <DialogTitle
                     as="h3"
-                    className="text-base font-semibold text-gray-900 dark:text-white"
+                    className="text-base font-semibold text-[var(--color-text-primary)]"
                   >
                     Time Box To-Do
                   </DialogTitle>
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-[var(--color-text-secondary)]">
                       {todo.text}
                     </p>
                     {todo.url && (
@@ -110,7 +110,7 @@ export default function TimeBoxDialog({
                         href={todo.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-2 block text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 break-all underline"
+                        className="mt-2 block text-sm text-[var(--color-accent-text)] hover:text-[var(--color-accent-text-hover)] break-all underline"
                       >
                         {todo.url}
                       </a>
@@ -119,13 +119,13 @@ export default function TimeBoxDialog({
                 </div>
               </div>
             </div>
-            <div className="bg-gray-50 px-4 py-3 sm:flex sm:justify-between sm:items-center sm:px-6 dark:bg-gray-700/25">
+            <div className="bg-[var(--color-bg-dialog-footer)] px-4 py-3 sm:flex sm:justify-between sm:items-center sm:px-6">
               {isTimerActive && timeRemaining !== null ? (
                 <div className="flex items-baseline">
-                  <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">
+                  <span className="text-3xl font-bold text-[var(--color-accent-text)]">
                     {timeRemaining}
                   </span>
-                  <span className="ml-2 text-sm font-semibold text-indigo-600 dark:text-indigo-400">
+                  <span className="ml-2 text-sm font-semibold text-[var(--color-accent-text)]">
                     min
                   </span>
                 </div>
@@ -136,7 +136,7 @@ export default function TimeBoxDialog({
                       key={option.name}
                       type="button"
                       onClick={() => handleTimeSelect(option.minutes)}
-                      className="inline-flex w-full justify-center rounded-md bg-gray-950/5 px-3 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-950/10 sm:w-auto dark:bg-white/10 dark:text-white dark:inset-ring dark:inset-ring-white/5 dark:hover:bg-white/20"
+                      className="inline-flex w-full justify-center rounded-md bg-[var(--color-bg-button-secondary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-button-secondary-hover)] sm:w-auto dark:inset-ring dark:inset-ring-white/5"
                     >
                       {option.name}
                     </button>
@@ -151,12 +151,12 @@ export default function TimeBoxDialog({
                         type="checkbox"
                         checked={isCompleting}
                         onChange={handleMarkComplete}
-                        className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:indeterminate:border-indigo-500 dark:indeterminate:bg-indigo-500 dark:focus-visible:outline-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/10 dark:disabled:checked:bg-white/10 forced-colors:appearance-auto"
+                        className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-dialog)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-tertiary)] disabled:checked:bg-[var(--color-bg-tertiary)] forced-colors:appearance-auto"
                       />
                       <svg
                         fill="none"
                         viewBox="0 0 14 14"
-                        className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-gray-950/25 dark:group-has-disabled/checkbox:stroke-white/25"
+                        className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-tertiary)]"
                       >
                         <path
                           d="M3 8L6 11L11 3.5"
@@ -167,7 +167,7 @@ export default function TimeBoxDialog({
                         />
                       </svg>
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-[var(--color-text-primary)]">
                       Mark as completed
                     </span>
                   </label>
@@ -175,7 +175,7 @@ export default function TimeBoxDialog({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 sm:w-auto dark:bg-indigo-500 dark:shadow-none dark:hover:bg-indigo-400"
+                  className="inline-flex w-full justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] sm:w-auto dark:shadow-none"
                 >
                   {isTimerActive ? "Cancel" : "Close"}
                 </button>

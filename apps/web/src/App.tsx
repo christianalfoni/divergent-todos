@@ -10,11 +10,7 @@ import { useEditTodo } from "./hooks/useEditTodo";
 import { useDeleteTodo } from "./hooks/useDeleteTodo";
 import { generateKeyBetween } from "fractional-indexing";
 import { useHittingWood } from "./hooks/useHittingWood";
-
-// Initialize dark mode on mount
-if (typeof window !== 'undefined') {
-  document.documentElement.classList.add('dark');
-}
+import { useTheme } from "./hooks/useTheme";
 
 export interface Todo {
   id: string;
@@ -140,6 +136,9 @@ function AuthenticatedApp() {
 function AppContent() {
   const [version, setVersion] = useState<string>("");
   const [authentication] = useAuthentication();
+
+  // Initialize theme system
+  useTheme();
 
   useEffect(() => {
     // Works only when running inside Electron

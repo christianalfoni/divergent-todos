@@ -89,20 +89,20 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col bg-gray-50 dark:bg-gray-900 py-2 group h-full overflow-hidden transition-all"
+      className="flex flex-col bg-[var(--color-bg-secondary)] py-2 group h-full overflow-hidden transition-all"
     >
       <div className="flex justify-between items-start mb-2 px-3">
         <time
           dateTime={date.toISOString().split('T')[0]}
           className={`text-xs font-semibold w-fit shrink-0 ${
             isToday
-              ? 'flex size-6 items-center justify-center rounded-full bg-indigo-600 text-white dark:bg-indigo-500'
-              : 'text-gray-900 dark:text-white'
+              ? 'flex size-6 items-center justify-center rounded-full bg-[var(--color-accent-primary)] text-[var(--color-text-inverse)]'
+              : 'text-[var(--color-text-primary)]'
           }`}
         >
           {isToday ? dayNumber : `${month} ${dayNumber}`}
         </time>
-        <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+        <span className="text-xs font-medium text-[var(--color-text-secondary)]">
           {dayName}
         </span>
       </div>
@@ -122,22 +122,24 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
         {isAuthenticated && !isAddingTodo && !isPastDay && (
           <button
             onClick={() => setIsAddingTodo(true)}
-            className="mt-2 px-3 flex items-center gap-2 text-xs/5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 transition-colors w-full"
+            className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-4 h-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 4.5v15m7.5-7.5h-15"
-              />
-            </svg>
+            <div className="flex h-5 w-4 shrink-0 items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+            </div>
             <span>Add to-do</span>
           </button>
         )}
@@ -151,12 +153,12 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
                     id={`todo-${date.toISOString()}`}
                     name="todo"
                     type="checkbox"
-                    className="col-start-1 row-start-1 appearance-none rounded-sm border border-gray-300 bg-white checked:border-indigo-600 checked:bg-indigo-600 indeterminate:border-indigo-600 indeterminate:bg-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:border-gray-300 disabled:bg-gray-50 disabled:checked:bg-gray-50 forced-colors:appearance-auto dark:border-white/10 dark:bg-white/5 dark:checked:border-indigo-500 dark:checked:bg-indigo-500 dark:disabled:border-white/5 dark:disabled:bg-white/5"
+                    className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
                   />
                   <svg
                     fill="none"
                     viewBox="0 0 14 14"
-                    className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-gray-500 dark:group-has-disabled/checkbox:stroke-gray-400"
+                    className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-[var(--color-text-inverse)] group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
                   >
                     <path
                       d="M3 8L6 11L11 3.5"
@@ -173,8 +175,8 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
                   contentEditable
                   role="textbox"
                   aria-label="Add a todo"
-                  data-placeholder="Add a todo..."
-                  className="block w-full text-xs/5 text-gray-900 dark:text-white focus:outline-none bg-transparent empty:before:content-[attr(data-placeholder)] empty:before:text-gray-500 dark:empty:before:text-gray-400"
+                  data-placeholder="Description..."
+                  className="block w-full text-xs/5 text-[var(--color-text-primary)] focus:outline-none bg-transparent empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]"
                   onPaste={handlePaste}
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
@@ -191,8 +193,8 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
                     stroke="currentColor"
                     className={`w-4 h-4 ${
                       attachedUrl
-                        ? 'text-indigo-600 dark:text-indigo-500'
-                        : 'text-gray-300 dark:text-white/10'
+                        ? 'text-[var(--color-accent-text)]'
+                        : 'text-[var(--color-text-tertiary)]'
                     }`}
                   >
                     <path
@@ -202,7 +204,7 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
                     />
                   </svg>
                   {attachedUrl && (
-                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-gray-50 text-gray-900 dark:bg-gray-800 dark:text-white text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-gray-300 dark:border-white/10">
+                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[var(--color-bg-hover)] text-[var(--color-text-primary)] text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-[var(--color-border-primary)]">
                       {attachedUrl}
                     </div>
                   )}
