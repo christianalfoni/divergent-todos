@@ -1,13 +1,13 @@
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
-import { signOut } from 'firebase/auth';
-import { useAuthentication } from './hooks/useAuthentication';
-import { auth } from './firebase';
-import { useTheme, type Theme } from './hooks/useTheme';
-import UpdateNotification from './UpdateNotification';
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
+import { signOut } from "firebase/auth";
+import { useAuthentication } from "./hooks/useAuthentication";
+import { auth } from "./firebase";
+import { useTheme, type Theme } from "./hooks/useTheme";
+import UpdateNotification from "./UpdateNotification";
 
 function getDownloadUrl(): string | null {
   // Check if running in Electron
-  if (window.navigator.userAgent.includes('Electron')) {
+  if (window.navigator.userAgent.includes("Electron")) {
     return null; // Don't show download link in desktop app
   }
 
@@ -15,28 +15,28 @@ function getDownloadUrl(): string | null {
   const userAgent = window.navigator.userAgent.toLowerCase();
 
   // macOS detection
-  if (platform.includes('mac') || userAgent.includes('mac')) {
+  if (platform.includes("mac") || userAgent.includes("mac")) {
     // Prefer ARM64 for Apple Silicon, but GitHub doesn't have architecture detection
     // Default to ARM64 as most modern Macs are Apple Silicon
-    return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg';
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg";
   }
 
   // Windows detection
-  if (platform.includes('win') || userAgent.includes('windows')) {
-    return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-win-x64.exe';
+  if (platform.includes("win") || userAgent.includes("windows")) {
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-win-x64.exe";
   }
 
   // Linux detection
-  if (platform.includes('linux') || userAgent.includes('linux')) {
-    return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-linux-x64.AppImage';
+  if (platform.includes("linux") || userAgent.includes("linux")) {
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-linux-x64.AppImage";
   }
 
   // Default to macOS if platform cannot be determined
-  return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg';
+  return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg";
 }
 
 export default function TopBar() {
-  const [authentication] = useAuthentication();
+  const authentication = useAuthentication();
   const { theme, setTheme } = useTheme();
   const downloadUrl = getDownloadUrl();
 
@@ -49,10 +49,10 @@ export default function TopBar() {
   };
 
   const themes: { value: Theme; label: string }[] = [
-    { value: 'default', label: 'Default' },
-    { value: 'ocean', label: 'Ocean' },
-    { value: 'forest', label: 'Forest' },
-    { value: 'sunset', label: 'Sunset' },
+    { value: "default", label: "Default" },
+    { value: "ocean", label: "Ocean" },
+    { value: "forest", label: "Forest" },
+    { value: "sunset", label: "Sunset" },
   ];
 
   return (
@@ -113,7 +113,14 @@ export default function TopBar() {
                 <span className="sr-only">Open user menu</span>
                 <img
                   alt=""
-                  src={authentication.user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(authentication.user.displayName || authentication.user.email || 'User')}`}
+                  src={
+                    authentication.user.photoURL ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      authentication.user.displayName ||
+                        authentication.user.email ||
+                        "User"
+                    )}`
+                  }
                   className="size-8 rounded-full outline -outline-offset-1 outline-[var(--color-outline)]"
                 />
               </MenuButton>
@@ -154,7 +161,9 @@ export default function TopBar() {
                     >
                       {themeOption.label}
                       {theme === themeOption.value && (
-                        <span className="ml-2 text-[var(--color-accent-text)]">✓</span>
+                        <span className="ml-2 text-[var(--color-accent-text)]">
+                          ✓
+                        </span>
                       )}
                     </button>
                   </MenuItem>

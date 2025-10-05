@@ -19,7 +19,7 @@ export type DeleteTodoState =
     };
 
 export function useDeleteTodo() {
-  const [authentication] = useAuthentication();
+  const authentication = useAuthentication();
   const userRef = useRef(authentication.user);
 
   userRef.current = authentication.user;
@@ -35,7 +35,7 @@ export function useDeleteTodo() {
 
       return deleteDoc(todoDoc);
     })
-    .map(() => ({ isDeleting: false, error: null } as const))
+    .map(() => ({ isDeleting: false, error: null }))
     .catch((err) => ({ isDeleting: false, error: String(err) }))
-    .use({ isDeleting: false, error: null } as const);
+    .use({ isDeleting: false, error: null });
 }

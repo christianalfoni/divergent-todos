@@ -22,7 +22,7 @@
     "fractional-indexing": "^3.2.0",
     "framer-motion": "^12.23.22",
     "howler": "^2.2.4",
-    "pipesy": "^0.0.4",
+    "pipesy": "^0.0.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },

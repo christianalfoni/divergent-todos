@@ -33,6 +33,21 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId);
     }
 
+    // Profiles collection rules
+    match /profiles/{userId} {
+      // Allow read only if user is reading their own profile
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+
+      // Allow create only if user is creating their own profile
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+
+      // Allow update only if user is updating their own profile
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+
+      // Allow delete only if user is deleting their own profile
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;
