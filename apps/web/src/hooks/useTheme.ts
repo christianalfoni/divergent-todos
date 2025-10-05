@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useProfile } from "./useProfile";
+import { useEditProfile } from "./useEditProfile";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type Theme = "default" | "ocean" | "forest" | "sunset";
@@ -59,7 +61,30 @@ function applyTheme(state: ThemeState) {
 }
 
 export function useTheme() {
+  const profile = useProfile();
+  const [, editProfile] = useEditProfile();
   const [themeState, setThemeState] = useState<ThemeState>(getStoredTheme);
+
+  // Sync profile theme to local state and localStorage (profile is source of truth)
+  useEffect(() => {
+    if (profile?.theme) {
+      const storedTheme = getStoredTheme();
+      const newState = {
+        ...storedTheme,
+        theme: profile.theme as Theme,
+      };
+      setThemeState(newState);
+
+      // Update localStorage to match profile
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          mode: newState.mode,
+          theme: newState.theme,
+        })
+      );
+    }
+  }, [profile?.theme]);
 
   // Listen to system theme changes
   useEffect(() => {
@@ -101,6 +126,8 @@ export function useTheme() {
 
   const setTheme = (theme: Theme) => {
     setThemeState((prev) => ({ ...prev, theme }));
+    // Update profile with new theme (profile is source of truth)
+    editProfile({ theme });
   };
 
   return {

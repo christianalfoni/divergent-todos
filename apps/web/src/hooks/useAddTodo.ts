@@ -20,7 +20,7 @@ export type AddTodoState =
     };
 
 export function useAddTodo() {
-  const [authentication] = useAuthentication();
+  const authentication = useAuthentication();
   const userRef = useRef(authentication.user);
 
   userRef.current = authentication.user;
@@ -51,7 +51,7 @@ export function useAddTodo() {
         updatedAt: serverTimestamp(),
       });
     })
-    .map(() => ({ isAdding: false, error: null } as const))
+    .map(() => ({ isAdding: false, error: null }))
     .catch((err) => ({ isAdding: false, error: String(err) }))
-    .use({ isAdding: false, error: null } as const);
+    .use({ isAdding: false, error: null });
 }

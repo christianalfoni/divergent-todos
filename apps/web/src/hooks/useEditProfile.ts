@@ -1,10 +1,10 @@
 import { pipe } from "pipesy";
-import { todosCollection, type Todo } from "../firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { profilesCollection, type Profile } from "../firebase";
+import { doc, setDoc } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
 import { useRef } from "react";
 
-export type EditTodoState =
+export type EditProfileState =
   | {
       isEditing: true;
       error: null;
@@ -18,32 +18,23 @@ export type EditTodoState =
       error: string;
     };
 
-export function useEditTodo() {
+export function useEditProfile() {
   const authentication = useAuthentication();
   const userRef = useRef(authentication.user);
 
   userRef.current = authentication.user;
 
-  return pipe<
-    EditTodoState,
-    Pick<Todo, "id" | "completed" | "date" | "description"> & {
-      position?: string;
-    }
-  >()
+  return pipe<EditProfileState, Partial<Profile>>()
     .setState({ isEditing: true, error: null })
-    .async(({ id, description, completed, date, position }) => {
-      const todoDoc = doc(todosCollection, id);
-
+    .async((updates) => {
       if (!userRef.current) {
-        throw new Error("can not edit todo without a user");
+        throw new Error("can not edit profile without a user");
       }
 
-      return updateDoc(todoDoc, {
-        completed,
-        description,
-        date,
-        ...(position ? { position } : {}),
-      });
+      const profileDoc = doc(profilesCollection, userRef.current.uid);
+
+      // Use setDoc with merge to update only the fields provided
+      return setDoc(profileDoc, updates, { merge: true });
     })
     .map(() => ({ isEditing: false, error: null }))
     .catch((err) => ({ isEditing: false, error: String(err) }))

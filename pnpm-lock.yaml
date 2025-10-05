@@ -72,8 +72,8 @@ importers:
         specifier: ^2.2.4
         version: 2.2.4
       pipesy:
-        specifier: ^0.0.4
-        version: 0.0.4(react@19.2.0)
+        specifier: ^0.0.5
+        version: 0.0.5(react@19.2.0)
       react:
         specifier: ^19.1.1
         version: 19.2.0
@@ -2907,8 +2907,8 @@ packages:
     resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
     engines: {node: '>=12'}
 
-  pipesy@0.0.4:
-    resolution: {integrity: sha512-t53+aQd0BQefeNqT9hwqsV7HSDI7InXDIMDr6Ziuambb2F0X0vx1APxj68hcSVIv7w77A7jxMtKIRXs+9sbN1Q==}
+  pipesy@0.0.5:
+    resolution: {integrity: sha512-9EnW7IKFLL3Em3V79ioeplNmh4KTtjCnMm0BJIpu6bElM2s2gPJn8Ll1a4NnlAgUfXEitBWjeDLVpjwC4KPxaQ==}
     peerDependencies:
       react: '>=18.0.0'
 
@@ -6739,7 +6739,7 @@ snapshots:
 
   picomatch@4.0.3: {}
 
-  pipesy@0.0.4(react@19.2.0):
+  pipesy@0.0.5(react@19.2.0):
     dependencies:
       react: 19.2.0
 

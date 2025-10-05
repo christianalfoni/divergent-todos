@@ -1,4 +1,4 @@
-import { } from "react";
+import {} from "react";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
@@ -44,9 +44,10 @@ function AuthenticatedApp() {
       .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
       .sort((a, b) => a.position.localeCompare(b.position));
 
-    const lastPosition = todosForDate.length > 0
-      ? todosForDate[todosForDate.length - 1].position
-      : null;
+    const lastPosition =
+      todosForDate.length > 0
+        ? todosForDate[todosForDate.length - 1].position
+        : null;
 
     addTodo({ description: todo.text, date: dateObj, lastPosition });
   };
@@ -74,7 +75,9 @@ function AuthenticatedApp() {
 
     // Get todos for target date, sorted by position (excluding the dragged todo)
     const todosInTargetDate = firebaseTodos
-      .filter((t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId)
+      .filter(
+        (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
+      )
       .sort((a, b) => a.position.localeCompare(b.position));
 
     let newPosition: string;
@@ -134,7 +137,7 @@ function AuthenticatedApp() {
 }
 
 function AppContent() {
-  const [authentication] = useAuthentication();
+  const authentication = useAuthentication();
 
   // Initialize theme system
   useTheme();
