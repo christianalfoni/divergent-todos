@@ -7,15 +7,15 @@ export function getWeekdaysForThreeWeeks() {
 
   const weekdays: Date[] = []
 
-  // Start from Monday of last week (7 days before current Monday)
+  // Start from Monday of current week
   const startDate = new Date(today)
-  startDate.setDate(today.getDate() - daysToCurrentMonday - 7)
+  startDate.setDate(today.getDate() - daysToCurrentMonday)
 
-  // Add 15 weekdays (Monday-Friday for 3 weeks)
+  // Add 10 weekdays (Monday-Friday for 2 weeks)
   let addedDays = 0
   let currentDate = new Date(startDate)
 
-  while (addedDays < 15) {
+  while (addedDays < 10) {
     const dayOfWeek = currentDate.getDay()
     // Only add Monday (1) through Friday (5)
     if (dayOfWeek >= 1 && dayOfWeek <= 5) {

@@ -55,8 +55,19 @@ export default function Calendar({
     if (showThreeWeeks) {
       return allWeekdays;
     }
-    // Show only current week (middle 5 days)
-    return allWeekdays.slice(5, 10);
+
+    // If it's weekend (Saturday or Sunday), show next week instead of current week
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    if (isWeekend) {
+      // Show next week (second 5 days)
+      return allWeekdays.slice(5, 10);
+    }
+
+    // Show current week (first 5 days)
+    return allWeekdays.slice(0, 5);
   }, [allWeekdays, showThreeWeeks]);
 
   useEffect(() => {
@@ -109,7 +120,7 @@ export default function Calendar({
       <div className="h-full w-full flex flex-col overflow-hidden">
         <div
           className={`grid grid-cols-5 ${
-            showThreeWeeks ? "grid-rows-3" : "grid-rows-1"
+            showThreeWeeks ? "grid-rows-2" : "grid-rows-1"
           } flex-1 divide-x divide-y divide-[var(--color-border-primary)]`}
         >
           {weekdays.map((date, index) => {

@@ -35,7 +35,12 @@ function getDownloadUrl(): string | null {
   return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg";
 }
 
-export default function TopBar() {
+interface TopBarProps {
+  oldTodoCount?: number;
+  onMoveOldTodos?: () => void;
+}
+
+export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: TopBarProps) {
   const authentication = useAuthentication();
   const { theme, setTheme } = useTheme();
   const downloadUrl = getDownloadUrl();
@@ -102,12 +107,39 @@ export default function TopBar() {
               </span>
             </div>
           </div>
-          <div className="hidden sm:ml-6 sm:flex sm:items-center">
+          <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
             {/* Update notification */}
             <UpdateNotification />
 
+            {/* Old todos indicator */}
+            {oldTodoCount > 0 && (
+              <button
+                onClick={onMoveOldTodos}
+                className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  aria-hidden="true"
+                  className="size-5 shrink-0"
+                >
+                  <path
+                    d="M10 3V17M10 17L14 13M10 17L6 13"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span>Move {oldTodoCount} uncompleted todo{oldTodoCount === 1 ? '' : 's'}</span>
+              </button>
+            )}
+
             {/* Profile dropdown */}
-            <Menu as="div" className="relative ml-3">
+            <Menu as="div" className="relative">
               <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
                 <span className="absolute -inset-1.5" />
                 <span className="sr-only">Open user menu</span>
