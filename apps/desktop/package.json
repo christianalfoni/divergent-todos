@@ -42,9 +42,22 @@
     },
     "mac": {
       "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": {
+        "teamId": "${APPLE_TEAM_ID}"
+      },
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64", "x64"]
+        }
       ],
       "artifactName": "${productName}-mac-${arch}.${ext}"
     },
@@ -62,9 +75,11 @@
       ],
       "category": "Utility",
       "artifactName": "${productName}-linux-${arch}.${ext}"
-    }
+    },
+    "afterSign": "build/notarize.js"
   },
   "devDependencies": {
+    "@electron/notarize": "^3.1.0",
     "@types/node": "^24.6.2",
     "@vitejs/plugin-react": "^5.0.4",
     "electron": "^35.0.0",
