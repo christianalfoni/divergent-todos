@@ -1,6 +1,5 @@
 {
   "name": "desktop",
-  "version": "0.0.0",
   "description": "A secure Electron + React + Firebase todo application",
   "homepage": "https://github.com/christianalfoni/divergent-todos",
   "author": {
@@ -14,74 +13,7 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "start": "electron .",
-    "package": "electron-builder --publish never"
-  },
-  "build": {
-    "appId": "com.divergent.todos",
-    "productName": "Divergent Todos",
-    "extends": "../../package.json",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist-electron/**/*",
-      "!dist-electron/renderer/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "../web/dist",
-        "to": "web",
-        "filter": [
-          "**/*"
-        ]
-      }
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "christianalfoni",
-      "repo": "divergent-todos"
-    },
-    "mac": {
-      "category": "public.app-category.productivity",
-      "hardenedRuntime": true,
-      "gatekeeperAssess": false,
-      "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist",
-      "notarize": false,
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ],
-      "artifactName": "${productName}-mac-${arch}.${ext}"
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "artifactName": "${productName}-win-${arch}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "category": "Utility",
-      "artifactName": "${productName}-linux-${arch}.${ext}"
-    },
-    "afterSign": "build/notarize.js"
+    "package": "electron-builder --config electron-builder.config.js --publish never"
   },
   "devDependencies": {
     "@electron/notarize": "^3.1.0",
