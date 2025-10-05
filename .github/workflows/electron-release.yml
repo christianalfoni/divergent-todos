@@ -84,7 +84,7 @@ jobs:
       - name: Get version
         id: version
         run: |
-          VERSION=$(node -p "require('./apps/desktop/package.json').version")
+          VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Check if tag exists
