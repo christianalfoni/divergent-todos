@@ -36,6 +36,29 @@ function AuthenticatedApp() {
     date: todo.date.toISOString().split("T")[0],
   }));
 
+  // Get Monday of current week
+  const getCurrentWeekMonday = () => {
+    const today = new Date();
+    const currentDay = today.getDay();
+    const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - daysToMonday);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+  };
+
+  // Count uncompleted todos from before current week
+  const getOldUncompletedTodos = () => {
+    const currentWeekMonday = getCurrentWeekMonday();
+    return todos.filter((todo) => {
+      if (todo.completed) return false;
+      const todoDate = new Date(todo.date);
+      return todoDate < currentWeekMonday;
+    });
+  };
+
+  const oldUncompletedTodos = getOldUncompletedTodos();
+
   const handleAddTodo = (todo: Omit<Todo, "id">) => {
     const dateObj = new Date(todo.date);
 
@@ -124,15 +147,42 @@ function AuthenticatedApp() {
     deleteTodo({ id: todoId });
   };
 
+  const moveOldTodosToNextWorkday = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+
+    let targetDate = new Date(today);
+
+    // If it's Saturday (6), move to Monday (+2 days)
+    // If it's Sunday (0), move to Monday (+1 day)
+    // Otherwise, use today
+    if (dayOfWeek === 6) {
+      targetDate.setDate(today.getDate() + 2);
+    } else if (dayOfWeek === 0) {
+      targetDate.setDate(today.getDate() + 1);
+    }
+
+    const targetDateString = targetDate.toISOString().split("T")[0];
+    oldUncompletedTodos.forEach((todo) => {
+      moveTodo(todo.id, targetDateString);
+    });
+  };
+
   return (
-    <Calendar
-      todos={todos}
-      onAddTodo={handleAddTodo}
-      onToggleTodoComplete={toggleTodoComplete}
-      onMoveTodo={moveTodo}
-      onUpdateTodo={updateTodo}
-      onDeleteTodo={handleDeleteTodo}
-    />
+    <>
+      <TopBar
+        oldTodoCount={oldUncompletedTodos.length}
+        onMoveOldTodos={moveOldTodosToNextWorkday}
+      />
+      <Calendar
+        todos={todos}
+        onAddTodo={handleAddTodo}
+        onToggleTodoComplete={toggleTodoComplete}
+        onMoveTodo={moveTodo}
+        onUpdateTodo={updateTodo}
+        onDeleteTodo={handleDeleteTodo}
+      />
+    </>
   );
 }
 
@@ -144,7 +194,6 @@ function AppContent() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <TopBar />
       <div className="flex-1 overflow-hidden">
         {authentication.user ? (
           <AuthenticatedApp />

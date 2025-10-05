@@ -1,6 +1,6 @@
 {
   "name": "divergent-todos",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "private": true,
   "workspaces": [
     "apps/*",
@@ -10,7 +10,7 @@
     "dev:web": "pnpm --filter web dev",
     "dev:desktop": "pnpm --filter desktop dev",
     "build:web": "pnpm --filter web build",
-    "build:desktop": "pnpm --filter desktop build",
+    "build:desktop": "pnpm build:web && pnpm --filter desktop build && pnpm --filter desktop package",
     "typecheck": "pnpm --filter web typecheck && pnpm --filter desktop typecheck",
     "deploy:rules": "pnpm --filter web deploy:rules",
     "deploy:functions": "pnpm --filter functions deploy:functions"
