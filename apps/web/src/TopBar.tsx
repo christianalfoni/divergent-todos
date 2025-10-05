@@ -5,9 +5,40 @@ import { auth } from './firebase';
 import { useTheme, type Theme } from './hooks/useTheme';
 import UpdateNotification from './UpdateNotification';
 
+function getDownloadUrl(): string | null {
+  // Check if running in Electron
+  if (window.navigator.userAgent.includes('Electron')) {
+    return null; // Don't show download link in desktop app
+  }
+
+  const platform = window.navigator.platform.toLowerCase();
+  const userAgent = window.navigator.userAgent.toLowerCase();
+
+  // macOS detection
+  if (platform.includes('mac') || userAgent.includes('mac')) {
+    // Prefer ARM64 for Apple Silicon, but GitHub doesn't have architecture detection
+    // Default to ARM64 as most modern Macs are Apple Silicon
+    return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg';
+  }
+
+  // Windows detection
+  if (platform.includes('win') || userAgent.includes('windows')) {
+    return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-win-x64.exe';
+  }
+
+  // Linux detection
+  if (platform.includes('linux') || userAgent.includes('linux')) {
+    return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-linux-x64.AppImage';
+  }
+
+  // Default to macOS if platform cannot be determined
+  return 'https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg';
+}
+
 export default function TopBar() {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
+  const downloadUrl = getDownloadUrl();
 
   if (!authentication.user) {
     return null;
@@ -99,6 +130,19 @@ export default function TopBar() {
                     Subscription
                   </a>
                 </MenuItem>
+
+                {downloadUrl && (
+                  <MenuItem>
+                    <a
+                      href={downloadUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                    >
+                      Download app
+                    </a>
+                  </MenuItem>
+                )}
 
                 <div className="my-1 h-px bg-[var(--color-border-primary)]" />
 
