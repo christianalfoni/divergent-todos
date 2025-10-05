@@ -122,8 +122,9 @@ dist
 firebase-debug.log
 firestore-debug.log
 
-# Electron
-build/
+# Electron build output
+apps/desktop/release/
+apps/desktop/dist-electron/
 
 # TernJS port file
 .tern-port
