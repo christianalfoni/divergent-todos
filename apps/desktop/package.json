@@ -1,6 +1,6 @@
 {
   "name": "desktop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A secure Electron + React + Firebase todo application",
   "homepage": "https://github.com/christianalfoni/divergent-todos",
   "author": {
@@ -50,11 +50,17 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["arm64", "x64"]
+          "arch": [
+            "arm64",
+            "x64"
+          ]
         }
       ],
       "artifactName": "${productName}-mac-${arch}.${ext}"
