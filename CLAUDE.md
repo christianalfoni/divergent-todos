@@ -119,6 +119,34 @@ Configuration uses public Firebase config (safe for client-side).
 4. **Preload script** is the only bridge between Electron and renderer
 5. **Firestore Security Rules** should be configured server-side
 
+## Versioning and Releases
+
+### Version Management
+- **Desktop app version** is managed in the **root** `package.json`
+- The desktop app inherits this version via `electron-builder.config.js` (`extraMetadata.version`)
+- GitHub Actions workflow reads from root `package.json` to determine release version
+- **To release a new desktop version**: Bump the version in the root `package.json`
+
+### Auto-Updates
+- Desktop app uses `electron-updater` to check for updates from GitHub Releases
+- Updates are published when:
+  1. Version in root `package.json` is bumped
+  2. Code is merged to `main` branch
+  3. GitHub Actions builds and publishes with `--publish always`
+- The workflow generates metadata files (`latest-mac.yml`, `latest-linux.yml`, `latest.yml`)
+- These metadata files are uploaded to GitHub Releases alongside installers
+- `electron-updater` reads these files to detect available updates
+- Update notification appears in the app's top bar when new version is available
+
+### Release Process
+1. Bump version in root `package.json` (e.g., `npm version patch`)
+2. Commit and push to `main`
+3. GitHub Actions automatically:
+   - Builds for all platforms (macOS, Windows, Linux)
+   - Creates GitHub Release with tag `v{version}` (if tag doesn't exist)
+   - Uploads installers and update metadata files
+4. Existing desktop app users see update notification on next launch
+
 ## Development Notes
 
 - Use **pnpm** for all package management (enforced by packageManager field)
