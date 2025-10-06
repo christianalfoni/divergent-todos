@@ -39,11 +39,19 @@ module.exports = {
     target: [
       {
         target: 'dmg',
-        arch: ['arm64', 'x64'],
+        arch: ['arm64'],
+      },
+      {
+        target: 'dmg',
+        arch: ['x64'],
       },
       {
         target: 'zip',
-        arch: ['arm64', 'x64'],
+        arch: ['arm64'],
+      },
+      {
+        target: 'zip',
+        arch: ['x64'],
       },
     ],
     artifactName: '${productName}-mac-${arch}.${ext}',
