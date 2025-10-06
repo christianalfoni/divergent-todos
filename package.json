@@ -11,6 +11,7 @@
     "dev:desktop": "pnpm --filter desktop dev",
     "build:web": "pnpm --filter web build",
     "build:desktop": "pnpm build:web && pnpm --filter desktop build && pnpm --filter desktop package",
+    "start:desktop": "pnpm --filter desktop start",
     "typecheck": "pnpm --filter web typecheck && pnpm --filter desktop typecheck",
     "deploy:rules": "pnpm --filter web deploy:rules",
     "deploy:functions": "pnpm --filter functions deploy:functions"

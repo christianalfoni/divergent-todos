@@ -1,7 +1,6 @@
 import {
   GoogleAuthProvider,
   linkWithPopup,
-  linkWithCredential,
   signInWithCustomToken,
 } from "firebase/auth";
 import { pipe } from "pipesy";

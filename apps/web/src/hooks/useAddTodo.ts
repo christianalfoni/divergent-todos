@@ -45,8 +45,7 @@ export function useAddTodo() {
       const position = generateKeyBetween(lastPosition, null);
 
       // Check if user has an active subscription
-      const hasActiveSubscription = profileRef.current?.subscription?.status === "active" ||
-                                    profileRef.current?.subscription?.status === "trialing";
+      const hasActiveSubscription = profileRef.current?.subscription?.status === "active";
 
       // If no subscription, increment freeTodoCount
       if (!hasActiveSubscription) {

@@ -157,14 +157,14 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
             )}
 
             {/* Free todo counter - only show if user has no active subscription */}
-            {authentication.user && profile && profile.subscription?.status !== 'active' && profile.subscription?.status !== 'trialing' && !showPaymentWarning && (
+            {authentication.user && profile && profile.subscription?.status !== 'active' && !showPaymentWarning && (
               <div className="flex items-center gap-x-2 text-sm text-[var(--color-text-secondary)]">
                 <span>{profile.freeTodoCount || 0} / 20 free todos added</span>
               </div>
             )}
 
             {/* Subscribe button - only show if user has no active subscription and no payment issues */}
-            {authentication.user && profile && profile.subscription?.status !== 'active' && profile.subscription?.status !== 'trialing' && !showPaymentWarning && onOpenSubscription && (
+            {authentication.user && profile && profile.subscription?.status !== 'active' && !showPaymentWarning && onOpenSubscription && (
               <button
                 onClick={onOpenSubscription}
                 className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"

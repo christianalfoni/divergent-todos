@@ -36,8 +36,7 @@ function AuthenticatedApp() {
   const isElectron = window.navigator.userAgent.includes("Electron");
 
   // Check for active subscription
-  const hasActiveSubscription = profile?.subscription?.status === "active" ||
-                                 profile?.subscription?.status === "trialing";
+  const hasActiveSubscription = profile?.subscription?.status === "active";
 
   // In Electron, require active subscription
   const requiresSubscription = isElectron && !hasActiveSubscription;
@@ -76,8 +75,7 @@ function AuthenticatedApp() {
 
   const handleAddTodo = (todo: Omit<Todo, "id">) => {
     // Check if user has reached the free limit
-    const hasActiveSubscription = profile?.subscription?.status === "active" ||
-                                  profile?.subscription?.status === "trialing";
+    const hasActiveSubscription = profile?.subscription?.status === "active";
     const freeTodoCount = profile?.freeTodoCount ?? 0;
 
     if (!hasActiveSubscription && freeTodoCount >= 20) {
