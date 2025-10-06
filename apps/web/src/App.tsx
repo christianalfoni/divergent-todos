@@ -12,7 +12,6 @@ import { useDeleteTodo } from "./hooks/useDeleteTodo";
 import { generateKeyBetween } from "fractional-indexing";
 import { useHittingWood } from "./hooks/useHittingWood";
 import { useTheme } from "./hooks/useTheme";
-import { useProfile } from "./hooks/useProfile";
 
 export interface Todo {
   id: string;
@@ -25,7 +24,7 @@ export interface Todo {
 function AuthenticatedApp() {
   const authentication = useAuthentication();
   const firebaseTodos = useTodos();
-  const profile = useProfile();
+  const profile = authentication.profile;
   const [, addTodo] = useAddTodo();
   const [, editTodo] = useEditTodo();
   const [, deleteTodo] = useDeleteTodo();

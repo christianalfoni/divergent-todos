@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
+import SmartLinksEditor from "./SmartLinksEditor";
 import type { Todo } from "./App";
 
 interface TodoItemProps {
@@ -20,8 +21,10 @@ export default function TodoItem({
   onOpenTimeBox,
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [attachedUrl, setAttachedUrl] = useState<string>(todo.url || "");
+  const [editingHtml, setEditingHtml] = useState<string>(todo.text);
   const containerRef = useRef<HTMLDivElement>(null);
+  const longPressTimerRef = useRef<number | null>(null);
+  const isLongPressRef = useRef(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -39,14 +42,9 @@ export default function TodoItem({
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        const textEl = containerRef.current.querySelector(
-          "[contenteditable]"
-        ) as HTMLDivElement;
-        const text = textEl?.textContent?.trim() || "";
-        if (text && text !== todo.text) {
-          onUpdateTodo?.(todo.id, text);
+        if (editingHtml !== todo.text) {
+          onUpdateTodo?.(todo.id, editingHtml);
         }
-        setAttachedUrl(todo.url || "");
         setIsEditing(false);
       }
     };
@@ -57,31 +55,16 @@ export default function TodoItem({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isEditing, todo.id, todo.text, todo.url, onUpdateTodo]);
-
-  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const pastedText = e.clipboardData.getData("text");
-    try {
-      new URL(pastedText);
-      e.preventDefault();
-      setAttachedUrl(pastedText);
-    } catch {
-      e.preventDefault();
-      const text = e.clipboardData.getData("text/plain");
-      document.execCommand("insertText", false, text);
-    }
-  };
+  }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
-      setAttachedUrl(todo.url || "");
-      e.currentTarget.textContent = todo.text;
+      setEditingHtml(todo.text);
       setIsEditing(false);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const text = e.currentTarget.textContent?.trim() || "";
-      if (text) {
-        onUpdateTodo?.(todo.id, text);
+      if (editingHtml.trim()) {
+        onUpdateTodo?.(todo.id, editingHtml);
         setIsEditing(false);
       }
     }
@@ -93,6 +76,29 @@ export default function TodoItem({
     if (!todo.completed) {
       onOpenTimeBox?.(todo);
     }
+  };
+
+  const handleTextMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    isLongPressRef.current = false;
+    longPressTimerRef.current = window.setTimeout(() => {
+      isLongPressRef.current = true;
+    }, 300);
+  };
+
+  const handleTextMouseUp = (e: React.MouseEvent) => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const handleTextClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isLongPressRef.current) {
+      setIsEditing(true);
+    }
+    isLongPressRef.current = false;
   };
 
   if (isEditing) {
@@ -123,56 +129,14 @@ export default function TodoItem({
               </svg>
             </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div
-              contentEditable
-              role="textbox"
-              aria-label="Edit todo"
-              suppressContentEditableWarning
-              className="block w-full text-xs/5 font-semibold text-[var(--color-text-primary)] focus:outline-none bg-transparent"
-              onPaste={handlePaste}
+          <div className="flex-1 min-w-0 text-xs/5 font-semibold text-[var(--color-text-primary)]">
+            <SmartLinksEditor
+              html={editingHtml}
+              editing={true}
+              onChange={setEditingHtml}
+              autoFocus={true}
               onKeyDown={handleKeyDown}
-              ref={(el) => {
-                if (el) {
-                  el.textContent = todo.text;
-                  el.focus();
-                  // Move cursor to end
-                  const range = document.createRange();
-                  const sel = window.getSelection();
-                  range.selectNodeContents(el);
-                  range.collapse(false);
-                  sel?.removeAllRanges();
-                  sel?.addRange(range);
-                }
-              }}
             />
-          </div>
-          <div className="flex h-5 shrink-0 items-center">
-            <div className="relative group/url">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-                className={`w-4 h-4 ${
-                  attachedUrl
-                    ? "text-[var(--color-accent-primary)]"
-                    : "text-[var(--color-text-tertiary)]"
-                }`}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"
-                />
-              </svg>
-              {attachedUrl && (
-                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-[var(--color-border-primary)]">
-                  {attachedUrl}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>
@@ -191,7 +155,7 @@ export default function TodoItem({
         {...attributes}
         {...listeners}
         onDoubleClick={handleDoubleClick}
-        className={`group/todo relative flex gap-3 text-xs/5 transition-colors hover:bg-[var(--color-bg-hover)] px-3 py-1 cursor-grab active:cursor-grabbing select-none focus:outline-none ${
+        className={`group/todo relative flex gap-3 text-xs/5 transition-colors hover:bg-[var(--color-bg-hover)] px-3 py-1 select-none focus:outline-none ${
           isDragging ? "bg-[var(--color-bg-hover)]" : ""
         }`}
       >
@@ -224,72 +188,18 @@ export default function TodoItem({
             </div>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <p
-            className={`font-semibold select-none ${
-              todo.completed
-                ? "line-through text-[var(--color-text-secondary)]"
-                : "text-[var(--color-accent-text)]"
-            }`}
-          >
-            {todo.text}
-          </p>
-        </div>
-        {todo.url && (
-          <div className="flex h-5 shrink-0 items-center">
-            <div className="relative group/url">
-              <button
-                onClick={() => window.open(todo.url, "_blank")}
-                className="hover:opacity-80 transition-opacity"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={1.5}
-                  stroke="currentColor"
-                  className={`w-4 h-4 ${
-                    todo.completed
-                      ? "text-[var(--color-text-secondary)]"
-                      : "text-[var(--color-accent-text)] hover:text-[var(--color-accent-text-hover)]"
-                  }`}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"
-                  />
-                </svg>
-              </button>
-              <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[var(--color-bg-secondary)] text-[var(--color-text-primary)] text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-[var(--color-border-primary)]">
-                {todo.url}
-              </div>
-            </div>
-          </div>
-        )}
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            setIsEditing(true)
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="flex h-5 shrink-0 items-center opacity-0 group-hover/todo:opacity-100 transition-opacity"
+        <div
+          onClick={handleTextClick}
+          onMouseDown={handleTextMouseDown}
+          onMouseUp={handleTextMouseUp}
+          className={`flex-1 min-w-0 text-xs/5 font-semibold select-none ${
+            todo.completed
+              ? "line-through text-[var(--color-text-secondary)]"
+              : "text-[var(--color-accent-text)]"
+          }`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-            />
-          </svg>
-        </button>
+          <SmartLinksEditor html={todo.text} editing={false} />
+        </div>
         <button
           onClick={(e) => {
             e.stopPropagation();

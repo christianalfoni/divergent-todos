@@ -30,6 +30,7 @@ module.exports = {
   },
   mac: {
     category: 'public.app-category.productivity',
+    icon: 'resources/icons/icon.icns',
     hardenedRuntime: true,
     gatekeeperAssess: false,
     entitlements: 'build/entitlements.mac.plist',
