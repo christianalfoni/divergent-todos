@@ -20,21 +20,21 @@ function getDownloadUrl(): string | null {
   if (platform.includes("mac") || userAgent.includes("mac")) {
     // Prefer ARM64 for Apple Silicon, but GitHub doesn't have architecture detection
     // Default to ARM64 as most modern Macs are Apple Silicon
-    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg";
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-mac-arm64.dmg";
   }
 
   // Windows detection
   if (platform.includes("win") || userAgent.includes("windows")) {
-    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-win-x64.exe";
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-win-x64.exe";
   }
 
   // Linux detection
   if (platform.includes("linux") || userAgent.includes("linux")) {
-    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-linux-x64.AppImage";
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-linux-x64.AppImage";
   }
 
   // Default to macOS if platform cannot be determined
-  return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent.Todos-mac-arm64.dmg";
+  return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-mac-arm64.dmg";
 }
 
 interface TopBarProps {
