@@ -6,7 +6,7 @@ export function useWoodDoorKnock() {
 
   useEffect(() => {
     soundRef.current = new Howl({
-      src: ['/wood-door-knock.mp3'],
+      src: [new URL('/wood-door-knock.mp3', import.meta.url).href],
     });
 
     return () => {
