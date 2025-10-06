@@ -83,6 +83,14 @@ function handleAuthCallback(url: string) {
 autoUpdater.autoDownload = false // Don't auto-download, let user decide
 autoUpdater.autoInstallOnAppQuit = true
 
+// Log configuration for debugging
+console.log('Auto-updater configuration:', {
+  autoDownload: autoUpdater.autoDownload,
+  autoInstallOnAppQuit: autoUpdater.autoInstallOnAppQuit,
+  currentVersion: app.getVersion(),
+  isPackaged: app.isPackaged,
+})
+
 // Auto-updater events
 autoUpdater.on('checking-for-update', () => {
   console.log('Checking for updates...')
@@ -101,6 +109,7 @@ autoUpdater.on('update-not-available', (info) => {
 
 autoUpdater.on('error', (err) => {
   console.error('Update error:', err)
+  console.error('Update error stack:', err.stack)
   win?.webContents.send('update:error', err.message)
 })
 

@@ -1,1 +1,44 @@
-"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("native",{getVersion:()=>e.ipcRenderer.invoke("app:getVersion"),auth:{startGoogleSignIn:()=>e.ipcRenderer.invoke("auth:startGoogleSignIn")},updater:{check:()=>e.ipcRenderer.invoke("update:check"),download:()=>e.ipcRenderer.invoke("update:download"),install:()=>e.ipcRenderer.invoke("update:install"),onChecking:n=>e.ipcRenderer.on("update:checking",n),onAvailable:n=>e.ipcRenderer.on("update:available",(r,o)=>n(o)),onNotAvailable:n=>e.ipcRenderer.on("update:not-available",(r,o)=>n(o)),onError:n=>e.ipcRenderer.on("update:error",(r,o)=>n(o)),onDownloadProgress:n=>e.ipcRenderer.on("update:download-progress",(r,o)=>n(o)),onDownloaded:n=>e.ipcRenderer.on("update:downloaded",(r,o)=>n(o))}});
+"use strict";
+const electron = require("electron");
+electron.contextBridge.exposeInMainWorld("native", {
+  getVersion: () => electron.ipcRenderer.invoke("app:getVersion"),
+  auth: {
+    startGoogleSignIn: () => electron.ipcRenderer.invoke("auth:startGoogleSignIn")
+  },
+  updater: {
+    check: () => electron.ipcRenderer.invoke("update:check"),
+    download: () => electron.ipcRenderer.invoke("update:download"),
+    install: () => electron.ipcRenderer.invoke("update:install"),
+    onChecking: (callback) => {
+      const listener = () => callback();
+      electron.ipcRenderer.on("update:checking", listener);
+      return () => electron.ipcRenderer.removeListener("update:checking", listener);
+    },
+    onAvailable: (callback) => {
+      const listener = (_event, info) => callback(info);
+      electron.ipcRenderer.on("update:available", listener);
+      return () => electron.ipcRenderer.removeListener("update:available", listener);
+    },
+    onNotAvailable: (callback) => {
+      const listener = (_event, info) => callback(info);
+      electron.ipcRenderer.on("update:not-available", listener);
+      return () => electron.ipcRenderer.removeListener("update:not-available", listener);
+    },
+    onError: (callback) => {
+      const listener = (_event, message) => callback(message);
+      electron.ipcRenderer.on("update:error", listener);
+      return () => electron.ipcRenderer.removeListener("update:error", listener);
+    },
+    onDownloadProgress: (callback) => {
+      const listener = (_event, progress) => callback(progress);
+      electron.ipcRenderer.on("update:download-progress", listener);
+      return () => electron.ipcRenderer.removeListener("update:download-progress", listener);
+    },
+    onDownloaded: (callback) => {
+      const listener = (_event, info) => callback(info);
+      electron.ipcRenderer.on("update:downloaded", listener);
+      return () => electron.ipcRenderer.removeListener("update:downloaded", listener);
+    }
+  }
+  // Add more commands that the UI needs (file pickers, app paths, etc.)
+});
