@@ -149,6 +149,13 @@ async function createWindow() {
       autoUpdater.checkForUpdates()
     }, 3000) // Wait 3 seconds after launch
   }
+
+  // Check for updates when window becomes visible/focused
+  win.on('focus', () => {
+    if (app.isPackaged) {
+      autoUpdater.checkForUpdates()
+    }
+  })
 }
 
 // Example typed IPC
