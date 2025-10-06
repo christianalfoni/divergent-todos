@@ -1,9 +1,10 @@
 import { pipe } from "pipesy";
-import { todosCollection } from "../firebase";
-import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { todosCollection, profilesCollection } from "../firebase";
+import { doc, serverTimestamp, setDoc, increment, writeBatch } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
 import { useRef } from "react";
 import { generateKeyBetween } from "fractional-indexing";
+import { useProfile } from "./useProfile";
 
 export type AddTodoState =
   | {
@@ -21,9 +22,12 @@ export type AddTodoState =
 
 export function useAddTodo() {
   const authentication = useAuthentication();
+  const profile = useProfile();
   const userRef = useRef(authentication.user);
+  const profileRef = useRef(profile);
 
   userRef.current = authentication.user;
+  profileRef.current = profile;
 
   return pipe<
     AddTodoState,
@@ -40,7 +44,32 @@ export function useAddTodo() {
       // Generate position for new todo at the end of the day
       const position = generateKeyBetween(lastPosition, null);
 
-      // Bypass converter to use serverTimestamp() directly
+      // Check if user has an active subscription
+      const hasActiveSubscription = profileRef.current?.subscription?.status === "active";
+
+      // If no subscription, increment freeTodoCount
+      if (!hasActiveSubscription) {
+        const batch = writeBatch(todosCollection.firestore);
+
+        // Add the todo
+        batch.set(doc(todosCollection.firestore, "todos", todoDoc.id), {
+          userId: userRef.current.uid,
+          description,
+          completed: false,
+          date,
+          position,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        // Increment freeTodoCount
+        const profileDoc = doc(profilesCollection, userRef.current.uid);
+        batch.set(profileDoc, { freeTodoCount: increment(1) }, { merge: true });
+
+        return batch.commit();
+      }
+
+      // User has subscription, just add the todo
       return setDoc(doc(todosCollection.firestore, "todos", todoDoc.id), {
         userId: userRef.current.uid,
         description,

@@ -7,6 +7,7 @@ import type { Todo } from './App'
 interface DayCellProps {
   date: Date
   isToday: boolean
+  isNextMonday: boolean
   isAuthenticated: boolean
   todos: Todo[]
   onAddTodo: (todo: Omit<Todo, 'id'>) => void
@@ -26,7 +27,7 @@ function isValidUrl(text: string): boolean {
   }
 }
 
-export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
   const [attachedUrl, setAttachedUrl] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const dayId = date.toISOString().split('T')[0]
@@ -91,12 +92,12 @@ export default function DayCell({ date, isToday, isAuthenticated, todos, onAddTo
         <time
           dateTime={date.toISOString().split('T')[0]}
           className={`text-xs font-semibold w-fit shrink-0 ${
-            isToday
-              ? 'flex size-6 items-center justify-center rounded-full bg-[var(--color-accent-primary)] text-[var(--color-text-inverse)]'
+            isToday || isNextMonday
+              ? 'text-[var(--color-accent-primary)]'
               : 'text-[var(--color-text-primary)]'
           }`}
         >
-          {isToday ? dayNumber : `${month} ${dayNumber}`}
+          {`${month} ${dayNumber}`}
         </time>
         <span className="text-xs font-medium text-[var(--color-text-secondary)]">
           {dayName}

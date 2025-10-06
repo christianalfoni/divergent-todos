@@ -42,10 +42,21 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == userId;
 
       // Allow update only if user is updating their own profile
-      allow update: if isAuthenticated() && request.auth.uid == userId;
+      // IMPORTANT: Prevent clients from modifying 'subscription' field (Cloud Functions only)
+      allow update: if isAuthenticated()
+        && request.auth.uid == userId
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['subscription']));
 
       // Allow delete only if user is deleting their own profile
       allow delete: if isAuthenticated() && request.auth.uid == userId;
+
+      // Payments subcollection rules
+      match /payments/{paymentId} {
+        // Allow read if user owns the parent profile
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        // Cloud Functions only (no write access for clients)
+        allow write: if false;
+      }
     }
 
     // Deny all other access

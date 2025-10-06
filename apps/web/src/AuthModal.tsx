@@ -6,6 +6,7 @@ import {
 } from "@headlessui/react";
 import { UserCircleIcon } from "@heroicons/react/24/outline";
 import { useSignIn } from "./hooks/useSignIn";
+import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 
 interface AuthModalProps {
   open: boolean;
@@ -13,6 +14,10 @@ interface AuthModalProps {
 
 export default function AuthModal({ open }: AuthModalProps) {
   const [{ isSigningIn, error }, signIn] = useSignIn();
+  const [{ isSigningIn: isSigningInAnonymously }, signInAnonymously] = useSignInAnonymously();
+
+  // Check if running in Electron
+  const isElectron = window.navigator.userAgent.includes("Electron");
 
   return (
     <Dialog open={open} onClose={() => {}} className="relative z-10">
@@ -49,15 +54,25 @@ export default function AuthModal({ open }: AuthModalProps) {
                 </div>
               </div>
             </div>
-            <div className="mt-5 sm:mt-6">
+            <div className="mt-5 sm:mt-6 space-y-3">
               <button
                 type="button"
                 onClick={signIn}
-                disabled={isSigningIn}
+                disabled={isSigningIn || isSigningInAnonymously}
                 className="inline-flex w-full justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSigningIn ? "Signing in..." : "Sign in with Google"}
               </button>
+              {!isElectron && (
+                <button
+                  type="button"
+                  onClick={signInAnonymously}
+                  disabled={isSigningIn || isSigningInAnonymously}
+                  className="inline-flex w-full justify-center rounded-md bg-[var(--color-bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] shadow-xs hover:bg-[var(--color-bg-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSigningInAnonymously ? "Starting..." : "Let me try it first"}
+                </button>
+              )}
               {error && (
                 <p className="mt-2 text-sm text-[var(--color-error-text)]">
                   {error}

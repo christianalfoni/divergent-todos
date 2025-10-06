@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
 import { useAuthentication } from "./hooks/useAuthentication";
-import { auth } from "./firebase";
+import { auth, type Profile } from "./firebase";
 import { useTheme, type Theme } from "./hooks/useTheme";
 import UpdateNotification from "./UpdateNotification";
+import { openBillingPortal } from "./firebase/subscriptions";
 
 function getDownloadUrl(): string | null {
   // Check if running in Electron
@@ -38,19 +40,31 @@ function getDownloadUrl(): string | null {
 interface TopBarProps {
   oldTodoCount?: number;
   onMoveOldTodos?: () => void;
+  profile?: Profile | null;
+  onOpenSubscription?: () => void;
 }
 
-export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: TopBarProps) {
+export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription }: TopBarProps) {
   const authentication = useAuthentication();
   const { theme, setTheme } = useTheme();
   const downloadUrl = getDownloadUrl();
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
-  if (!authentication.user) {
-    return null;
-  }
+  const subscriptionStatus = profile?.subscription?.status;
+  const showPaymentWarning = subscriptionStatus === "past_due" || subscriptionStatus === "unpaid";
 
   const handleSignOut = () => {
     signOut(auth);
+  };
+
+  const handleOpenBillingPortal = async () => {
+    setIsOpeningPortal(true);
+    try {
+      await openBillingPortal({ returnUrl: window.location.origin });
+    } catch (err) {
+      console.error("Failed to open billing portal:", err);
+      setIsOpeningPortal(false);
+    }
   };
 
   const themes: { value: Theme; label: string }[] = [
@@ -109,10 +123,58 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
             {/* Update notification */}
-            <UpdateNotification />
+            {authentication.user && <UpdateNotification />}
+
+            {/* Payment warning indicators for past_due (yellow) and unpaid (red) */}
+            {authentication.user && showPaymentWarning && (
+              <button
+                onClick={handleOpenBillingPortal}
+                disabled={isOpeningPortal}
+                className={`flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  subscriptionStatus === "unpaid"
+                    ? "bg-red-600 focus-visible:outline-red-600"
+                    : "bg-yellow-600 focus-visible:outline-yellow-600"
+                }`}
+              >
+                <svg
+                  className="size-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                  />
+                </svg>
+                <span>
+                  {subscriptionStatus === "unpaid" ? "Payment failed" : "Payment past due"}
+                </span>
+              </button>
+            )}
+
+            {/* Free todo counter - only show if user has no active subscription */}
+            {authentication.user && profile && profile.subscription?.status !== 'active' && !showPaymentWarning && (
+              <div className="flex items-center gap-x-2 text-sm text-[var(--color-text-secondary)]">
+                <span>{profile.freeTodoCount || 0} / 20 free todos added</span>
+              </div>
+            )}
+
+            {/* Subscribe button - only show if user has no active subscription and no payment issues */}
+            {authentication.user && profile && profile.subscription?.status !== 'active' && !showPaymentWarning && onOpenSubscription && (
+              <button
+                onClick={onOpenSubscription}
+                className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+              >
+                Subscribe
+              </button>
+            )}
 
             {/* Old todos indicator */}
-            {oldTodoCount > 0 && (
+            {authentication.user && oldTodoCount > 0 && onMoveOldTodos && (
               <button
                 onClick={onMoveOldTodos}
                 className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
@@ -138,23 +200,25 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
               </button>
             )}
 
-            {/* Profile dropdown */}
-            <Menu as="div" className="relative">
+            {/* Profile dropdown - hide for anonymous users */}
+            {authentication.user && !authentication.user.isAnonymous && (
+              <Menu as="div" className="relative">
               <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
                 <span className="absolute -inset-1.5" />
                 <span className="sr-only">Open user menu</span>
-                <img
-                  alt=""
-                  src={
-                    authentication.user.photoURL ||
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                      authentication.user.displayName ||
-                        authentication.user.email ||
-                        "User"
-                    )}`
-                  }
-                  className="size-8 rounded-full outline -outline-offset-1 outline-[var(--color-outline)]"
-                />
+                {authentication.user.photoURL ? (
+                  <img
+                    alt=""
+                    src={authentication.user.photoURL}
+                    className="size-8 rounded-full outline -outline-offset-1 outline-[var(--color-outline)]"
+                  />
+                ) : (
+                  <span className="inline-block size-8 overflow-hidden rounded-full bg-[var(--color-bg-primary)] outline -outline-offset-1 outline-[var(--color-outline)]">
+                    <svg fill="currentColor" viewBox="0 0 24 24" className="size-full text-[var(--color-text-tertiary)]">
+                      <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                  </span>
+                )}
               </MenuButton>
 
               <MenuItems
@@ -162,12 +226,12 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
                 className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-[var(--color-bg-primary)] py-1 shadow-lg outline outline-[var(--color-outline)] transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-75 data-leave:ease-in dark:shadow-none dark:-outline-offset-1"
               >
                 <MenuItem>
-                  <a
-                    href="#"
-                    className="block px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                  <button
+                    onClick={onOpenSubscription}
+                    className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                   >
                     Subscription
-                  </a>
+                  </button>
                 </MenuItem>
 
                 {downloadUrl && (
@@ -201,18 +265,23 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
                   </MenuItem>
                 ))}
 
-                <div className="my-1 h-px bg-[var(--color-border-primary)]" />
+                {!authentication.user.isAnonymous && (
+                  <>
+                    <div className="my-1 h-px bg-[var(--color-border-primary)]" />
 
-                <MenuItem>
-                  <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
-                  >
-                    Sign out
-                  </button>
-                </MenuItem>
+                    <MenuItem>
+                      <button
+                        onClick={handleSignOut}
+                        className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                      >
+                        Sign out
+                      </button>
+                    </MenuItem>
+                  </>
+                )}
               </MenuItems>
             </Menu>
+            )}
           </div>
         </div>
       </div>
