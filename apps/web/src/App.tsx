@@ -37,8 +37,9 @@ function AuthenticatedApp() {
   // Check for active subscription
   const hasActiveSubscription = profile?.subscription?.status === "active";
 
-  // In Electron, require active subscription
-  const requiresSubscription = isElectron && !hasActiveSubscription;
+  // In Electron, require active subscription - but only show dialog after auth is complete
+  // This prevents showing the dialog while profile is still loading
+  const requiresSubscription = isElectron && !authentication.isAuthenticating && !hasActiveSubscription;
 
   // Convert Firebase todos to App todos format
   const todos: Todo[] = firebaseTodos.map((todo) => ({
