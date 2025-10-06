@@ -162,7 +162,7 @@ export default function SmartLinksEditor({
           (node as HTMLElement).dataset.url
         ) {
           e.preventDefault();
-          node.remove();
+          (node as HTMLElement).remove();
           emitChange();
         }
         return;

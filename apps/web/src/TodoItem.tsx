@@ -86,7 +86,7 @@ export default function TodoItem({
     }, 300);
   };
 
-  const handleTextMouseUp = (e: React.MouseEvent) => {
+  const handleTextMouseUp = () => {
     if (longPressTimerRef.current) {
       clearTimeout(longPressTimerRef.current);
       longPressTimerRef.current = null;
