@@ -13,7 +13,8 @@
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
     "start": "electron .",
-    "package": "electron-builder --config electron-builder.config.js --publish never"
+    "package": "electron-builder --config electron-builder.config.js --publish never",
+    "generate-icons": "electron-icon-builder --input=./divergent-todos-icon.png --output=./resources --flatten"
   },
   "devDependencies": {
     "@electron/notarize": "^3.1.0",
@@ -21,6 +22,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "electron": "^35.0.0",
     "electron-builder": "^26.0.12",
+    "electron-icon-builder": "^2.0.1",
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vite-plugin-electron": "^0.29.0"
