@@ -25,32 +25,32 @@ export default function UpdateNotification() {
   const isDesktop = typeof window.native?.updater !== 'undefined';
 
   useEffect(() => {
-    if (!isDesktop) return;
+    if (!isDesktop || !window.native?.updater) return;
 
     // Set up event listeners and collect cleanup functions
-    const unsubscribeChecking = window.native!.updater.onChecking(() => {
+    const unsubscribeChecking = window.native.updater.onChecking(() => {
       setUpdateState({ type: 'checking' });
     });
 
-    const unsubscribeAvailable = window.native!.updater.onAvailable((info) => {
+    const unsubscribeAvailable = window.native.updater.onAvailable((info) => {
       setUpdateState({ type: 'available', info });
     });
 
-    const unsubscribeNotAvailable = window.native!.updater.onNotAvailable(() => {
+    const unsubscribeNotAvailable = window.native.updater.onNotAvailable(() => {
       setUpdateState({ type: 'idle' });
     });
 
-    const unsubscribeError = window.native!.updater.onError((message) => {
+    const unsubscribeError = window.native.updater.onError((message) => {
       setUpdateState({ type: 'error', message });
       // Reset after 5 seconds
       setTimeout(() => setUpdateState({ type: 'idle' }), 5000);
     });
 
-    const unsubscribeProgress = window.native!.updater.onDownloadProgress((progress) => {
+    const unsubscribeProgress = window.native.updater.onDownloadProgress((progress) => {
       setUpdateState({ type: 'downloading', progress });
     });
 
-    const unsubscribeDownloaded = window.native!.updater.onDownloaded((info) => {
+    const unsubscribeDownloaded = window.native.updater.onDownloaded((info) => {
       setUpdateState({ type: 'downloaded', info });
     });
 
