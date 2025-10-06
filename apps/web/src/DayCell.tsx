@@ -92,14 +92,12 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         <time
           dateTime={date.toISOString().split('T')[0]}
           className={`text-xs font-semibold w-fit shrink-0 ${
-            isToday
-              ? 'flex size-6 items-center justify-center rounded-full bg-[var(--color-accent-primary)] text-[var(--color-text-inverse)]'
-              : isNextMonday
+            isToday || isNextMonday
               ? 'text-[var(--color-accent-primary)]'
               : 'text-[var(--color-text-primary)]'
           }`}
         >
-          {isToday ? dayNumber : `${month} ${dayNumber}`}
+          {`${month} ${dayNumber}`}
         </time>
         <span className="text-xs font-medium text-[var(--color-text-secondary)]">
           {dayName}

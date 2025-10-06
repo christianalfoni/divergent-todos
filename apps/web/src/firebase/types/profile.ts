@@ -15,11 +15,9 @@ export interface Profile {
     subscriptionId: string | null;
     status:
       | "active"
-      | "trialing"
       | "past_due"
       | "canceled"
       | "incomplete"
-      | "incomplete_expired"
       | "unpaid"
       | null;
     currentPeriodEnd: Date | null;
@@ -37,11 +35,9 @@ interface ProfileFirestore {
     subscriptionId: string | null;
     status:
       | "active"
-      | "trialing"
       | "past_due"
       | "canceled"
       | "incomplete"
-      | "incomplete_expired"
       | "unpaid"
       | null;
     currentPeriodEnd: Timestamp | null;

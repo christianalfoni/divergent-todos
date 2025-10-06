@@ -1,10 +1,12 @@
 import { initializeApp } from "firebase-admin/app";
-import { onRequest } from "firebase-functions/v2/https";
+import { onRequest, onCall, HttpsError } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { OAuth2Client } from "google-auth-library";
 import * as crypto from "crypto";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
+import Stripe from "stripe";
+import { logger } from "firebase-functions";
 
 initializeApp();
 
@@ -19,6 +21,9 @@ const TOKEN_TTL_MS = 5 * 60 * 1000; // 5 minutes
 // Define secrets (Firebase Secrets Manager)
 const googleClientId = defineSecret("GOOGLE_CLIENT_ID");
 const googleClientSecret = defineSecret("GOOGLE_CLIENT_SECRET");
+const STRIPE_API_KEY = defineSecret("STRIPE_API_KEY");
+const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
+const STRIPE_PRICE_ID = defineSecret("STRIPE_PRICE_ID");
 
 interface AuthSession {
   sid: string;
@@ -381,6 +386,300 @@ export const authExchange = onRequest(
     } catch (error) {
       console.error("Error in authExchange:", error);
       res.status(500).json({ error: "Failed to exchange token" });
+    }
+  }
+);
+
+// ============================================================================
+// Stripe Subscription Functions
+// ============================================================================
+
+const stripeFrom = (key: string) =>
+  new Stripe(key, { apiVersion: "2025-09-30.clover" });
+
+/** Create or reuse a Customer and store customerId in profiles/{uid}.subscription */
+async function getOrCreateCustomer(
+  stripe: Stripe,
+  uid: string,
+  email?: string | null
+): Promise<string> {
+  const ref = db.doc(`profiles/${uid}`);
+  const snap = await ref.get();
+  const sub = snap.exists ? (snap.data()?.subscription ?? {}) : {};
+
+  if (sub?.customerId) return sub.customerId as string;
+
+  const customer = await stripe.customers.create({
+    email: email ?? undefined,
+    metadata: { firebaseUID: uid },
+  });
+
+  await ref.set(
+    {
+      subscription: {
+        customerId: customer.id,
+        subscriptionId: null,
+        status: null,
+        cancelAtPeriodEnd: false,
+        currentPeriodEnd: null,
+      },
+    },
+    { merge: true }
+  );
+
+  return customer.id;
+}
+
+async function writeSubscription(uid: string, sub: Stripe.Subscription) {
+  const ref = db.doc(`profiles/${uid}`);
+  await ref.set(
+    {
+      subscription: {
+        customerId: sub.customer.toString(),
+        subscriptionId: sub.id,
+        status: sub.status,
+        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+        currentPeriodEnd: (sub as any).current_period_end
+          ? Timestamp.fromMillis((sub as any).current_period_end * 1000)
+          : null,
+      },
+    },
+    { merge: true }
+  );
+}
+
+async function writePayment(uid: string, invoice: Stripe.Invoice) {
+  const invoiceAny = invoice as any;
+  const paymentId = (invoiceAny.payment_intent?.toString() || invoice.id) as string;
+  const ref = db.doc(`profiles/${uid}/payments/${paymentId}`);
+  const line = invoice.lines?.data?.[0];
+  const period = line?.period;
+
+  await ref.set(
+    {
+      amount: invoice.amount_paid,
+      currency: invoice.currency,
+      invoiceId: invoice.id,
+      paymentIntentId: invoiceAny.payment_intent ?? null,
+      subscriptionId: invoiceAny.subscription ?? null,
+      created: Timestamp.fromMillis(invoice.created * 1000),
+      periodStart: period?.start
+        ? Timestamp.fromMillis(period.start * 1000)
+        : null,
+      periodEnd: period?.end
+        ? Timestamp.fromMillis(period.end * 1000)
+        : null,
+      status: invoice.status,
+      description: line?.description ?? null,
+    },
+    { merge: true }
+  );
+}
+
+/** === Callable Functions === */
+
+export const createSubscription = onCall(
+  { secrets: [STRIPE_API_KEY, STRIPE_PRICE_ID] },
+  async (req) => {
+    const uid = req.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required.");
+
+    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    const priceId = STRIPE_PRICE_ID.value();
+    if (!priceId) throw new HttpsError("failed-precondition", "Missing price.");
+
+    const email = req.auth?.token?.email ?? null;
+    const customerId = await getOrCreateCustomer(stripe, uid, email);
+
+    const successUrl = req.data?.successUrl || "https://divergent-todos.com/billing/success";
+    const cancelUrl = req.data?.cancelUrl || "https://divergent-todos.com/billing/cancel";
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      client_reference_id: uid,
+      subscription_data: { metadata: { firebaseUID: uid } },
+      success_url: successUrl + "?session_id={CHECKOUT_SESSION_ID}",
+      cancel_url: cancelUrl,
+    });
+
+    return { url: session.url };
+  }
+);
+
+export const createBillingPortal = onCall(
+  { secrets: [STRIPE_API_KEY] },
+  async (req) => {
+    const uid = req.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required.");
+
+    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    const snap = await db.doc(`profiles/${uid}`).get();
+    const customerId = snap.data()?.subscription?.customerId as string | undefined;
+    if (!customerId) throw new HttpsError("failed-precondition", "No customer.");
+
+    const returnUrl = req.data?.returnUrl || "https://divergent-todos.com/account";
+    const portal = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: returnUrl,
+    });
+
+    return { url: portal.url };
+  }
+);
+
+export const stopSubscription = onCall(
+  { secrets: [STRIPE_API_KEY] },
+  async (req) => {
+    const uid = req.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required.");
+
+    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    const snap = await db.doc(`profiles/${uid}`).get();
+    const subId = snap.data()?.subscription?.subscriptionId as string | undefined;
+    if (!subId) throw new HttpsError("failed-precondition", "No subscription.");
+
+    const updated = await stripe.subscriptions.update(subId, {
+      cancel_at_period_end: true,
+    });
+
+    await writeSubscription(uid, updated);
+    return { status: updated.status, cancelAtPeriodEnd: true };
+  }
+);
+
+export const resumeSubscription = onCall(
+  { secrets: [STRIPE_API_KEY] },
+  async (req) => {
+    const uid = req.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required.");
+
+    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    const snap = await db.doc(`profiles/${uid}`).get();
+    const subId = snap.data()?.subscription?.subscriptionId as string | undefined;
+    if (!subId) throw new HttpsError("failed-precondition", "No subscription.");
+
+    const updated = await stripe.subscriptions.update(subId, {
+      cancel_at_period_end: false,
+    });
+
+    await writeSubscription(uid, updated);
+    return { status: updated.status, cancelAtPeriodEnd: false };
+  }
+);
+
+/** === Webhook helpers === */
+async function uidFromSubscription(stripe: Stripe, sub: Stripe.Subscription): Promise<string | undefined> {
+  if (sub.metadata?.firebaseUID) return sub.metadata.firebaseUID as string;
+  const cust = await stripe.customers.retrieve(sub.customer.toString());
+  if (!("deleted" in cust) && cust.metadata?.firebaseUID) {
+    const uid = cust.metadata.firebaseUID as string;
+    await stripe.subscriptions.update(sub.id, {
+      metadata: { ...(sub.metadata ?? {}), firebaseUID: uid },
+    });
+    return uid;
+  }
+  return undefined;
+}
+
+async function uidFromCheckoutSession(
+  stripe: Stripe,
+  s: Stripe.Checkout.Session
+) {
+  let uid = s.client_reference_id as string | undefined;
+  let subscription: Stripe.Subscription | null = null;
+
+  if (s.subscription) {
+    subscription = await stripe.subscriptions.retrieve(s.subscription.toString());
+    uid =
+      (subscription.metadata?.firebaseUID as string | undefined) ??
+      uid ??
+      undefined;
+
+    if (!uid && s.customer) {
+      const cust = await stripe.customers.retrieve(s.customer.toString());
+      if (!("deleted" in cust) && cust.metadata?.firebaseUID) {
+        uid = cust.metadata.firebaseUID as string;
+        await stripe.subscriptions.update(subscription.id, {
+          metadata: { ...(subscription.metadata ?? {}), firebaseUID: uid },
+        });
+      }
+    }
+  }
+  return { uid, subscription };
+}
+
+/** === Webhook === */
+export const stripeWebhook = onRequest(
+  { secrets: [STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET] },
+  async (req, res) => {
+    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    const sig = req.headers["stripe-signature"];
+    if (!sig) {
+      res.status(400).send("Missing stripe-signature");
+      return;
+    }
+
+    let event: Stripe.Event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.rawBody,
+        sig as string,
+        STRIPE_WEBHOOK_SECRET.value()
+      );
+    } catch (err: any) {
+      logger.error("Invalid signature", err?.message);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+      return;
+    }
+
+    try {
+      switch (event.type) {
+        case "checkout.session.completed": {
+          const session = event.data.object as Stripe.Checkout.Session;
+          const { uid, subscription } = await uidFromCheckoutSession(stripe, session);
+          if (uid && subscription) await writeSubscription(uid, subscription);
+          break;
+        }
+        case "customer.subscription.created":
+        case "customer.subscription.updated":
+        case "customer.subscription.deleted": {
+          const sub = event.data.object as Stripe.Subscription;
+          const uid = await uidFromSubscription(stripe, sub);
+          if (uid) await writeSubscription(uid, sub);
+          break;
+        }
+        case "invoice.paid": {
+          const invoice = event.data.object as Stripe.Invoice;
+          const invoiceAny = invoice as any;
+          let uid: string | undefined;
+          if (invoiceAny.subscription) {
+            const sub = await stripe.subscriptions.retrieve(invoiceAny.subscription.toString());
+            uid = (sub.metadata?.firebaseUID as string | undefined);
+            if (!uid && invoice.customer) {
+              const cust = await stripe.customers.retrieve(invoice.customer.toString());
+              if (!("deleted" in cust) && cust.metadata?.firebaseUID) {
+                uid = cust.metadata.firebaseUID as string;
+              }
+            }
+          } else if (invoice.customer) {
+            const cust = await stripe.customers.retrieve(invoice.customer.toString());
+            if (!("deleted" in cust) && cust.metadata?.firebaseUID) {
+              uid = cust.metadata.firebaseUID as string;
+            }
+          }
+          if (uid) await writePayment(uid, invoice);
+          break;
+        }
+        default:
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (err) {
+      logger.error("Webhook handler error", err);
+      res.status(500).send("Webhook handler error");
     }
   }
 );

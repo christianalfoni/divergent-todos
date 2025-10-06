@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -8,6 +9,12 @@ import { BanknotesIcon } from "@heroicons/react/24/outline";
 import { type User } from "firebase/auth";
 import { type Profile } from "./firebase/types/profile";
 import { useLinkAnonymousAccount } from "./hooks/useLinkAnonymousAccount";
+import {
+  startSubscription,
+  openBillingPortal,
+  stopSubscription,
+  resumeSubscription,
+} from "./firebase/subscriptions";
 
 interface SubscriptionDialogProps {
   open: boolean;
@@ -18,39 +25,144 @@ interface SubscriptionDialogProps {
 }
 
 export default function SubscriptionDialog({ open, onClose, user, profile, isElectron = false }: SubscriptionDialogProps) {
-  const [{ isLinking, error }, linkAccount] = useLinkAnonymousAccount();
+  const [{ isLinking, error: linkError }, linkAccount] = useLinkAnonymousAccount();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const isAnonymous = user?.isAnonymous ?? true;
-  const hasActiveSubscription = profile?.subscription?.status === "active" ||
-                                 profile?.subscription?.status === "trialing";
+  const subscriptionStatus = profile?.subscription?.status;
+  const cancelAtPeriodEnd = profile?.subscription?.cancelAtPeriodEnd ?? false;
+  const currentPeriodEnd = profile?.subscription?.currentPeriodEnd;
 
   // In Electron, don't allow closing if no subscription
-  const canClose = !isElectron || hasActiveSubscription;
+  const canClose = !isElectron || subscriptionStatus === "active";
+
+  const handleOpenBillingPortal = async () => {
+    setIsProcessing(true);
+    setError(null);
+    try {
+      await openBillingPortal({ returnUrl: window.location.origin });
+    } catch (err: any) {
+      setError(err.message || "Failed to open billing portal");
+      setIsProcessing(false);
+    }
+  };
+
+  const handleStartSubscription = async () => {
+    setIsProcessing(true);
+    setError(null);
+    try {
+      await startSubscription({
+        successUrl: window.location.origin,
+        cancelUrl: window.location.origin,
+      });
+    } catch (err: any) {
+      setError(err.message || "Failed to start subscription");
+      setIsProcessing(false);
+    }
+  };
+
+  const handleStopSubscription = async () => {
+    setIsProcessing(true);
+    setError(null);
+    try {
+      await stopSubscription();
+      setIsProcessing(false);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Failed to cancel subscription");
+      setIsProcessing(false);
+    }
+  };
+
+  const handleResumeSubscription = async () => {
+    setIsProcessing(true);
+    setError(null);
+    try {
+      await resumeSubscription();
+      setIsProcessing(false);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Failed to resume subscription");
+      setIsProcessing(false);
+    }
+  };
 
   let title: string;
   let description: string;
-  let buttonText: string;
-  let buttonAction: () => void;
-  let isButtonDisabled = false;
+  let primaryButtonText: string;
+  let primaryButtonAction: () => void;
+  let isPrimaryButtonDisabled = false;
+  let showSecondaryButton = false;
+  let secondaryButtonText = "";
+  let secondaryButtonAction: () => void = () => {};
 
   // In Electron, users are always signed in (never anonymous)
   if (isAnonymous && !isElectron) {
     title = "Sign in required";
     description = "Please sign in with your Google account to subscribe and unlock unlimited todos. Your existing todos will be preserved.";
-    buttonText = isLinking ? "Signing in..." : "Sign in with Google";
-    buttonAction = () => linkAccount(undefined);
-    isButtonDisabled = isLinking;
-  } else if (!hasActiveSubscription) {
+    primaryButtonText = isLinking ? "Signing in..." : "Sign in with Google";
+    primaryButtonAction = () => linkAccount(undefined);
+    isPrimaryButtonDisabled = isLinking;
+  } else if (!subscriptionStatus || subscriptionStatus === "incomplete") {
     title = isElectron ? "Subscription required" : "Subscribe for unlimited todos";
     description = isElectron
       ? "The desktop app requires an active subscription. Get unlimited todos for just $2/month."
       : "Get unlimited todos for just $2/month. Continue adding todos without limits.";
-    buttonText = "Subscribe - $2/month";
-    buttonAction = onClose; // TODO: Implement subscription flow
+    primaryButtonText = isProcessing ? "Starting..." : "Subscribe - $2/month";
+    primaryButtonAction = handleStartSubscription;
+    isPrimaryButtonDisabled = isProcessing;
+  } else if (subscriptionStatus === "active") {
+    if (cancelAtPeriodEnd && currentPeriodEnd) {
+      title = "Subscription canceling";
+      description = `Your subscription is set to cancel on ${currentPeriodEnd.toLocaleDateString()}. You can continue using unlimited todos until then. Resume your subscription to continue beyond this date.`;
+      primaryButtonText = isProcessing ? "Resuming..." : "Resume subscription";
+      primaryButtonAction = handleResumeSubscription;
+      isPrimaryButtonDisabled = isProcessing;
+      showSecondaryButton = true;
+      secondaryButtonText = "Manage billing";
+      secondaryButtonAction = handleOpenBillingPortal;
+    } else {
+      title = "Active subscription";
+      description = "You have an active subscription with unlimited todos. You can cancel at any time and continue using your subscription until the end of the billing period.";
+      primaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
+      primaryButtonAction = handleStopSubscription;
+      isPrimaryButtonDisabled = isProcessing;
+      showSecondaryButton = true;
+      secondaryButtonText = "Manage billing";
+      secondaryButtonAction = handleOpenBillingPortal;
+    }
+  } else if (subscriptionStatus === "past_due") {
+    title = "Payment past due";
+    description = "Your payment is past due. Please update your payment method to continue using unlimited todos.";
+    primaryButtonText = "Update payment";
+    primaryButtonAction = handleOpenBillingPortal;
+    isPrimaryButtonDisabled = isProcessing;
+    showSecondaryButton = true;
+    secondaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
+    secondaryButtonAction = handleStopSubscription;
+  } else if (subscriptionStatus === "unpaid") {
+    title = "Subscription unpaid";
+    description = "Your subscription payment has failed. Please update your payment method immediately to avoid service interruption.";
+    primaryButtonText = "Update payment";
+    primaryButtonAction = handleOpenBillingPortal;
+    isPrimaryButtonDisabled = isProcessing;
+    showSecondaryButton = true;
+    secondaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
+    secondaryButtonAction = handleStopSubscription;
+  } else if (subscriptionStatus === "canceled") {
+    title = "Subscription canceled";
+    description = "Your subscription has been canceled. Resubscribe to get unlimited todos again.";
+    primaryButtonText = isProcessing ? "Starting..." : "Resubscribe - $2/month";
+    primaryButtonAction = handleStartSubscription;
+    isPrimaryButtonDisabled = isProcessing;
   } else {
+    // Fallback for any other states
     title = "Manage subscription";
-    description = "You have an active subscription. You can cancel it at any time.";
-    buttonText = "Cancel subscription";
-    buttonAction = onClose; // TODO: Implement cancellation flow
+    description = "Manage your subscription settings and billing information.";
+    primaryButtonText = "Open billing portal";
+    primaryButtonAction = handleOpenBillingPortal;
+    isPrimaryButtonDisabled = isProcessing;
   }
 
   return (
@@ -91,18 +203,28 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
                 </div>
               </div>
             </div>
-            <div className="mt-5 sm:mt-6">
+            <div className="mt-5 sm:mt-6 flex flex-col gap-2">
               <button
                 type="button"
-                onClick={buttonAction}
-                disabled={isButtonDisabled}
+                onClick={primaryButtonAction}
+                disabled={isPrimaryButtonDisabled}
                 className="inline-flex w-full justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {buttonText}
+                {primaryButtonText}
               </button>
-              {error && (
+              {showSecondaryButton && (
+                <button
+                  type="button"
+                  onClick={secondaryButtonAction}
+                  disabled={isProcessing}
+                  className="inline-flex w-full justify-center rounded-md border border-[var(--color-border-primary)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] shadow-xs hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {secondaryButtonText}
+                </button>
+              )}
+              {(error || linkError) && (
                 <p className="mt-2 text-sm text-[var(--color-error-text)]">
-                  {error}
+                  {error || linkError}
                 </p>
               )}
             </div>
