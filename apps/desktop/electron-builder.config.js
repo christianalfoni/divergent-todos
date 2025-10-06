@@ -54,16 +54,16 @@ module.exports = {
         arch: ['x64'],
       },
     ],
-    artifactName: '${productName}-mac-${arch}.${ext}',
+    artifactName: 'Divergent-Todos-mac-${arch}.${ext}',
   },
   win: {
     target: ['nsis', 'portable'],
-    artifactName: '${productName}-win-${arch}.${ext}',
+    artifactName: 'Divergent-Todos-win-${arch}.${ext}',
   },
   linux: {
     target: ['AppImage', 'deb'],
     category: 'Utility',
-    artifactName: '${productName}-linux-${arch}.${ext}',
+    artifactName: 'Divergent-Todos-linux-${arch}.${ext}',
   },
   afterSign: 'build/notarize.js',
 };
