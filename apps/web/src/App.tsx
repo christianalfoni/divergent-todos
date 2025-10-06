@@ -39,7 +39,8 @@ function AuthenticatedApp() {
 
   // In Electron, require active subscription - but only show dialog after auth is complete
   // This prevents showing the dialog while profile is still loading
-  const requiresSubscription = isElectron && !authentication.isAuthenticating && !hasActiveSubscription;
+  // Wait for both auth to complete AND profile to load before checking subscription
+  const requiresSubscription = isElectron && !authentication.isAuthenticating && profile !== null && !hasActiveSubscription;
 
   // Convert Firebase todos to App todos format
   const todos: Todo[] = firebaseTodos.map((todo) => ({

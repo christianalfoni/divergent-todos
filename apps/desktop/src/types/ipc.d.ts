@@ -11,10 +11,10 @@ declare global {
         check: () => Promise<any>
         download: () => Promise<any>
         install: () => void
-        onChecking: (callback: () => void) => void
-        onAvailable: (callback: (info: { version: string }) => void) => void
-        onNotAvailable: (callback: (info: { version: string }) => void) => void
-        onError: (callback: (message: string) => void) => void
+        onChecking: (callback: () => void) => () => void
+        onAvailable: (callback: (info: { version: string }) => void) => () => void
+        onNotAvailable: (callback: (info: { version: string }) => void) => () => void
+        onError: (callback: (message: string) => void) => () => void
         onDownloadProgress: (
           callback: (progress: {
             percent: number
@@ -22,8 +22,8 @@ declare global {
             total: number
             transferred: number
           }) => void
-        ) => void
-        onDownloaded: (callback: (info: { version: string }) => void) => void
+        ) => () => void
+        onDownloaded: (callback: (info: { version: string }) => void) => () => void
       }
     }
   }
