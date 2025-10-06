@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useProfile } from "./useProfile";
+import { useAuthentication } from "./useAuthentication";
 import { useEditProfile } from "./useEditProfile";
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -61,7 +61,8 @@ function applyTheme(state: ThemeState) {
 }
 
 export function useTheme() {
-  const profile = useProfile();
+  const authentication = useAuthentication();
+  const profile = authentication.profile;
   const [, editProfile] = useEditProfile();
   const [themeState, setThemeState] = useState<ThemeState>(getStoredTheme);
 

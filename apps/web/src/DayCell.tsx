@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
+import SmartLinksEditor from './SmartLinksEditor'
 import type { Todo } from './App'
 
 interface DayCellProps {
@@ -18,17 +19,8 @@ interface DayCellProps {
   isBeingDraggedOver: boolean
 }
 
-function isValidUrl(text: string): boolean {
-  try {
-    new URL(text)
-    return true
-  } catch {
-    return false
-  }
-}
-
 export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
-  const [attachedUrl, setAttachedUrl] = useState<string>('')
+  const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const dayId = date.toISOString().split('T')[0]
   const today = new Date()
@@ -39,43 +31,27 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
     id: dayId,
   })
 
-  const handlePaste = async (e: React.ClipboardEvent<HTMLDivElement>) => {
-    const pastedText = e.clipboardData.getData('text')
-    if (isValidUrl(pastedText)) {
-      e.preventDefault()
-      setAttachedUrl(pastedText)
-    } else {
-      // For plain text paste, prevent default and insert as plain text
-      e.preventDefault()
-      const text = e.clipboardData.getData('text/plain')
-      document.execCommand('insertText', false, text)
-    }
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
-      setAttachedUrl('')
-      e.currentTarget.textContent = ''
+      setNewTodoHtml('')
       setIsAddingTodo(false)
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      const text = e.currentTarget.textContent?.trim() || ''
-      if (text) {
+      if (newTodoHtml.trim()) {
         onAddTodo({
-          text,
-          url: attachedUrl || undefined,
+          text: newTodoHtml,
+          url: undefined, // URL is now embedded in HTML
           completed: false,
           date: date.toISOString().split('T')[0],
         })
-        e.currentTarget.textContent = ''
-        setAttachedUrl('')
+        setNewTodoHtml('')
         // Keep isAddingTodo true so user can quickly add another todo
       }
     }
   }
 
   const handleBlur = () => {
-    setAttachedUrl('')
+    setNewTodoHtml('')
     setIsAddingTodo(false)
   }
 
@@ -167,49 +143,16 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                   </svg>
                 </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div
-                  contentEditable
-                  role="textbox"
-                  aria-label="Add a todo"
-                  data-placeholder="Description..."
-                  className="block w-full text-xs/5 text-[var(--color-text-primary)] focus:outline-none bg-transparent empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]"
-                  onPaste={handlePaste}
+              <div className="flex-1 min-w-0 text-xs/5 text-[var(--color-text-primary)] empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]">
+                <SmartLinksEditor
+                  html={newTodoHtml}
+                  editing={true}
+                  onChange={setNewTodoHtml}
+                  placeholder="Description..."
+                  autoFocus={true}
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
-                  ref={(el) => {
-                    if (el) {
-                      el.focus();
-                    }
-                  }}
                 />
-              </div>
-              <div className="flex h-5 shrink-0 items-center">
-                <div className="relative group/url">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className={`w-4 h-4 ${
-                      attachedUrl
-                        ? 'text-[var(--color-accent-text)]'
-                        : 'text-[var(--color-text-tertiary)]'
-                    }`}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"
-                    />
-                  </svg>
-                  {attachedUrl && (
-                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-[var(--color-bg-hover)] text-[var(--color-text-primary)] text-xs rounded whitespace-nowrap opacity-0 group-hover/url:opacity-100 pointer-events-none z-10 border border-[var(--color-border-primary)]">
-                      {attachedUrl}
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
           </div>

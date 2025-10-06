@@ -4,7 +4,6 @@ import { doc, serverTimestamp, setDoc, increment, writeBatch } from "firebase/fi
 import { useAuthentication } from "./useAuthentication";
 import { useRef } from "react";
 import { generateKeyBetween } from "fractional-indexing";
-import { useProfile } from "./useProfile";
 
 export type AddTodoState =
   | {
@@ -22,12 +21,11 @@ export type AddTodoState =
 
 export function useAddTodo() {
   const authentication = useAuthentication();
-  const profile = useProfile();
   const userRef = useRef(authentication.user);
-  const profileRef = useRef(profile);
+  const profileRef = useRef(authentication.profile);
 
   userRef.current = authentication.user;
-  profileRef.current = profile;
+  profileRef.current = authentication.profile;
 
   return pipe<
     AddTodoState,
