@@ -1,7 +1,7 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
 import { useAuthentication } from "./hooks/useAuthentication";
-import { auth } from "./firebase";
+import { auth, type Profile } from "./firebase";
 import { useTheme, type Theme } from "./hooks/useTheme";
 import UpdateNotification from "./UpdateNotification";
 
@@ -38,16 +38,14 @@ function getDownloadUrl(): string | null {
 interface TopBarProps {
   oldTodoCount?: number;
   onMoveOldTodos?: () => void;
+  profile?: Profile | null;
+  onOpenSubscription?: () => void;
 }
 
-export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: TopBarProps) {
+export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription }: TopBarProps) {
   const authentication = useAuthentication();
   const { theme, setTheme } = useTheme();
   const downloadUrl = getDownloadUrl();
-
-  if (!authentication.user) {
-    return null;
-  }
 
   const handleSignOut = () => {
     signOut(auth);
@@ -109,10 +107,27 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
             {/* Update notification */}
-            <UpdateNotification />
+            {authentication.user && <UpdateNotification />}
+
+            {/* Free todo counter - only show if user has no active subscription */}
+            {authentication.user && profile && profile.subscription?.status !== 'active' && profile.subscription?.status !== 'trialing' && (
+              <div className="flex items-center gap-x-2 text-sm text-[var(--color-text-secondary)]">
+                <span>{profile.freeTodoCount || 0} / 20 free todos added</span>
+              </div>
+            )}
+
+            {/* Subscribe button - only show if user has no active subscription */}
+            {authentication.user && profile && profile.subscription?.status !== 'active' && profile.subscription?.status !== 'trialing' && onOpenSubscription && (
+              <button
+                onClick={onOpenSubscription}
+                className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+              >
+                Subscribe
+              </button>
+            )}
 
             {/* Old todos indicator */}
-            {oldTodoCount > 0 && (
+            {authentication.user && oldTodoCount > 0 && onMoveOldTodos && (
               <button
                 onClick={onMoveOldTodos}
                 className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
@@ -138,8 +153,9 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
               </button>
             )}
 
-            {/* Profile dropdown */}
-            <Menu as="div" className="relative">
+            {/* Profile dropdown - hide for anonymous users */}
+            {authentication.user && !authentication.user.isAnonymous && (
+              <Menu as="div" className="relative">
               <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
                 <span className="absolute -inset-1.5" />
                 <span className="sr-only">Open user menu</span>
@@ -201,18 +217,23 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos = () => {} }: 
                   </MenuItem>
                 ))}
 
-                <div className="my-1 h-px bg-[var(--color-border-primary)]" />
+                {!authentication.user.isAnonymous && (
+                  <>
+                    <div className="my-1 h-px bg-[var(--color-border-primary)]" />
 
-                <MenuItem>
-                  <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
-                  >
-                    Sign out
-                  </button>
-                </MenuItem>
+                    <MenuItem>
+                      <button
+                        onClick={handleSignOut}
+                        className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                      >
+                        Sign out
+                      </button>
+                    </MenuItem>
+                  </>
+                )}
               </MenuItems>
             </Menu>
+            )}
           </div>
         </div>
       </div>

@@ -8,6 +8,8 @@ import {
 // Profile type definition
 export interface Profile {
   theme?: string;
+  freeTodoCount?: number;
+  isOnboarded?: boolean;
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -28,6 +30,8 @@ export interface Profile {
 // Firestore data format (with Timestamps instead of Dates)
 interface ProfileFirestore {
   theme?: string;
+  freeTodoCount?: number;
+  isOnboarded?: boolean;
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -54,6 +58,14 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
       result.theme = profile.theme;
     }
 
+    if (profile.freeTodoCount !== undefined) {
+      result.freeTodoCount = profile.freeTodoCount;
+    }
+
+    if (profile.isOnboarded !== undefined) {
+      result.isOnboarded = profile.isOnboarded;
+    }
+
     if (profile.subscription !== undefined) {
       result.subscription = {
         customerId: profile.subscription.customerId,
@@ -78,6 +90,14 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (data.theme !== undefined) {
       profile.theme = data.theme;
+    }
+
+    if (data.freeTodoCount !== undefined) {
+      profile.freeTodoCount = data.freeTodoCount;
+    }
+
+    if (data.isOnboarded !== undefined) {
+      profile.isOnboarded = data.isOnboarded;
     }
 
     if (data.subscription !== undefined) {

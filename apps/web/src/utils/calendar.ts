@@ -48,3 +48,29 @@ export function isToday(date: Date): boolean {
 export function getDateId(date: Date): string {
   return date.toISOString().split('T')[0]
 }
+
+export function getNextMonday(): Date {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+
+  // Calculate days until next Monday
+  // If Sunday (0), add 1 day. If Saturday (6), add 2 days
+  const daysUntilMonday = dayOfWeek === 0 ? 1 : dayOfWeek === 6 ? 2 : 0
+
+  const nextMonday = new Date(today)
+  nextMonday.setDate(today.getDate() + daysUntilMonday)
+  nextMonday.setHours(0, 0, 0, 0)
+
+  return nextMonday
+}
+
+export function isNextMonday(date: Date): boolean {
+  const today = new Date()
+  const dayOfWeek = today.getDay()
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+  if (!isWeekend) return false
+
+  const nextMonday = getNextMonday()
+  return date.toDateString() === nextMonday.toDateString()
+}

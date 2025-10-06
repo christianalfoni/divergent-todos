@@ -5,8 +5,9 @@ import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
-import { getWeekdaysForThreeWeeks, isToday, getDateId } from "./utils/calendar";
+import { getWeekdaysForThreeWeeks, isToday, getDateId, isNextMonday } from "./utils/calendar";
 import type { Todo } from "./App";
+import type { Profile } from "./firebase";
 
 interface CalendarProps {
   todos: Todo[];
@@ -15,6 +16,7 @@ interface CalendarProps {
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
   onDeleteTodo: (todoId: string) => void;
+  profile: Profile | null;
 }
 
 const isWeekend = () => {
@@ -29,6 +31,7 @@ export default function Calendar({
   onMoveTodo,
   onUpdateTodo,
   onDeleteTodo,
+  profile,
 }: CalendarProps) {
   const authentication = useAuthentication();
   const [showThreeWeeks, setShowThreeWeeks] = useState(true);
@@ -88,8 +91,8 @@ export default function Calendar({
         // Force re-render when tab becomes visible
         setVisibilityTrigger((prev) => prev + 1);
 
-        // Check if it's weekend and show dialog
-        if (isWeekend()) {
+        // Check if it's weekend, user is authenticated, and user is onboarded
+        if (isWeekend() && authentication.user && profile?.isOnboarded) {
           setShowWeekendDialog(true);
         } else {
           setShowWeekendDialog(false);
@@ -100,14 +103,14 @@ export default function Calendar({
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+  }, [authentication.user, profile?.isOnboarded]);
 
-  // Check weekend status on mount
+  // Check weekend status on mount and when authentication/onboarding changes
   useEffect(() => {
-    if (isWeekend()) {
+    if (isWeekend() && authentication.user && profile?.isOnboarded) {
       setShowWeekendDialog(true);
     }
-  }, []);
+  }, [authentication.user, profile?.isOnboarded]);
 
   return (
     <DndContext
@@ -117,7 +120,7 @@ export default function Calendar({
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-full w-full flex flex-col overflow-hidden">
+      <div className="flex-1 w-full flex flex-col overflow-hidden">
         <div
           className={`grid grid-cols-5 ${
             showThreeWeeks ? "grid-rows-2" : "grid-rows-1"
@@ -130,6 +133,7 @@ export default function Calendar({
                 key={index}
                 date={date}
                 isToday={isToday(date)}
+                isNextMonday={isNextMonday(date)}
                 isAuthenticated={!!authentication.user}
                 todos={getTodosForDate(date)}
                 onAddTodo={onAddTodo}

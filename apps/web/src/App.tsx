@@ -1,7 +1,8 @@
-import {} from "react";
+import { useState } from "react";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
+import SubscriptionDialog from "./SubscriptionDialog";
 import TopBar from "./TopBar";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodos } from "./hooks/useTodos";
@@ -11,6 +12,7 @@ import { useDeleteTodo } from "./hooks/useDeleteTodo";
 import { generateKeyBetween } from "fractional-indexing";
 import { useHittingWood } from "./hooks/useHittingWood";
 import { useTheme } from "./hooks/useTheme";
+import { useProfile } from "./hooks/useProfile";
 
 export interface Todo {
   id: string;
@@ -21,11 +23,24 @@ export interface Todo {
 }
 
 function AuthenticatedApp() {
+  const authentication = useAuthentication();
   const firebaseTodos = useTodos();
+  const profile = useProfile();
   const [, addTodo] = useAddTodo();
   const [, editTodo] = useEditTodo();
   const [, deleteTodo] = useDeleteTodo();
   const hittingWood = useHittingWood();
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+
+  // Check if running in Electron
+  const isElectron = window.navigator.userAgent.includes("Electron");
+
+  // Check for active subscription
+  const hasActiveSubscription = profile?.subscription?.status === "active" ||
+                                 profile?.subscription?.status === "trialing";
+
+  // In Electron, require active subscription
+  const requiresSubscription = isElectron && !hasActiveSubscription;
 
   // Convert Firebase todos to App todos format
   const todos: Todo[] = firebaseTodos.map((todo) => ({
@@ -60,6 +75,16 @@ function AuthenticatedApp() {
   const oldUncompletedTodos = getOldUncompletedTodos();
 
   const handleAddTodo = (todo: Omit<Todo, "id">) => {
+    // Check if user has reached the free limit
+    const hasActiveSubscription = profile?.subscription?.status === "active" ||
+                                  profile?.subscription?.status === "trialing";
+    const freeTodoCount = profile?.freeTodoCount ?? 0;
+
+    if (!hasActiveSubscription && freeTodoCount >= 20) {
+      setShowSubscriptionDialog(true);
+      return;
+    }
+
     const dateObj = new Date(todo.date);
 
     // Find last position for this date
@@ -173,6 +198,8 @@ function AuthenticatedApp() {
       <TopBar
         oldTodoCount={oldUncompletedTodos.length}
         onMoveOldTodos={moveOldTodosToNextWorkday}
+        profile={profile}
+        onOpenSubscription={() => setShowSubscriptionDialog(true)}
       />
       <Calendar
         todos={todos}
@@ -181,6 +208,19 @@ function AuthenticatedApp() {
         onMoveTodo={moveTodo}
         onUpdateTodo={updateTodo}
         onDeleteTodo={handleDeleteTodo}
+        profile={profile}
+      />
+      <SubscriptionDialog
+        open={showSubscriptionDialog || requiresSubscription}
+        onClose={() => {
+          // Only allow closing if not required (i.e., not in Electron or has subscription)
+          if (!requiresSubscription) {
+            setShowSubscriptionDialog(false);
+          }
+        }}
+        user={authentication.user}
+        profile={profile}
+        isElectron={isElectron}
       />
     </>
   );
@@ -194,18 +234,22 @@ function AppContent() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {authentication.user ? (
           <AuthenticatedApp />
         ) : (
-          <Calendar
-            todos={[]}
-            onAddTodo={() => {}}
-            onToggleTodoComplete={() => {}}
-            onMoveTodo={() => {}}
-            onUpdateTodo={() => {}}
-            onDeleteTodo={() => {}}
-          />
+          <>
+            <TopBar />
+            <Calendar
+              todos={[]}
+              onAddTodo={() => {}}
+              onToggleTodoComplete={() => {}}
+              onMoveTodo={() => {}}
+              onUpdateTodo={() => {}}
+              onDeleteTodo={() => {}}
+              profile={null}
+            />
+          </>
         )}
       </div>
       <AuthModal
