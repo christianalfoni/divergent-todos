@@ -14874,6 +14874,9 @@ async function createWindow() {
   });
 }
 require$$1$4.ipcMain.handle("app:getVersion", () => require$$1$4.app.getVersion());
+require$$1$4.ipcMain.handle("shell:openExternal", async (_event, url) => {
+  await require$$1$4.shell.openExternal(url);
+});
 require$$1$4.ipcMain.handle("update:check", async () => {
   if (!require$$1$4.app.isPackaged) {
     return { available: false, message: "Updates only available in production" };

@@ -76,7 +76,16 @@ export default function SmartLinksEditor({
         a.rel = "noopener noreferrer";
         a.target = "_blank";
         a.className = "smartlink-anchor";
-        a.addEventListener("click", (e) => e.stopPropagation());
+        a.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Use Electron's shell.openExternal if available, otherwise use default behavior
+          if (window.native?.openExternal) {
+            window.native.openExternal(url);
+          } else {
+            window.open(url, "_blank");
+          }
+        });
         chip.replaceWith(a);
       });
     } else {

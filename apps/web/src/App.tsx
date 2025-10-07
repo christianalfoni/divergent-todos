@@ -305,6 +305,7 @@ function AuthenticatedApp() {
   const handleDeleteTodo = (todoId: string) => {
     if (onboarding.isOnboarding) {
       onboarding.deleteTodo(todoId);
+      onboarding.notifyTodoDeleted();
     } else {
       deleteTodo({ id: todoId });
     }

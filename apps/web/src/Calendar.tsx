@@ -138,7 +138,7 @@ export default function Calendar({
         <div
           className={`grid grid-cols-5 ${
             showThreeWeeks ? "grid-rows-2" : "grid-rows-1"
-          } flex-1 divide-x divide-y divide-[var(--color-border-primary)]`}
+          } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
         >
           {weekdays.map((date, index) => {
             const dayId = getDateId(date);

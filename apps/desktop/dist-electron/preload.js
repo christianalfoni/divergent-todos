@@ -2,6 +2,7 @@
 const electron = require("electron");
 electron.contextBridge.exposeInMainWorld("native", {
   getVersion: () => electron.ipcRenderer.invoke("app:getVersion"),
+  openExternal: (url) => electron.ipcRenderer.invoke("shell:openExternal", url),
   auth: {
     startGoogleSignIn: () => electron.ipcRenderer.invoke("auth:startGoogleSignIn")
   },

@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 // Expose a narrow, data-only API
 contextBridge.exposeInMainWorld('native', {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
+  openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   auth: {
     startGoogleSignIn: () => ipcRenderer.invoke('auth:startGoogleSignIn'),
   },

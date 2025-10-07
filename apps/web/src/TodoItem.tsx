@@ -48,10 +48,12 @@ export default function TodoItem({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Only handle actual mouse clicks, not programmatic events or window focus changes
       if (
         isEditing &&
         containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
+        !containerRef.current.contains(event.target as Node) &&
+        event.target instanceof Node // Ensure it's a real DOM event
       ) {
         if (!isHtmlEmpty(editingHtml)) {
           if (editingHtml !== todo.text) {
@@ -66,10 +68,11 @@ export default function TodoItem({
     };
 
     if (isEditing) {
-      document.addEventListener("mousedown", handleClickOutside);
+      // Use capture phase to ensure we catch the event before any stopPropagation
+      document.addEventListener("mousedown", handleClickOutside, true);
     }
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside, true);
     };
   }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo, onDeleteTodo]);
 

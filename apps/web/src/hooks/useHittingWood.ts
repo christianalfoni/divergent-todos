@@ -25,7 +25,7 @@ export function useHittingWood() {
     };
 
     soundRef.current = new Howl({
-      src: ["/hitting-wood.mp3"],
+      src: ["./hitting-wood.mp3"],
       sprite,
     });
 
