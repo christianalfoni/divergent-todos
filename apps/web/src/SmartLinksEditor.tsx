@@ -76,6 +76,7 @@ export default function SmartLinksEditor({
         a.rel = "noopener noreferrer";
         a.target = "_blank";
         a.className = "smartlink-anchor";
+        a.addEventListener("click", (e) => e.stopPropagation());
         chip.replaceWith(a);
       });
     } else {
