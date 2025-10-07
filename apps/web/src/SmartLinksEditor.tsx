@@ -59,6 +59,9 @@ export default function SmartLinksEditor({
     if (isInitialMount.current) {
       if (html) el.innerHTML = html;
       isInitialMount.current = false;
+    } else if (html === "" && el.innerHTML !== "") {
+      // Clear content when html prop becomes empty (e.g., after submitting a todo)
+      el.innerHTML = "";
     }
 
     // When switching to view mode, swap chip spans -> anchors
@@ -96,7 +99,7 @@ export default function SmartLinksEditor({
       sel?.removeAllRanges();
       sel?.addRange(range);
     }
-  }, [editing, autoFocus]);
+  }, [editing, autoFocus, html]);
 
   // Notify changes (serialize innerHTML while editing)
   const emitChange = () => {
@@ -217,7 +220,7 @@ export default function SmartLinksEditor({
           border-radius: 6px;
           border: 1px solid var(--color-border-secondary);
           background: var(--color-bg-hover);
-          line-height: 1.6;
+          line-height: 1.4;
           margin: 0 1px;
           user-select: none;
           font-size: inherit;

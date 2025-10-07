@@ -2,6 +2,7 @@ import { pipe } from "pipesy";
 import { todosCollection, type Todo } from "../firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
+import { useTodos } from "./useTodos";
 import { useRef } from "react";
 
 export type EditTodoState =
@@ -19,8 +20,9 @@ export type EditTodoState =
     };
 
 export function useEditTodo() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
+  const [, setTodos] = useTodos();
 
   userRef.current = authentication.user;
 
@@ -31,6 +33,17 @@ export function useEditTodo() {
     }
   >()
     .setState({ isEditing: true, error: null })
+    .map((updates) => {
+      // Optimistic update
+      setTodos((todos) =>
+        todos.map((todo) =>
+          todo.id === updates.id
+            ? { ...todo, ...updates }
+            : todo
+        )
+      );
+      return updates;
+    })
     .async(({ id, description, completed, date, position }) => {
       const todoDoc = doc(todosCollection, id);
 

@@ -43,6 +43,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           url: undefined, // URL is now embedded in HTML
           completed: false,
           date: date.toISOString().split('T')[0],
+          position: '',
         })
         setNewTodoHtml('')
         // Keep isAddingTodo true so user can quickly add another todo

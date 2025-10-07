@@ -8,6 +8,7 @@ import {
 import { ClockIcon } from "@heroicons/react/24/outline";
 import type { Todo } from "./App";
 import { useWoodDoorKnock } from "./hooks/useWoodDoorKnock";
+import { useOnboarding } from "./contexts/OnboardingContext";
 
 interface TimeBoxDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ export default function TimeBoxDialog({
   const [isTimerActive, setIsTimerActive] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const woodDoorKnock = useWoodDoorKnock();
+  const onboarding = useOnboarding();
 
   useEffect(() => {
     if (!isTimerActive || timeRemaining === null) return;
@@ -61,6 +63,8 @@ export default function TimeBoxDialog({
     setIsTimerActive(false);
     setIsCompleting(false);
     onClose();
+    // Notify onboarding that timebox was closed
+    onboarding.notifyTimeboxClosed();
   };
 
   const handleMarkComplete = async () => {
@@ -74,13 +78,13 @@ export default function TimeBoxDialog({
   if (!todo) return null;
 
   return (
-    <Dialog open={open} onClose={isTimerActive ? () => {} : onClose} className="relative z-10">
+    <Dialog open={open} onClose={isTimerActive ? () => {} : onClose} className="relative z-[60]">
       <DialogBackdrop
         transition
         className={`fixed inset-0 ${isTimerActive ? 'backdrop-blur-md' : ''} bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in`}
       />
 
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+      <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition

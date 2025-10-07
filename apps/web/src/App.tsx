@@ -3,6 +3,7 @@ import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
+import OnboardingNotification from "./OnboardingNotification";
 import TopBar from "./TopBar";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodos } from "./hooks/useTodos";
@@ -12,6 +13,8 @@ import { useDeleteTodo } from "./hooks/useDeleteTodo";
 import { generateKeyBetween } from "fractional-indexing";
 import { useHittingWood } from "./hooks/useHittingWood";
 import { useTheme } from "./hooks/useTheme";
+import { OnboardingProvider, useOnboarding } from "./contexts/OnboardingContext";
+import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 
 export interface Todo {
   id: string;
@@ -19,17 +22,22 @@ export interface Todo {
   url?: string;
   completed: boolean;
   date: string; // ISO date string (YYYY-MM-DD)
+  position: string;
 }
 
 function AuthenticatedApp() {
-  const authentication = useAuthentication();
-  const firebaseTodos = useTodos();
+  const [authentication] = useAuthentication();
+  const [firebaseTodos] = useTodos();
   const profile = authentication.profile;
   const [, addTodo] = useAddTodo();
   const [, editTodo] = useEditTodo();
   const [, deleteTodo] = useDeleteTodo();
   const hittingWood = useHittingWood();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const onboarding = useOnboarding();
+
+  // Mark app as installed when running in desktop app
+  useMarkAppInstalled();
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
@@ -42,14 +50,38 @@ function AuthenticatedApp() {
   // Wait for both auth to complete AND profile to load before checking subscription
   const requiresSubscription = isElectron && !authentication.isAuthenticating && profile !== null && !hasActiveSubscription;
 
-  // Convert Firebase todos to App todos format
-  const todos: Todo[] = firebaseTodos.map((todo) => ({
-    id: todo.id,
-    text: todo.description,
-    url: undefined, // URL not yet supported in Firebase schema
-    completed: todo.completed,
-    date: todo.date.toISOString().split("T")[0],
-  }));
+  // Check if user needs to see "Get started" button
+  // Show if profile exists and isOnboarded is not true (could be false or undefined)
+  const showGetStarted = profile !== null && profile.isOnboarded !== true;
+
+  // Use onboarding todos if in onboarding mode, otherwise use Firebase todos
+  const todos: Todo[] = onboarding.isOnboarding
+    ? onboarding.todos
+        .slice()
+        .sort((a, b) => {
+          const dateCompare = a.date.toISOString().localeCompare(b.date.toISOString());
+          if (dateCompare !== 0) return dateCompare;
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        })
+        .map((todo) => ({
+          id: todo.id,
+          text: todo.description,
+          url: undefined,
+          completed: todo.completed,
+          date: todo.date.toISOString().split("T")[0],
+          position: todo.position,
+        }))
+    : firebaseTodos.map((todo) => ({
+        id: todo.id,
+        text: todo.description,
+        url: undefined, // URL not yet supported in Firebase schema
+        completed: todo.completed,
+        date: todo.date.toISOString().split("T")[0],
+        position: todo.position,
+      }));
 
   // Get Monday of current week
   const getCurrentWeekMonday = () => {
@@ -75,100 +107,207 @@ function AuthenticatedApp() {
   const oldUncompletedTodos = getOldUncompletedTodos();
 
   const handleAddTodo = (todo: Omit<Todo, "id">) => {
-    // Check if user has reached the free limit
-    const hasActiveSubscription = profile?.subscription?.status === "active";
-    const freeTodoCount = profile?.freeTodoCount ?? 0;
-
-    if (!hasActiveSubscription && freeTodoCount >= 20) {
-      setShowSubscriptionDialog(true);
-      return;
-    }
-
     const dateObj = new Date(todo.date);
 
-    // Find last position for this date
-    const todosForDate = firebaseTodos
-      .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
-      .sort((a, b) => a.position.localeCompare(b.position));
+    if (onboarding.isOnboarding) {
+      // In onboarding mode, use local state
+      const todosForDate = onboarding.todos
+        .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
-    const lastPosition =
-      todosForDate.length > 0
-        ? todosForDate[todosForDate.length - 1].position
-        : null;
+      const lastPosition =
+        todosForDate.length > 0
+          ? todosForDate[todosForDate.length - 1].position
+          : null;
 
-    addTodo({ description: todo.text, date: dateObj, lastPosition });
+      onboarding.addTodo({
+        description: todo.text,
+        date: dateObj,
+        completed: false,
+        position: generateKeyBetween(lastPosition, null),
+      });
+
+      // If in add-todo step, advance to next step
+      if (onboarding.currentStep === "add-todo") {
+        onboarding.nextStep();
+      }
+
+      // If in add-todo-with-url step, check if todo contains a URL and advance
+      if (onboarding.currentStep === "add-todo-with-url") {
+        const hasUrl = todo.text.includes('data-url="');
+        if (hasUrl) {
+          onboarding.nextStep();
+        }
+      }
+    } else {
+      // Check if user has reached the free limit
+      const hasActiveSubscription = profile?.subscription?.status === "active";
+      const freeTodoCount = profile?.freeTodoCount ?? 0;
+
+      if (!hasActiveSubscription && freeTodoCount >= 20) {
+        setShowSubscriptionDialog(true);
+        return;
+      }
+
+      // Find last position for this date
+      const todosForDate = firebaseTodos
+        .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
+        .sort((a, b) => a.position.localeCompare(b.position));
+
+      const lastPosition =
+        todosForDate.length > 0
+          ? todosForDate[todosForDate.length - 1].position
+          : null;
+
+      addTodo({ description: todo.text, date: dateObj, lastPosition });
+    }
   };
 
   const toggleTodoComplete = (todoId: string) => {
-    const todo = firebaseTodos.find((t) => t.id === todoId);
-    if (!todo) return;
+    if (onboarding.isOnboarding) {
+      const todo = onboarding.todos.find((t) => t.id === todoId);
+      if (!todo) return;
 
-    // Play sound when completing a todo
-    if (!todo.completed) {
-      hittingWood.play();
+      // Play sound when completing a todo
+      if (!todo.completed) {
+        hittingWood.play();
+      }
+
+      onboarding.editTodo(todoId, {
+        completed: !todo.completed,
+      });
+    } else {
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
+
+      // Play sound when completing a todo
+      if (!todo.completed) {
+        hittingWood.play();
+      }
+
+      editTodo({
+        id: todoId,
+        description: todo.description,
+        completed: !todo.completed,
+        date: todo.date,
+      });
     }
-
-    editTodo({
-      id: todoId,
-      description: todo.description,
-      completed: !todo.completed,
-      date: todo.date,
-    });
   };
 
   const moveTodo = (todoId: string, newDate: string, newIndex?: number) => {
-    const todo = firebaseTodos.find((t) => t.id === todoId);
-    if (!todo) return;
+    if (onboarding.isOnboarding) {
+      const todo = onboarding.todos.find((t) => t.id === todoId);
+      if (!todo) return;
 
-    // Get todos for target date, sorted by position (excluding the dragged todo)
-    const todosInTargetDate = firebaseTodos
-      .filter(
-        (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
-      )
-      .sort((a, b) => a.position.localeCompare(b.position));
+      // Get todos for target date, sorted by position (excluding the dragged todo)
+      const todosInTargetDate = onboarding.todos
+        .filter(
+          (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
+        )
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
-    let newPosition: string;
+      let newPosition: string;
 
-    if (newIndex === undefined) {
-      // Moving to a date without specific position - place at end
-      const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
-      newPosition = generateKeyBetween(lastTodo?.position || null, null);
+      if (newIndex === undefined) {
+        // Moving to a date without specific position - place at end
+        const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
+        newPosition = generateKeyBetween(lastTodo?.position || null, null);
+      } else {
+        // Moving to specific position
+        const beforeTodo = todosInTargetDate[newIndex - 1];
+        const afterTodo = todosInTargetDate[newIndex];
+        newPosition = generateKeyBetween(
+          beforeTodo?.position || null,
+          afterTodo?.position || null
+        );
+      }
+
+      // Convert string date to Date object
+      const dateObj = new Date(newDate);
+
+      onboarding.editTodo(todoId, {
+        date: dateObj,
+        position: newPosition,
+      });
+
+      // Notify that a todo was moved
+      onboarding.notifyTodoMoved();
     } else {
-      // Moving to specific position
-      const beforeTodo = todosInTargetDate[newIndex - 1];
-      const afterTodo = todosInTargetDate[newIndex];
-      newPosition = generateKeyBetween(
-        beforeTodo?.position || null,
-        afterTodo?.position || null
-      );
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
+
+      // Get todos for target date, sorted by position (excluding the dragged todo)
+      const todosInTargetDate = firebaseTodos
+        .filter(
+          (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
+        )
+        .sort((a, b) => a.position.localeCompare(b.position));
+
+      let newPosition: string;
+
+      if (newIndex === undefined) {
+        // Moving to a date without specific position - place at end
+        const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
+        newPosition = generateKeyBetween(lastTodo?.position || null, null);
+      } else {
+        // Moving to specific position
+        const beforeTodo = todosInTargetDate[newIndex - 1];
+        const afterTodo = todosInTargetDate[newIndex];
+        newPosition = generateKeyBetween(
+          beforeTodo?.position || null,
+          afterTodo?.position || null
+        );
+      }
+
+      // Convert string date to Date object
+      const dateObj = new Date(newDate);
+
+      editTodo({
+        id: todoId,
+        description: todo.description,
+        completed: todo.completed,
+        date: dateObj,
+        position: newPosition,
+      });
     }
-
-    // Convert string date to Date object
-    const dateObj = new Date(newDate);
-
-    editTodo({
-      id: todoId,
-      description: todo.description,
-      completed: todo.completed,
-      date: dateObj,
-      position: newPosition,
-    });
   };
 
   const updateTodo = (todoId: string, text: string) => {
-    const todo = firebaseTodos.find((t) => t.id === todoId);
-    if (!todo) return;
+    if (onboarding.isOnboarding) {
+      onboarding.editTodo(todoId, {
+        description: text,
+      });
+      // Notify that a todo edit was completed
+      onboarding.notifyTodoEditCompleted();
+    } else {
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
 
-    editTodo({
-      id: todoId,
-      description: text,
-      completed: todo.completed,
-      date: todo.date,
-    });
+      editTodo({
+        id: todoId,
+        description: text,
+        completed: todo.completed,
+        date: todo.date,
+      });
+    }
   };
 
   const handleDeleteTodo = (todoId: string) => {
-    deleteTodo({ id: todoId });
+    if (onboarding.isOnboarding) {
+      onboarding.deleteTodo(todoId);
+    } else {
+      deleteTodo({ id: todoId });
+    }
   };
 
   const moveOldTodosToNextWorkday = () => {
@@ -199,6 +338,8 @@ function AuthenticatedApp() {
         onMoveOldTodos={moveOldTodosToNextWorkday}
         profile={profile}
         onOpenSubscription={() => setShowSubscriptionDialog(true)}
+        showGetStarted={showGetStarted}
+        onOpenOnboarding={onboarding.startOnboarding}
       />
       <Calendar
         todos={todos}
@@ -221,12 +362,13 @@ function AuthenticatedApp() {
         profile={profile}
         isElectron={isElectron}
       />
+      <OnboardingNotification />
     </>
   );
 }
 
 function AppContent() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
 
   // Initialize theme system
   useTheme();
@@ -261,7 +403,9 @@ function AppContent() {
 export default function App() {
   return (
     <CacheProvider>
-      <AppContent />
+      <OnboardingProvider>
+        <AppContent />
+      </OnboardingProvider>
     </CacheProvider>
   );
 }

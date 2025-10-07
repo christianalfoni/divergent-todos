@@ -23,8 +23,7 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 200,
-        tolerance: 5,
+        distance: 8,
       },
     })
   )
@@ -67,7 +66,8 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     } else {
       // We're over another todo - set hovered day to that todo's day
       setHoveredDayId(overTodo.date)
-      // Move to that day if different
+      // Only move to different day during drag, not for reordering within same day
+      // Reordering will be handled in handleDragEnd
       if (activeTodo.date !== overTodo.date) {
         onMoveTodo(activeTodoId, overTodo.date)
       }
@@ -91,7 +91,14 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
       const activeTodo = todos.find(t => t.id === activeTodoId)
       if (activeTodo && activeTodo.date === overTodo.date) {
         // Reordering within the same day
-        const todosInDay = todos.filter(t => t.date === activeTodo.date)
+        const todosInDay = todos
+          .filter(t => t.date === activeTodo.date)
+          .sort((a, b) => {
+            // Use standard string comparison, not localeCompare, to match fractional-indexing library
+            if (a.position < b.position) return -1;
+            if (a.position > b.position) return 1;
+            return 0;
+          })
         const oldIndex = todosInDay.findIndex(t => t.id === activeTodoId)
         const newIndex = todosInDay.findIndex(t => t.id === overItemId)
 

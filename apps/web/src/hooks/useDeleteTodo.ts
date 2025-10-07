@@ -2,6 +2,7 @@ import { pipe } from "pipesy";
 import { todosCollection } from "../firebase";
 import { doc, deleteDoc } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
+import { useTodos } from "./useTodos";
 import { useRef } from "react";
 
 export type DeleteTodoState =
@@ -19,13 +20,19 @@ export type DeleteTodoState =
     };
 
 export function useDeleteTodo() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
+  const [, setTodos] = useTodos();
 
   userRef.current = authentication.user;
 
   return pipe<DeleteTodoState, { id: string }>()
     .setState({ isDeleting: true, error: null })
+    .map(({ id }) => {
+      // Optimistic delete
+      setTodos((todos) => todos.filter((todo) => todo.id !== id));
+      return { id };
+    })
     .async(({ id }) => {
       const todoDoc = doc(todosCollection, id);
 

@@ -14867,6 +14867,11 @@ async function createWindow() {
       mainExports.autoUpdater.checkForUpdates();
     }, 3e3);
   }
+  win.on("focus", () => {
+    if (require$$1$4.app.isPackaged) {
+      mainExports.autoUpdater.checkForUpdates();
+    }
+  });
 }
 require$$1$4.ipcMain.handle("app:getVersion", () => require$$1$4.app.getVersion());
 require$$1$4.ipcMain.handle("update:check", async () => {

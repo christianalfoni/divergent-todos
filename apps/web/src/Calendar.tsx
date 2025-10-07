@@ -5,6 +5,7 @@ import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
+import { useOnboarding } from "./contexts/OnboardingContext";
 import { getWeekdaysForThreeWeeks, isToday, getDateId, isNextMonday } from "./utils/calendar";
 import type { Todo } from "./App";
 import type { Profile } from "./firebase";
@@ -33,7 +34,8 @@ export default function Calendar({
   onDeleteTodo,
   profile,
 }: CalendarProps) {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
+  const onboarding = useOnboarding();
   const [showThreeWeeks, setShowThreeWeeks] = useState(true);
   const [timeBoxTodo, setTimeBoxTodo] = useState<Todo | null>(null);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
@@ -51,7 +53,14 @@ export default function Calendar({
 
   const getTodosForDate = (date: Date): Todo[] => {
     const dateString = date.toISOString().split("T")[0];
-    return todos.filter((todo) => todo.date === dateString);
+    return todos
+      .filter((todo) => todo.date === dateString)
+      .sort((a, b) => {
+        // Use standard string comparison, not localeCompare, to match fractional-indexing library
+        if (a.position < b.position) return -1;
+        if (a.position > b.position) return 1;
+        return 0;
+      });
   };
 
   const weekdays = useMemo(() => {
@@ -77,13 +86,18 @@ export default function Calendar({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Tab") {
         e.preventDefault();
-        setShowThreeWeeks((prev) => !prev);
+        setShowThreeWeeks((prev) => {
+          const newValue = !prev;
+          // Notify onboarding context about the toggle
+          onboarding.notifyWeekModeToggled(newValue);
+          return newValue;
+        });
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [onboarding]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

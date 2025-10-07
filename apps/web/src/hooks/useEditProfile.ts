@@ -19,13 +19,25 @@ export type EditProfileState =
     };
 
 export function useEditProfile() {
-  const authentication = useAuthentication();
+  const [authentication, setAuthentication] = useAuthentication();
   const userRef = useRef(authentication.user);
 
   userRef.current = authentication.user;
 
   return pipe<EditProfileState, Partial<Profile>>()
     .setState({ isEditing: true, error: null })
+    .map((updates) => {
+      // Optimistic update
+      setAuthentication((currentAuth) => {
+        if (!currentAuth.profile) return currentAuth;
+        return {
+          ...currentAuth,
+          profile: { ...currentAuth.profile, ...updates },
+        };
+      });
+
+      return updates;
+    })
     .async((updates) => {
       if (!userRef.current) {
         throw new Error("can not edit profile without a user");
