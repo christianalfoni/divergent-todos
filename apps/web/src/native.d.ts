@@ -4,6 +4,7 @@ declare global {
   interface Window {
     native?: {
       getVersion: () => Promise<string>
+      openExternal: (url: string) => Promise<void>
       auth: {
         startGoogleSignIn: () => Promise<string>
       }

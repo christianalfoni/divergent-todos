@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-export type OnboardingStep = "workdays" | "add-todo" | "add-todo-with-url" | "edit-todo" | "move-todo" | "timebox" | "congratulations" | null;
+export type OnboardingStep = "workdays" | "add-todo" | "add-todo-with-url" | "edit-todo" | "move-todo" | "delete-todo" | "timebox" | "congratulations" | null;
 
 export interface OnboardingTodo {
   id: string;
@@ -24,6 +24,7 @@ interface OnboardingContextValue {
   notifyTodoEditCompleted: () => void;
   notifyWeekModeToggled: (isThreeWeeks: boolean) => void;
   notifyTodoMoved: () => void;
+  notifyTodoDeleted: () => void;
   notifyTimeboxClosed: () => void;
 }
 
@@ -31,7 +32,7 @@ const OnboardingContext = createContext<OnboardingContextValue | undefined>(
   undefined
 );
 
-const ONBOARDING_STEPS: OnboardingStep[] = ["workdays", "add-todo", "add-todo-with-url", "edit-todo", "move-todo", "timebox", "congratulations"];
+const ONBOARDING_STEPS: OnboardingStep[] = ["workdays", "add-todo", "add-todo-with-url", "edit-todo", "move-todo", "delete-todo", "timebox", "congratulations"];
 
 interface OnboardingProviderProps {
   children: ReactNode;
@@ -107,6 +108,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
+  const notifyTodoDeleted = () => {
+    if (currentStep === "delete-todo") {
+      nextStep();
+    }
+  };
+
   const notifyTimeboxClosed = () => {
     if (currentStep === "timebox") {
       nextStep();
@@ -128,6 +135,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         notifyTodoEditCompleted,
         notifyWeekModeToggled,
         notifyTodoMoved,
+        notifyTodoDeleted,
         notifyTimeboxClosed,
       }}
     >

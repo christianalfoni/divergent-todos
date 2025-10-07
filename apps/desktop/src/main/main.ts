@@ -161,6 +161,11 @@ async function createWindow() {
 // Example typed IPC
 ipcMain.handle('app:getVersion', () => app.getVersion())
 
+// Open URL in default browser
+ipcMain.handle('shell:openExternal', async (_event, url: string) => {
+  await shell.openExternal(url)
+})
+
 // Update IPC handlers
 ipcMain.handle('update:check', async () => {
   if (!app.isPackaged) {

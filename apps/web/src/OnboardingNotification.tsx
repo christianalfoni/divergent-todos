@@ -6,6 +6,7 @@ import {
   LinkIcon,
   PencilSquareIcon,
   ArrowsRightLeftIcon,
+  TrashIcon,
   ClockIcon,
   CheckCircleIcon,
   ClipboardIcon,
@@ -91,6 +92,17 @@ export default function OnboardingNotification() {
             "Drag and drop todos to reorder them within a day or move them to different days.",
           actionLabel: "Move a todo to continue",
           requiresMoveTodo: true,
+        };
+      case "delete-todo":
+        return {
+          icon: (
+            <TrashIcon aria-hidden="true" className="size-6 text-red-500 dark:text-red-400" />
+          ),
+          title: "Delete todos",
+          message:
+            "To delete a todo, click on it to edit, then remove all the text content and press Enter.",
+          actionLabel: "Delete a todo to continue",
+          requiresDeleteTodo: true,
         };
       case "timebox":
         return {
