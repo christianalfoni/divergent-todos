@@ -10,6 +10,7 @@ export interface Profile {
   theme?: string;
   freeTodoCount?: number;
   isOnboarded?: boolean;
+  hasInstalledApp?: boolean;
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -30,6 +31,7 @@ interface ProfileFirestore {
   theme?: string;
   freeTodoCount?: number;
   isOnboarded?: boolean;
+  hasInstalledApp?: boolean;
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -60,6 +62,10 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (profile.isOnboarded !== undefined) {
       result.isOnboarded = profile.isOnboarded;
+    }
+
+    if (profile.hasInstalledApp !== undefined) {
+      result.hasInstalledApp = profile.hasInstalledApp;
     }
 
     if (profile.subscription !== undefined) {
@@ -94,6 +100,10 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (data.isOnboarded !== undefined) {
       profile.isOnboarded = data.isOnboarded;
+    }
+
+    if (data.hasInstalledApp !== undefined) {
+      profile.hasInstalledApp = data.hasInstalledApp;
     }
 
     if (data.subscription !== undefined) {

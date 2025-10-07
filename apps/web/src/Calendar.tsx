@@ -5,6 +5,7 @@ import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
+import { useOnboarding } from "./contexts/OnboardingContext";
 import { getWeekdaysForThreeWeeks, isToday, getDateId, isNextMonday } from "./utils/calendar";
 import type { Todo } from "./App";
 import type { Profile } from "./firebase";
@@ -34,6 +35,7 @@ export default function Calendar({
   profile,
 }: CalendarProps) {
   const authentication = useAuthentication();
+  const onboarding = useOnboarding();
   const [showThreeWeeks, setShowThreeWeeks] = useState(true);
   const [timeBoxTodo, setTimeBoxTodo] = useState<Todo | null>(null);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
@@ -78,12 +80,17 @@ export default function Calendar({
       if (e.key === "Tab") {
         e.preventDefault();
         setShowThreeWeeks((prev) => !prev);
+
+        // If in workdays onboarding step, advance to next step
+        if (onboarding.currentStep === "workdays") {
+          onboarding.nextStep();
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [onboarding]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import SmartLinksEditor from "./SmartLinksEditor";
 import type { Todo } from "./App";
 
@@ -22,9 +21,8 @@ export default function TodoItem({
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
+  const [isPressed, setIsPressed] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const longPressTimerRef = useRef<number | null>(null);
-  const isLongPressRef = useRef(false);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -78,27 +76,9 @@ export default function TodoItem({
     }
   };
 
-  const handleTextMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    isLongPressRef.current = false;
-    longPressTimerRef.current = window.setTimeout(() => {
-      isLongPressRef.current = true;
-    }, 300);
-  };
-
-  const handleTextMouseUp = () => {
-    if (longPressTimerRef.current) {
-      clearTimeout(longPressTimerRef.current);
-      longPressTimerRef.current = null;
-    }
-  };
-
   const handleTextClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!isLongPressRef.current) {
-      setIsEditing(true);
-    }
-    isLongPressRef.current = false;
+    setIsEditing(true);
   };
 
   if (isEditing) {
@@ -155,43 +135,42 @@ export default function TodoItem({
         {...attributes}
         {...listeners}
         onDoubleClick={handleDoubleClick}
-        className={`group/todo relative flex gap-3 text-xs/5 transition-colors hover:bg-[var(--color-bg-hover)] px-3 py-1 select-none focus:outline-none ${
-          isDragging ? "bg-[var(--color-bg-hover)]" : ""
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => setIsPressed(false)}
+        className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none ${
+          isDragging ? "bg-[var(--color-bg-active)]" :
+          isPressed ? "bg-[var(--color-bg-active)]" :
+          "hover:bg-[var(--color-bg-hover)]"
         }`}
       >
         <div className="flex h-5 shrink-0 items-center" onDoubleClick={(e) => e.stopPropagation()}>
-          {isDragging ? (
-            <ArrowsRightLeftIcon className="size-4 text-[var(--color-text-secondary)]" />
-          ) : (
-            <div className="group/checkbox grid size-4 grid-cols-1">
-              <input
-                id={`todo-${todo.id}`}
-                name="todo"
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => onToggleTodoComplete(todo.id)}
-                className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
+          <div className="group/checkbox grid size-4 grid-cols-1">
+            <input
+              id={`todo-${todo.id}`}
+              name="todo"
+              type="checkbox"
+              checked={todo.completed}
+              onChange={() => onToggleTodoComplete(todo.id)}
+              className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
+            />
+            <svg
+              fill="none"
+              viewBox="0 0 14 14"
+              className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
+            >
+              <path
+                d="M3 8L6 11L11 3.5"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="opacity-0 group-has-checked/checkbox:opacity-100"
               />
-              <svg
-                fill="none"
-                viewBox="0 0 14 14"
-                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
-              >
-                <path
-                  d="M3 8L6 11L11 3.5"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="opacity-0 group-has-checked/checkbox:opacity-100"
-                />
-              </svg>
-            </div>
-          )}
+            </svg>
+          </div>
         </div>
         <div
           onClick={handleTextClick}
-          onMouseDown={handleTextMouseDown}
-          onMouseUp={handleTextMouseUp}
           className={`flex-1 min-w-0 text-xs/5 font-semibold select-none ${
             todo.completed
               ? "line-through text-[var(--color-text-secondary)]"

@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
+import { RocketLaunchIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { auth, type Profile } from "./firebase";
 import { useTheme, type Theme } from "./hooks/useTheme";
 import UpdateNotification from "./UpdateNotification";
 import { openBillingPortal } from "./firebase/subscriptions";
+import { useOnboarding } from "./contexts/OnboardingContext";
 
 function getDownloadUrl(): string | null {
   // Check if running in Electron
@@ -42,13 +44,16 @@ interface TopBarProps {
   onMoveOldTodos?: () => void;
   profile?: Profile | null;
   onOpenSubscription?: () => void;
+  showGetStarted?: boolean;
+  onOpenOnboarding?: () => void;
 }
 
-export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription }: TopBarProps) {
+export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription, showGetStarted, onOpenOnboarding }: TopBarProps) {
   const authentication = useAuthentication();
   const { theme, setTheme } = useTheme();
   const downloadUrl = getDownloadUrl();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const { isOnboarding, currentStep } = useOnboarding();
 
   const subscriptionStatus = profile?.subscription?.status;
   const showPaymentWarning = subscriptionStatus === "past_due" || subscriptionStatus === "unpaid";
@@ -125,6 +130,26 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
             {/* Update notification */}
             {authentication.user && <UpdateNotification />}
 
+            {/* Get Started button or Onboarding badge */}
+            {authentication.user && showGetStarted && onOpenOnboarding && (
+              isOnboarding ? (
+                <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 inset-ring inset-ring-yellow-600/20 dark:bg-yellow-400/10 dark:text-yellow-500 dark:inset-ring-yellow-400/20">
+                  Onboarding {currentStep === "morning-sun" ? "1/2" : "2/2"}
+                </span>
+              ) : (
+                <button
+                  onClick={onOpenOnboarding}
+                  className="group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
+                >
+                  <RocketLaunchIcon
+                    aria-hidden="true"
+                    className="size-6 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
+                  />
+                  Get started
+                </button>
+              )
+            )}
+
             {/* Payment warning indicators for past_due (yellow) and unpaid (red) */}
             {authentication.user && showPaymentWarning && (
               <button
@@ -167,8 +192,12 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
             {authentication.user && profile && profile.subscription?.status !== 'active' && !showPaymentWarning && onOpenSubscription && (
               <button
                 onClick={onOpenSubscription}
-                className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+                className="group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
               >
+                <SparklesIcon
+                  aria-hidden="true"
+                  className="size-6 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
+                />
                 Subscribe
               </button>
             )}
@@ -177,7 +206,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
             {authentication.user && oldTodoCount > 0 && onMoveOldTodos && (
               <button
                 onClick={onMoveOldTodos}
-                className="relative flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+                className="group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
               >
                 <svg
                   width="20"
@@ -186,7 +215,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
-                  className="size-5 shrink-0"
+                  className="size-6 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
                 >
                   <path
                     d="M10 3V17M10 17L14 13M10 17L6 13"
@@ -196,7 +225,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span>Move {oldTodoCount} uncompleted todo{oldTodoCount === 1 ? '' : 's'}</span>
+                Move {oldTodoCount} uncompleted todo{oldTodoCount === 1 ? '' : 's'}
               </button>
             )}
 
