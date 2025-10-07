@@ -1,37 +1,27 @@
 import { Transition } from "@headlessui/react";
 import {
-  SunIcon,
-  EnvelopeIcon,
-  ChatBubbleLeftIcon,
-  ExclamationTriangleIcon,
-  UserIcon,
   XMarkIcon,
   CalendarDaysIcon,
   PlusCircleIcon,
   LinkIcon,
   PencilSquareIcon,
+  ArrowsRightLeftIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ClipboardIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
 import { useState } from "react";
 
 export default function OnboardingNotification() {
-  const { isOnboarding, currentStep, nextStep, completeOnboarding } =
+  const { isOnboarding, currentStep, completeOnboarding } =
     useOnboarding();
   const [{ isEditing }, editProfile] = useEditProfile();
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  const handleNext = () => {
-    if (currentStep === "icon-cloud") {
-      editProfile({ isOnboarded: true });
-      completeOnboarding();
-    } else {
-      nextStep();
-    }
-  };
-
-  const handleDismiss = () => {
-    editProfile({ isOnboarded: true });
+  const handleDismiss = async () => {
+    await editProfile({ isOnboarded: true });
     completeOnboarding();
   };
 
@@ -39,7 +29,6 @@ export default function OnboardingNotification() {
     try {
       await navigator.clipboard.writeText("https://example.com/task");
       setCopiedUrl(true);
-      setTimeout(() => setCopiedUrl(false), 2000);
     } catch (err) {
       console.error("Failed to copy URL:", err);
     }
@@ -54,8 +43,8 @@ export default function OnboardingNotification() {
           ),
           title: "This app only displays workdays",
           message:
-            "Weekends are for family, friends and rest. By default, the app shows current and next week. Press TAB to toggle between showing both weeks or just the current week.",
-          actionLabel: "Press TAB to continue",
+            "Weekends are for family, friends and rest. By default, the app shows current and next week. Press TAB to toggle to 1-week mode, then press TAB again to return to 2-week mode.",
+          actionLabel: "Press TAB twice to continue",
           requiresTab: true,
         };
       case "add-todo":
@@ -65,7 +54,7 @@ export default function OnboardingNotification() {
           ),
           title: "Let's add your first todo",
           message:
-            "You can press TAB again to flip back to two-week mode. Now try adding a todo by clicking on any day.",
+            "Try adding a todo by clicking on any day.",
           actionLabel: "Add a todo to continue",
           requiresAddTodo: true,
         };
@@ -92,70 +81,38 @@ export default function OnboardingNotification() {
           actionLabel: "Edit and save a todo to continue",
           requiresEditTodo: true,
         };
-      case "morning-sun":
+      case "move-todo":
         return {
           icon: (
-            <SunIcon aria-hidden="true" className="size-6 text-yellow-500 dark:text-yellow-400" />
+            <ArrowsRightLeftIcon aria-hidden="true" className="size-6 text-indigo-500 dark:text-indigo-400" />
           ),
-          title: "Some mornings you wake up feeling great",
+          title: "Move todos around",
           message:
-            "Hundreds of factors, most out of our control, define how well we meet the workday. Regardless, we all need to feel a sense of control to be motivated.",
-          actionLabel: "Go to work",
+            "Drag and drop todos to reorder them within a day or move them to different days.",
+          actionLabel: "Move a todo to continue",
+          requiresMoveTodo: true,
         };
-      case "icon-cloud":
+      case "timebox":
         return {
           icon: (
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="flex size-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                  <EnvelopeIcon
-                    aria-hidden="true"
-                    className="size-4 text-blue-600 dark:text-blue-400"
-                  />
-                </div>
-                <div className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  12
-                </div>
-              </div>
-              <div className="relative">
-                <div className="flex size-8 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-                  <ChatBubbleLeftIcon
-                    aria-hidden="true"
-                    className="size-4 text-green-600 dark:text-green-400"
-                  />
-                </div>
-                <div className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  8
-                </div>
-              </div>
-              <div className="relative">
-                <div className="flex size-8 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30">
-                  <ExclamationTriangleIcon
-                    aria-hidden="true"
-                    className="size-4 text-orange-600 dark:text-orange-400"
-                  />
-                </div>
-                <div className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  5
-                </div>
-              </div>
-              <div className="relative">
-                <div className="flex size-8 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30">
-                  <UserIcon
-                    aria-hidden="true"
-                    className="size-4 text-purple-600 dark:text-purple-400"
-                  />
-                </div>
-                <div className="absolute -top-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  3
-                </div>
-              </div>
-            </div>
+            <ClockIcon aria-hidden="true" className="size-6 text-pink-500 dark:text-pink-400" />
           ),
-          title: "Opening your computer can be quite disarming",
+          title: "Use the timebox feature",
           message:
-            "We operate in a workplace where a never ending stream of notifications distracts and overwhelms us.",
-          actionLabel: "Take control",
+            "Double-click on any todo to open the timebox. This helps you focus on one task at a time with a timer.",
+          actionLabel: "Open and close timebox to continue",
+          requiresTimebox: true,
+        };
+      case "congratulations":
+        return {
+          icon: (
+            <CheckCircleIcon aria-hidden="true" className="size-6 text-green-500 dark:text-green-400" />
+          ),
+          title: "Congratulations!",
+          message:
+            "You've completed the onboarding. You now know all the core features of Divergent Todos. Start managing your tasks and stay focused!",
+          actionLabel: "",
+          hideActionLabel: true,
         };
       default:
         return null;
@@ -169,7 +126,7 @@ export default function OnboardingNotification() {
   return (
     <div
       aria-live="assertive"
-      className="pointer-events-none fixed inset-0 flex items-end px-4 py-6 sm:items-end sm:p-6 z-50"
+      className="pointer-events-none fixed inset-0 flex items-start px-4 pt-20 sm:items-start sm:p-6 sm:pt-20 z-50"
     >
       <div className="flex w-full flex-col items-end space-y-4">
         <Transition show={isOnboarding}>
@@ -184,49 +141,53 @@ export default function OnboardingNotification() {
                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     {content.message}
                   </p>
+                  {!content.hideActionLabel && content.actionLabel && (
+                    <p className="mt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">
+                      {content.actionLabel}
+                    </p>
+                  )}
                   {content.showCopyButton && (
                     <div className="mt-3">
                       <button
                         type="button"
                         onClick={handleCopyUrl}
-                        className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                        className="inline-flex items-center gap-x-1.5 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-xs outline-1 outline-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/10 dark:text-white dark:shadow-none dark:outline-white/10 dark:hover:bg-white/20 dark:focus-visible:outline-indigo-500"
                       >
-                        {copiedUrl ? "✓ Copied!" : "Copy sample URL"}
+                        <ClipboardIcon aria-hidden="true" className="-ml-0.5 size-5" />
+                        {copiedUrl ? "Copied!" : "Copy sample URL"}
                       </button>
                     </div>
                   )}
-                  <div className="mt-3 flex space-x-7">
-                    {!content.requiresTab && !content.requiresAddTodo && !content.requiresAddTodoWithUrl && !content.requiresEditTodo && (
+                  {currentStep === "congratulations" && (
+                    <div className="mt-3 flex justify-end">
                       <button
                         type="button"
-                        onClick={handleNext}
+                        onClick={handleDismiss}
                         disabled={isEditing}
                         className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isEditing ? "Loading..." : content.actionLabel}
+                        {isEditing ? "Loading..." : "Get started"}
                       </button>
-                    )}
-                    {(content.requiresTab || content.requiresAddTodo || content.requiresAddTodoWithUrl || content.requiresEditTodo) && (
-                      <div className="text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                        {content.actionLabel}
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleDismiss}
-                      disabled={isEditing}
-                      className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Dismiss
-                    </button>
-                  </div>
+                    </div>
+                  )}
+                  {currentStep !== "congratulations" && (
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleDismiss}
+                        disabled={isEditing}
+                        className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Skip onboarding
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="ml-4 flex shrink-0">
                   <button
                     type="button"
-                    onClick={handleDismiss}
-                    disabled={isEditing}
-                    className="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={currentStep === "congratulations" ? handleDismiss : completeOnboarding}
+                    className="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500"
                   >
                     <span className="sr-only">Close</span>
                     <XMarkIcon aria-hidden="true" className="size-5" />

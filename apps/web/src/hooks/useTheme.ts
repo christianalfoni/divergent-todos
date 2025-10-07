@@ -61,7 +61,7 @@ function applyTheme(state: ThemeState) {
 }
 
 export function useTheme() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
   const profile = authentication.profile;
   const [, editProfile] = useEditProfile();
   const [themeState, setThemeState] = useState<ThemeState>(getStoredTheme);

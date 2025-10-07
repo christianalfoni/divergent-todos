@@ -220,7 +220,7 @@ export default function SmartLinksEditor({
           border-radius: 6px;
           border: 1px solid var(--color-border-secondary);
           background: var(--color-bg-hover);
-          line-height: 1.6;
+          line-height: 1.4;
           margin: 0 1px;
           user-select: none;
           font-size: inherit;

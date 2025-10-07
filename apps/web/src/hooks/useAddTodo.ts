@@ -20,7 +20,7 @@ export type AddTodoState =
     };
 
 export function useAddTodo() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
   const profileRef = useRef(authentication.profile);
 

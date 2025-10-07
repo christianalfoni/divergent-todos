@@ -1,7 +1,7 @@
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-export type OnboardingStep = "workdays" | "add-todo" | "add-todo-with-url" | "edit-todo" | "morning-sun" | "icon-cloud" | null;
+export type OnboardingStep = "workdays" | "add-todo" | "add-todo-with-url" | "edit-todo" | "move-todo" | "timebox" | "congratulations" | null;
 
 export interface OnboardingTodo {
   id: string;
@@ -22,13 +22,16 @@ interface OnboardingContextValue {
   nextStep: () => void;
   completeOnboarding: () => void;
   notifyTodoEditCompleted: () => void;
+  notifyWeekModeToggled: (isThreeWeeks: boolean) => void;
+  notifyTodoMoved: () => void;
+  notifyTimeboxClosed: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(
   undefined
 );
 
-const ONBOARDING_STEPS: OnboardingStep[] = ["workdays", "add-todo", "add-todo-with-url", "edit-todo", "morning-sun", "icon-cloud"];
+const ONBOARDING_STEPS: OnboardingStep[] = ["workdays", "add-todo", "add-todo-with-url", "edit-todo", "move-todo", "timebox", "congratulations"];
 
 interface OnboardingProviderProps {
   children: ReactNode;
@@ -37,12 +40,14 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(null);
   const [todos, setTodos] = useState<OnboardingTodo[]>([]);
+  const [hasToggledToOneWeek, setHasToggledToOneWeek] = useState(false);
 
   const isOnboarding = currentStep !== null;
 
   const startOnboarding = () => {
     setCurrentStep(ONBOARDING_STEPS[0]);
     setTodos([]); // Reset todos when starting onboarding
+    setHasToggledToOneWeek(false); // Reset week toggle tracking
   };
 
   const nextStep = () => {
@@ -83,6 +88,31 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
+  const notifyWeekModeToggled = (isThreeWeeks: boolean) => {
+    if (currentStep === "workdays") {
+      if (!isThreeWeeks) {
+        // User toggled to 1-week mode
+        setHasToggledToOneWeek(true);
+      } else if (hasToggledToOneWeek) {
+        // User toggled back to 2-week mode after having toggled to 1-week
+        nextStep();
+        setHasToggledToOneWeek(false); // Reset for potential future use
+      }
+    }
+  };
+
+  const notifyTodoMoved = () => {
+    if (currentStep === "move-todo") {
+      nextStep();
+    }
+  };
+
+  const notifyTimeboxClosed = () => {
+    if (currentStep === "timebox") {
+      nextStep();
+    }
+  };
+
   return (
     <OnboardingContext.Provider
       value={{
@@ -96,6 +126,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         nextStep,
         completeOnboarding,
         notifyTodoEditCompleted,
+        notifyWeekModeToggled,
+        notifyTodoMoved,
+        notifyTimeboxClosed,
       }}
     >
       {children}

@@ -5,9 +5,11 @@ import { useAuthentication } from "./useAuthentication";
 import { useEffect } from "react";
 
 export function useTodos() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
 
-  const [todos, setTodos] = pipe<Todo[]>().setState().useCache("todos", []);
+  const [todos, setTodos] = pipe<Todo[], (todos: Todo[]) => Todo[]>()
+    .updateState((state, cb) => cb(state))
+    .useCache("todos", []);
 
   useEffect(() => {
     const q = query(
@@ -17,12 +19,12 @@ export function useTodos() {
       orderBy("position", "asc")
     );
 
-    return onSnapshot(q, { includeMetadataChanges: false }, (snapshot) => {
-      setTodos(
+    return onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+      setTodos(() =>
         snapshot.docs.map((doc) => doc.data({ serverTimestamps: "estimate" }))
       );
     });
   }, [authentication.user, setTodos]);
 
-  return todos;
+  return [todos, setTodos] as const;
 }

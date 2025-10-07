@@ -33,9 +33,9 @@ export type AuthenticationState =
 export function useAuthentication() {
   const [authentication, setAuthentication] = pipe<
     AuthenticationState,
-    AuthenticationState
+    (state: AuthenticationState) => AuthenticationState
   >()
-    .setState()
+    .updateState((state, cb) => cb(state))
     .useCache("authentication", {
       isAuthenticating: true,
       error: null,
@@ -56,41 +56,32 @@ export function useAuthentication() {
 
       if (!user) {
         // User logged out - clear everything
-        setAuthentication({
+        setAuthentication(() => ({
           isAuthenticating: false,
           user: null,
           profile: null,
           error: null,
-        });
+        }));
         return;
       }
-
-      // User logged in - set user and start listening to profile
-      // Initially set profile to null until we load it
-      setAuthentication({
-        isAuthenticating: false,
-        user,
-        profile: null,
-        error: null,
-      });
 
       // Set up profile listener
       const profileDoc = doc(profilesCollection, user.uid);
       unsubscribeProfile = onSnapshot(
         profileDoc,
-        { includeMetadataChanges: false },
+        { includeMetadataChanges: true },
         (snapshot) => {
           const profile = snapshot.exists()
             ? snapshot.data({ serverTimestamps: "estimate" })
             : null;
 
-          // Update authentication state with new profile
-          setAuthentication({
+          // Update authentication state with profile - now fully authenticated
+          setAuthentication(() => ({
             isAuthenticating: false,
             user,
             profile,
             error: null,
-          });
+          }));
         }
       );
     });
@@ -104,5 +95,5 @@ export function useAuthentication() {
     };
   }, [setAuthentication]);
 
-  return authentication;
+  return [authentication, setAuthentication] as const;
 }

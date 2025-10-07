@@ -12,6 +12,15 @@ interface TodoItemProps {
   onOpenTimeBox?: (todo: Todo) => void;
 }
 
+// Helper function to check if HTML content is empty
+function isHtmlEmpty(html: string): boolean {
+  // Create a temporary div to parse the HTML
+  const temp = document.createElement('div');
+  temp.innerHTML = html;
+  // Get the text content and check if it's empty after trimming
+  return temp.textContent?.trim() === '';
+}
+
 export default function TodoItem({
   todo,
   onToggleTodoComplete,
@@ -22,11 +31,15 @@ export default function TodoItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
   const [isPressed, setIsPressed] = useState(false);
+  const [dragEnabled, setDragEnabled] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const lastClickTimeRef = useRef<number>(0);
+  const clickTimeoutRef = useRef<number | null>(null);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
       animateLayoutChanges: () => false,
+      disabled: !dragEnabled,
     });
 
   const style = {
@@ -40,8 +53,13 @@ export default function TodoItem({
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        if (editingHtml !== todo.text) {
-          onUpdateTodo?.(todo.id, editingHtml);
+        if (!isHtmlEmpty(editingHtml)) {
+          if (editingHtml !== todo.text) {
+            onUpdateTodo?.(todo.id, editingHtml);
+          }
+        } else {
+          // Delete todo if content is empty
+          onDeleteTodo?.(todo.id);
         }
         setIsEditing(false);
       }
@@ -53,7 +71,7 @@ export default function TodoItem({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo]);
+  }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo, onDeleteTodo]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
@@ -61,9 +79,12 @@ export default function TodoItem({
       setIsEditing(false);
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (editingHtml.trim()) {
+      if (!isHtmlEmpty(editingHtml)) {
         onUpdateTodo?.(todo.id, editingHtml);
         setIsEditing(false);
+      } else {
+        // Delete todo if content is empty
+        onDeleteTodo?.(todo.id);
       }
     }
   };
@@ -71,14 +92,45 @@ export default function TodoItem({
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    // Cancel any pending single-click edit activation
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+      clickTimeoutRef.current = null;
+    }
+
     if (!todo.completed) {
       onOpenTimeBox?.(todo);
     }
   };
 
-  const handleTextClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsEditing(true);
+  const handleMouseDown = () => {
+    const now = Date.now();
+    const timeSinceLastClick = now - lastClickTimeRef.current;
+    lastClickTimeRef.current = now;
+
+    // If this is a potential double-click (within 300ms), temporarily disable drag
+    if (timeSinceLastClick < 300) {
+      setDragEnabled(false);
+      // Re-enable drag after a short delay
+      setTimeout(() => setDragEnabled(true), 100);
+      return;
+    }
+
+    setDragEnabled(true);
+    setIsPressed(true);
+  };
+
+  const handleContainerClick = (_e: React.MouseEvent) => {
+    // Delay edit mode activation to allow for double-click
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+
+    clickTimeoutRef.current = setTimeout(() => {
+      setIsEditing(true);
+      clickTimeoutRef.current = null;
+    }, 250);
   };
 
   if (isEditing) {
@@ -134,8 +186,9 @@ export default function TodoItem({
       <div
         {...attributes}
         {...listeners}
+        onClick={handleContainerClick}
         onDoubleClick={handleDoubleClick}
-        onMouseDown={() => setIsPressed(true)}
+        onMouseDown={handleMouseDown}
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
         className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none ${
@@ -144,7 +197,7 @@ export default function TodoItem({
           "hover:bg-[var(--color-bg-hover)]"
         }`}
       >
-        <div className="flex h-5 shrink-0 items-center" onDoubleClick={(e) => e.stopPropagation()}>
+        <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
           <div className="group/checkbox grid size-4 grid-cols-1">
             <input
               id={`todo-${todo.id}`}
@@ -170,7 +223,6 @@ export default function TodoItem({
           </div>
         </div>
         <div
-          onClick={handleTextClick}
           className={`flex-1 min-w-0 text-xs/5 font-semibold select-none ${
             todo.completed
               ? "line-through text-[var(--color-text-secondary)]"
@@ -179,30 +231,6 @@ export default function TodoItem({
         >
           <SmartLinksEditor html={todo.text} editing={false} />
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDeleteTodo?.(todo.id);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="flex h-5 shrink-0 items-center opacity-0 group-hover/todo:opacity-100 transition-opacity"
-          aria-label="Delete todo"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="w-4 h-4 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
       </div>
     </div>
   );

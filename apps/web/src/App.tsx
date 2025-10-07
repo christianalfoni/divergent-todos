@@ -14,6 +14,7 @@ import { generateKeyBetween } from "fractional-indexing";
 import { useHittingWood } from "./hooks/useHittingWood";
 import { useTheme } from "./hooks/useTheme";
 import { OnboardingProvider, useOnboarding } from "./contexts/OnboardingContext";
+import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 
 export interface Todo {
   id: string;
@@ -21,11 +22,12 @@ export interface Todo {
   url?: string;
   completed: boolean;
   date: string; // ISO date string (YYYY-MM-DD)
+  position: string;
 }
 
 function AuthenticatedApp() {
-  const authentication = useAuthentication();
-  const firebaseTodos = useTodos();
+  const [authentication] = useAuthentication();
+  const [firebaseTodos] = useTodos();
   const profile = authentication.profile;
   const [, addTodo] = useAddTodo();
   const [, editTodo] = useEditTodo();
@@ -33,6 +35,9 @@ function AuthenticatedApp() {
   const hittingWood = useHittingWood();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const onboarding = useOnboarding();
+
+  // Mark app as installed when running in desktop app
+  useMarkAppInstalled();
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
@@ -51,19 +56,31 @@ function AuthenticatedApp() {
 
   // Use onboarding todos if in onboarding mode, otherwise use Firebase todos
   const todos: Todo[] = onboarding.isOnboarding
-    ? onboarding.todos.map((todo) => ({
-        id: todo.id,
-        text: todo.description,
-        url: undefined,
-        completed: todo.completed,
-        date: todo.date.toISOString().split("T")[0],
-      }))
+    ? onboarding.todos
+        .slice()
+        .sort((a, b) => {
+          const dateCompare = a.date.toISOString().localeCompare(b.date.toISOString());
+          if (dateCompare !== 0) return dateCompare;
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        })
+        .map((todo) => ({
+          id: todo.id,
+          text: todo.description,
+          url: undefined,
+          completed: todo.completed,
+          date: todo.date.toISOString().split("T")[0],
+          position: todo.position,
+        }))
     : firebaseTodos.map((todo) => ({
         id: todo.id,
         text: todo.description,
         url: undefined, // URL not yet supported in Firebase schema
         completed: todo.completed,
         date: todo.date.toISOString().split("T")[0],
+        position: todo.position,
       }));
 
   // Get Monday of current week
@@ -96,7 +113,12 @@ function AuthenticatedApp() {
       // In onboarding mode, use local state
       const todosForDate = onboarding.todos
         .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
-        .sort((a, b) => a.position.localeCompare(b.position));
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
       const lastPosition =
         todosForDate.length > 0
@@ -187,7 +209,12 @@ function AuthenticatedApp() {
         .filter(
           (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
         )
-        .sort((a, b) => a.position.localeCompare(b.position));
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
       let newPosition: string;
 
@@ -212,6 +239,9 @@ function AuthenticatedApp() {
         date: dateObj,
         position: newPosition,
       });
+
+      // Notify that a todo was moved
+      onboarding.notifyTodoMoved();
     } else {
       const todo = firebaseTodos.find((t) => t.id === todoId);
       if (!todo) return;
@@ -338,7 +368,7 @@ function AuthenticatedApp() {
 }
 
 function AppContent() {
-  const authentication = useAuthentication();
+  const [authentication] = useAuthentication();
 
   // Initialize theme system
   useTheme();
