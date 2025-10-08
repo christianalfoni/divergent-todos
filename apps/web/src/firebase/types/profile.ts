@@ -8,6 +8,7 @@ import {
 // Profile type definition
 export interface Profile {
   theme?: string;
+  viewMode?: "one-week" | "two-weeks";
   freeTodoCount?: number;
   isOnboarded?: boolean;
   hasInstalledApp?: boolean;
@@ -29,6 +30,7 @@ export interface Profile {
 // Firestore data format (with Timestamps instead of Dates)
 interface ProfileFirestore {
   theme?: string;
+  viewMode?: "one-week" | "two-weeks";
   freeTodoCount?: number;
   isOnboarded?: boolean;
   hasInstalledApp?: boolean;
@@ -54,6 +56,10 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (profile.theme !== undefined) {
       result.theme = profile.theme;
+    }
+
+    if (profile.viewMode !== undefined) {
+      result.viewMode = profile.viewMode;
     }
 
     if (profile.freeTodoCount !== undefined) {
@@ -92,6 +98,10 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (data.theme !== undefined) {
       profile.theme = data.theme;
+    }
+
+    if (data.viewMode !== undefined) {
+      profile.viewMode = data.viewMode;
     }
 
     if (data.freeTodoCount !== undefined) {

@@ -5,6 +5,7 @@ import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
+import { useViewMode } from "./hooks/useViewMode";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { getWeekdaysForThreeWeeks, isToday, getDateId, isNextMonday } from "./utils/calendar";
 import type { Todo } from "./App";
@@ -36,7 +37,7 @@ export default function Calendar({
 }: CalendarProps) {
   const [authentication] = useAuthentication();
   const onboarding = useOnboarding();
-  const [showThreeWeeks, setShowThreeWeeks] = useState(true);
+  const { viewMode, setViewMode } = useViewMode();
   const [timeBoxTodo, setTimeBoxTodo] = useState<Todo | null>(null);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
   const [, setVisibilityTrigger] = useState(0);
@@ -64,7 +65,7 @@ export default function Calendar({
   };
 
   const weekdays = useMemo(() => {
-    if (showThreeWeeks) {
+    if (viewMode === "two-weeks") {
       return allWeekdays;
     }
 
@@ -80,24 +81,22 @@ export default function Calendar({
 
     // Show current week (first 5 days)
     return allWeekdays.slice(0, 5);
-  }, [allWeekdays, showThreeWeeks]);
+  }, [allWeekdays, viewMode]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Tab") {
         e.preventDefault();
-        setShowThreeWeeks((prev) => {
-          const newValue = !prev;
-          // Notify onboarding context about the toggle
-          onboarding.notifyWeekModeToggled(newValue);
-          return newValue;
-        });
+        const newViewMode = viewMode === "two-weeks" ? "one-week" : "two-weeks";
+        setViewMode(newViewMode);
+        // Notify onboarding context about the toggle
+        onboarding.notifyWeekModeToggled(newViewMode === "two-weeks");
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onboarding]);
+  }, [viewMode, setViewMode, onboarding]);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -137,7 +136,7 @@ export default function Calendar({
       <div className="flex-1 w-full flex flex-col overflow-hidden">
         <div
           className={`grid grid-cols-5 ${
-            showThreeWeeks ? "grid-rows-2" : "grid-rows-1"
+            viewMode === "two-weeks" ? "grid-rows-2" : "grid-rows-1"
           } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
         >
           {weekdays.map((date, index) => {
