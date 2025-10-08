@@ -78,13 +78,13 @@ const SmartLinksEditor = forwardRef<SmartLinksEditorRef, Props>(function SmartLi
     if (isInitialMount.current) {
       if (html) el.innerHTML = html;
       isInitialMount.current = false;
-      return;
-    }
-
-    // Update innerHTML when html prop changes - but ONLY when not editing
-    // to avoid cursor jumping during editing
-    if (!editing && html !== undefined && el.innerHTML !== html) {
-      el.innerHTML = html;
+      // Don't return - continue to do chip-to-anchor conversion on initial mount
+    } else {
+      // Update innerHTML when html prop changes - but ONLY when not editing
+      // to avoid cursor jumping during editing
+      if (!editing && html !== undefined && el.innerHTML !== html) {
+        el.innerHTML = html;
+      }
     }
 
     // When switching to view mode, swap chip spans -> anchors
