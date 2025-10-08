@@ -17,6 +17,7 @@ type UpdateState =
   | { type: 'available', info: UpdateInfo }
   | { type: 'downloading', progress: DownloadProgress }
   | { type: 'downloaded', info: UpdateInfo }
+  | { type: 'installing', info: UpdateInfo }
   | { type: 'error', message: string };
 
 export default function UpdateNotification() {
@@ -50,7 +51,7 @@ export default function UpdateNotification() {
     });
 
     const unsubscribeDownloaded = window.native.updater.onDownloaded((info) => {
-      setUpdateState({ type: 'downloaded', info });
+      setUpdateState({ type: 'installing', info });
       // Automatically install when download completes
       window.native!.updater.install();
     });
@@ -72,6 +73,8 @@ export default function UpdateNotification() {
 
   const handleClick = () => {
     if (updateState.type === 'available') {
+      // Immediately set to downloading state
+      setUpdateState({ type: 'downloading', progress: { percent: 0, bytesPerSecond: 0, total: 0, transferred: 0 } });
       window.native!.updater.download();
     }
   };
@@ -79,10 +82,10 @@ export default function UpdateNotification() {
   return (
     <button
       onClick={handleClick}
-      disabled={updateState.type === 'downloading'}
+      disabled={updateState.type === 'downloading' || updateState.type === 'installing'}
       className="flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      {updateState.type === 'downloading' ? (
+      {updateState.type === 'downloading' || updateState.type === 'installing' ? (
         <>
           {/* Spinner icon */}
           <svg
@@ -105,7 +108,7 @@ export default function UpdateNotification() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          <span>Downloading...</span>
+          <span>{updateState.type === 'installing' ? 'Installing...' : 'Downloading...'}</span>
         </>
       ) : (
         <>
