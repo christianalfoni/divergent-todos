@@ -78,7 +78,13 @@ const SmartLinksEditor = forwardRef<SmartLinksEditorRef, Props>(function SmartLi
     if (isInitialMount.current) {
       if (html) el.innerHTML = html;
       isInitialMount.current = false;
-      return;
+      // Don't return - continue to do chip-to-anchor conversion on initial mount
+    } else {
+      // Update innerHTML when html prop changes - but ONLY when not editing
+      // to avoid cursor jumping during editing
+      if (!editing && html !== undefined && el.innerHTML !== html) {
+        el.innerHTML = html;
+      }
     }
 
     // When switching to view mode, swap chip spans -> anchors
@@ -126,7 +132,15 @@ const SmartLinksEditor = forwardRef<SmartLinksEditorRef, Props>(function SmartLi
       sel?.removeAllRanges();
       sel?.addRange(range);
     }
-  }, [editing, autoFocus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    // Conditionally depend on html: only when NOT editing to prevent cursor jumping.
+    // When editing=true, changes to html won't trigger this effect, avoiding innerHTML updates.
+    // When editing=false (view mode), html changes will trigger the effect to update display.
+    editing ? null : html,
+    editing,
+    autoFocus
+  ]);
 
   // Notify changes (serialize innerHTML while editing)
   const emitChange = () => {
