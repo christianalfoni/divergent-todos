@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
 
 type Props = {
   html?: string; // initial serialized HTML with chips (optional)
@@ -8,6 +8,11 @@ type Props = {
   autoFocus?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   onBlur?: () => void;
+};
+
+export type SmartLinksEditorRef = {
+  clear: () => void;
+  setHtml: (html: string) => void;
 };
 
 const URL_REGEX = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/i;
@@ -36,7 +41,7 @@ function insertNodeAtSelection(node: Node) {
   sel.addRange(range);
 }
 
-export default function SmartLinksEditor({
+const SmartLinksEditor = forwardRef<SmartLinksEditorRef, Props>(function SmartLinksEditor({
   html,
   editing,
   onChange,
@@ -44,9 +49,23 @@ export default function SmartLinksEditor({
   autoFocus = false,
   onKeyDown: externalOnKeyDown,
   onBlur: externalOnBlur,
-}: Props) {
+}, forwardedRef) {
   const ref = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
+
+  // Expose imperative methods
+  useImperativeHandle(forwardedRef, () => ({
+    clear: () => {
+      if (ref.current) {
+        ref.current.innerHTML = "";
+      }
+    },
+    setHtml: (html: string) => {
+      if (ref.current) {
+        ref.current.innerHTML = html;
+      }
+    }
+  }));
 
   // Initialize content only once or when explicitly changing modes
   useEffect(() => {
@@ -55,13 +74,11 @@ export default function SmartLinksEditor({
 
     el.contentEditable = editing ? "true" : "false";
 
-    // Only set innerHTML on initial mount, not on every html prop change
+    // Only set innerHTML on initial mount
     if (isInitialMount.current) {
       if (html) el.innerHTML = html;
       isInitialMount.current = false;
-    } else if (html === "" && el.innerHTML !== "") {
-      // Clear content when html prop becomes empty (e.g., after submitting a todo)
-      el.innerHTML = "";
+      return;
     }
 
     // When switching to view mode, swap chip spans -> anchors
@@ -109,7 +126,7 @@ export default function SmartLinksEditor({
       sel?.removeAllRanges();
       sel?.addRange(range);
     }
-  }, [editing, autoFocus, html]);
+  }, [editing, autoFocus]);
 
   // Notify changes (serialize innerHTML while editing)
   const emitChange = () => {
@@ -256,4 +273,6 @@ export default function SmartLinksEditor({
       `}</style>
     </>
   );
-}
+});
+
+export default SmartLinksEditor;

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
-import SmartLinksEditor from './SmartLinksEditor'
+import SmartLinksEditor, { type SmartLinksEditorRef } from './SmartLinksEditor'
 import type { Todo } from './App'
 
 interface DayCellProps {
@@ -22,6 +22,7 @@ interface DayCellProps {
 export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
+  const editorRef = useRef<SmartLinksEditorRef>(null)
   const dayId = date.toISOString().split('T')[0]
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -33,6 +34,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
+      editorRef.current?.clear()
       setNewTodoHtml('')
       setIsAddingTodo(false)
     } else if (e.key === 'Enter') {
@@ -45,6 +47,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           date: date.toISOString().split('T')[0],
           position: '',
         })
+        editorRef.current?.clear()
         setNewTodoHtml('')
         // Keep isAddingTodo true so user can quickly add another todo
       }
@@ -52,6 +55,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
   }
 
   const handleBlur = () => {
+    editorRef.current?.clear()
     setNewTodoHtml('')
     setIsAddingTodo(false)
   }
@@ -146,6 +150,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
               </div>
               <div className="flex-1 min-w-0 text-xs/5 text-[var(--color-text-primary)] empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]">
                 <SmartLinksEditor
+                  ref={editorRef}
                   html={newTodoHtml}
                   editing={true}
                   onChange={setNewTodoHtml}

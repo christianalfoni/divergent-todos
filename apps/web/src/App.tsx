@@ -157,7 +157,12 @@ function AuthenticatedApp() {
       // Find last position for this date
       const todosForDate = firebaseTodos
         .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
-        .sort((a, b) => a.position.localeCompare(b.position));
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
       const lastPosition =
         todosForDate.length > 0
@@ -251,7 +256,12 @@ function AuthenticatedApp() {
         .filter(
           (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
         )
-        .sort((a, b) => a.position.localeCompare(b.position));
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
       let newPosition: string;
 
