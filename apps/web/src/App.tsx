@@ -157,7 +157,12 @@ function AuthenticatedApp() {
       // Find last position for this date
       const todosForDate = firebaseTodos
         .filter((t) => t.date.toISOString().split("T")[0] === todo.date)
-        .sort((a, b) => a.position.localeCompare(b.position));
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
 
       const lastPosition =
         todosForDate.length > 0
@@ -216,6 +221,17 @@ function AuthenticatedApp() {
           return 0;
         });
 
+      // Find current index in source date
+      const currentDate = todo.date.toISOString().split("T")[0];
+      const todosInSourceDate = onboarding.todos
+        .filter((t) => t.date.toISOString().split("T")[0] === currentDate)
+        .sort((a, b) => {
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
+      const currentIndex = todosInSourceDate.findIndex((t) => t.id === todoId);
+
       let newPosition: string;
 
       if (newIndex === undefined) {
@@ -251,7 +267,23 @@ function AuthenticatedApp() {
         .filter(
           (t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId
         )
-        .sort((a, b) => a.position.localeCompare(b.position));
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
+
+      // Find current index in source date
+      const currentDate = todo.date.toISOString().split("T")[0];
+      const todosInSourceDate = firebaseTodos
+        .filter((t) => t.date.toISOString().split("T")[0] === currentDate)
+        .sort((a, b) => {
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        });
+      const currentIndex = todosInSourceDate.findIndex((t) => t.id === todoId);
 
       let newPosition: string;
 

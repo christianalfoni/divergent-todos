@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import SmartLinksEditor from "./SmartLinksEditor";
+import SmartLinksEditor, { type SmartLinksEditorRef } from "./SmartLinksEditor";
 import type { Todo } from "./App";
 
 interface TodoItemProps {
@@ -33,6 +33,8 @@ export default function TodoItem({
   const [isPressed, setIsPressed] = useState(false);
   const [dragEnabled, setDragEnabled] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<SmartLinksEditorRef>(null);
+  const originalHtmlRef = useRef<string>(todo.text);
   const lastClickTimeRef = useRef<number>(0);
   const clickTimeoutRef = useRef<number | null>(null);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -78,7 +80,9 @@ export default function TodoItem({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
-      setEditingHtml(todo.text);
+      // Revert to original content
+      editorRef.current?.setHtml(originalHtmlRef.current);
+      setEditingHtml(originalHtmlRef.current);
       setIsEditing(false);
     } else if (e.key === "Enter") {
       e.preventDefault();
@@ -131,6 +135,9 @@ export default function TodoItem({
     }
 
     clickTimeoutRef.current = setTimeout(() => {
+      // Save original content when entering edit mode
+      originalHtmlRef.current = todo.text;
+      setEditingHtml(todo.text);
       setIsEditing(true);
       clickTimeoutRef.current = null;
     }, 250);
@@ -166,6 +173,7 @@ export default function TodoItem({
           </div>
           <div className="flex-1 min-w-0 text-xs/5 font-semibold text-[var(--color-text-primary)]">
             <SmartLinksEditor
+              ref={editorRef}
               html={editingHtml}
               editing={true}
               onChange={setEditingHtml}
@@ -198,7 +206,7 @@ export default function TodoItem({
           isDragging ? "bg-[var(--color-bg-active)]" :
           isPressed ? "bg-[var(--color-bg-active)]" :
           "hover:bg-[var(--color-bg-hover)]"
-        }`}
+        } ${todo.completed ? "opacity-60" : ""}`}
       >
         <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
           <div className="group/checkbox grid size-4 grid-cols-1">

@@ -85,26 +85,39 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     const activeTodoId = active.id as string
     const overItemId = over.id as string
 
-    // Check if we're dropping over another todo (for reordering within the same day)
+    const activeTodo = todos.find(t => t.id === activeTodoId)
+    if (!activeTodo) return
+
+    // Check if we're dropping over another todo
     const overTodo = todos.find(t => t.id === overItemId)
     if (overTodo) {
-      const activeTodo = todos.find(t => t.id === activeTodoId)
-      if (activeTodo && activeTodo.date === overTodo.date) {
-        // Reordering within the same day
-        const todosInDay = todos
-          .filter(t => t.date === activeTodo.date)
-          .sort((a, b) => {
-            // Use standard string comparison, not localeCompare, to match fractional-indexing library
-            if (a.position < b.position) return -1;
-            if (a.position > b.position) return 1;
-            return 0;
-          })
-        const oldIndex = todosInDay.findIndex(t => t.id === activeTodoId)
-        const newIndex = todosInDay.findIndex(t => t.id === overItemId)
+      // Dropped over another todo
+      const todosInTargetDay = todos
+        .filter(t => t.date === overTodo.date)
+        .sort((a, b) => {
+          // Use standard string comparison, not localeCompare, to match fractional-indexing library
+          if (a.position < b.position) return -1;
+          if (a.position > b.position) return 1;
+          return 0;
+        })
 
+      const newIndex = todosInTargetDay.findIndex(t => t.id === overItemId)
+
+      if (activeTodo.date === overTodo.date) {
+        // Reordering within the same day
+        const oldIndex = todosInTargetDay.findIndex(t => t.id === activeTodoId)
         if (oldIndex !== newIndex) {
           onMoveTodo(activeTodoId, activeTodo.date, newIndex)
         }
+      } else {
+        // Moving to a different day - place at the position of the todo we dropped on
+        onMoveTodo(activeTodoId, overTodo.date, newIndex)
+      }
+    } else {
+      // Dropped on an empty day cell - no specific index, will go to end
+      const overDayId = overItemId
+      if (activeTodo.date !== overDayId) {
+        onMoveTodo(activeTodoId, overDayId)
       }
     }
   }
