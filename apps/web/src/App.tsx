@@ -221,17 +221,6 @@ function AuthenticatedApp() {
           return 0;
         });
 
-      // Find current index in source date
-      const currentDate = todo.date.toISOString().split("T")[0];
-      const todosInSourceDate = onboarding.todos
-        .filter((t) => t.date.toISOString().split("T")[0] === currentDate)
-        .sort((a, b) => {
-          if (a.position < b.position) return -1;
-          if (a.position > b.position) return 1;
-          return 0;
-        });
-      const currentIndex = todosInSourceDate.findIndex((t) => t.id === todoId);
-
       let newPosition: string;
 
       if (newIndex === undefined) {
@@ -273,17 +262,6 @@ function AuthenticatedApp() {
           if (a.position > b.position) return 1;
           return 0;
         });
-
-      // Find current index in source date
-      const currentDate = todo.date.toISOString().split("T")[0];
-      const todosInSourceDate = firebaseTodos
-        .filter((t) => t.date.toISOString().split("T")[0] === currentDate)
-        .sort((a, b) => {
-          if (a.position < b.position) return -1;
-          if (a.position > b.position) return 1;
-          return 0;
-        });
-      const currentIndex = todosInSourceDate.findIndex((t) => t.id === todoId);
 
       let newPosition: string;
 
