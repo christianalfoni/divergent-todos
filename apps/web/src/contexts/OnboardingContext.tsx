@@ -1,7 +1,16 @@
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-export type OnboardingStep = "workdays" | "add-todo" | "add-todo-with-url" | "edit-todo" | "move-todo" | "delete-todo" | "timebox" | "congratulations" | null;
+export type OnboardingStep =
+  | "workdays"
+  | "add-todo"
+  | "add-todo-with-url"
+  | "edit-todo"
+  | "move-todo"
+  | "delete-todo"
+  | "timebox"
+  | "congratulations"
+  | null;
 
 export interface OnboardingTodo {
   id: string;
@@ -32,7 +41,16 @@ const OnboardingContext = createContext<OnboardingContextValue | undefined>(
   undefined
 );
 
-const ONBOARDING_STEPS: OnboardingStep[] = ["workdays", "add-todo", "add-todo-with-url", "edit-todo", "move-todo", "delete-todo", "timebox", "congratulations"];
+const ONBOARDING_STEPS: OnboardingStep[] = [
+  "workdays",
+  "add-todo",
+  "add-todo-with-url",
+  "edit-todo",
+  "move-todo",
+  "delete-todo",
+  "timebox",
+  "congratulations",
+];
 
 interface OnboardingProviderProps {
   children: ReactNode;
@@ -41,14 +59,12 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(null);
   const [todos, setTodos] = useState<OnboardingTodo[]>([]);
-  const [hasToggled, setHasToggled] = useState(false);
 
   const isOnboarding = currentStep !== null;
 
   const startOnboarding = () => {
     setCurrentStep(ONBOARDING_STEPS[0]);
     setTodos([]); // Reset todos when starting onboarding
-    setHasToggled(false); // Reset toggle tracking
   };
 
   const nextStep = () => {
@@ -73,7 +89,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     setTodos((prev) => [...prev, newTodo]);
   };
 
-  const editTodo = (id: string, updates: Partial<Omit<OnboardingTodo, "id">>) => {
+  const editTodo = (
+    id: string,
+    updates: Partial<Omit<OnboardingTodo, "id">>
+  ) => {
     setTodos((prev) =>
       prev.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo))
     );
@@ -91,15 +110,9 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const notifyWeekModeToggled = (isTwoWeeks: boolean) => {
     if (currentStep === "workdays") {
-      // Mark that user has toggled
-      const newHasToggled = true;
-      setHasToggled(newHasToggled);
-
       // If they've toggled and are now in 2-week mode, complete the step
-      // We check with newHasToggled (always true after first toggle) and current mode
-      if (newHasToggled && isTwoWeeks) {
+      if (isTwoWeeks) {
         nextStep();
-        setHasToggled(false); // Reset for potential future use
       }
     }
   };

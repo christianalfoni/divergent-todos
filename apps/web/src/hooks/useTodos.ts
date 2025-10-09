@@ -33,7 +33,7 @@ export function useTodos() {
       () => {
         if (!authentication.user) {
           setTodos(() => ({
-            isLoading: false,
+            isLoading: authentication.isAuthenticating,
             data: [],
           }));
           return;
