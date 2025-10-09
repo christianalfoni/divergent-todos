@@ -191,7 +191,7 @@ export default function TodoItem({
       ref={setNodeRef}
       style={style}
       className={`mt-2 relative ${
-        isDragging ? "z-50" : ""
+        isDragging ? "opacity-0" : ""
       }`}
     >
       <div
@@ -202,8 +202,7 @@ export default function TodoItem({
         onMouseDown={handleMouseDown}
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
-        className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none ${
-          isDragging ? "bg-[var(--color-bg-active)]" :
+        className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none cursor-default ${
           isPressed ? "bg-[var(--color-bg-active)]" :
           "hover:bg-[var(--color-bg-hover)]"
         } ${todo.completed ? "opacity-60" : ""}`}

@@ -18,7 +18,6 @@ interface DayCellProps {
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
-  isBeingDraggedOver: boolean
 }
 
 export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
