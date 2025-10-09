@@ -3,6 +3,7 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import DayCell from "./DayCell";
 import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
+import TodosLoadingPlaceholder from "./TodosLoadingPlaceholder";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";
@@ -13,6 +14,7 @@ import type { Profile } from "./firebase";
 
 interface CalendarProps {
   todos: Todo[];
+  isLoading: boolean;
   onAddTodo: (todo: Omit<Todo, "id">) => void;
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
@@ -28,6 +30,7 @@ const isWeekend = () => {
 
 export default function Calendar({
   todos,
+  isLoading,
   onAddTodo,
   onToggleTodoComplete,
   onMoveTodo,
@@ -148,6 +151,7 @@ export default function Calendar({
                 isToday={isToday(date)}
                 isNextMonday={isNextMonday(date)}
                 isAuthenticated={!!authentication.user}
+                isLoading={isLoading}
                 todos={getTodosForDate(date)}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}

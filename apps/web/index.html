@@ -8,6 +8,34 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Divergent Todos</title>
+    <script>
+      // Apply theme immediately to prevent flash
+      (function() {
+        try {
+          const stored = localStorage.getItem('app-theme');
+          if (stored) {
+            const { mode, theme } = JSON.parse(stored);
+            const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const effectiveMode = mode === 'system' ? (systemIsDark ? 'dark' : 'light') : mode;
+
+            if (effectiveMode === 'dark') {
+              document.documentElement.classList.add('dark');
+            }
+            if (theme) {
+              document.documentElement.setAttribute('data-theme', theme);
+            }
+          } else {
+            // Default to system theme if nothing stored
+            const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (systemIsDark) {
+              document.documentElement.classList.add('dark');
+            }
+          }
+        } catch (e) {
+          console.error('Failed to apply theme:', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

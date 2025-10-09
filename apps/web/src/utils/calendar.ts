@@ -74,3 +74,26 @@ export function isNextMonday(date: Date): boolean {
   const nextMonday = getNextMonday()
   return date.toDateString() === nextMonday.toDateString()
 }
+
+export function getCurrentWeekStart(): Date {
+  const today = new Date()
+  const currentDay = today.getDay()
+  const daysToMonday = currentDay === 0 ? 6 : currentDay - 1
+
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - daysToMonday)
+  monday.setHours(0, 0, 0, 0)
+
+  return monday
+}
+
+export function getNextWeekEnd(): Date {
+  const currentWeekStart = getCurrentWeekStart()
+
+  // Next week ends on Friday (4 days after next Monday)
+  const nextWeekEnd = new Date(currentWeekStart)
+  nextWeekEnd.setDate(currentWeekStart.getDate() + 11) // 7 days + 4 days (Mon-Fri)
+  nextWeekEnd.setHours(23, 59, 59, 999)
+
+  return nextWeekEnd
+}

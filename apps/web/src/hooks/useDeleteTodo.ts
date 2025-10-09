@@ -22,7 +22,7 @@ export type DeleteTodoState =
 export function useDeleteTodo() {
   const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
-  const [, setTodos] = useTodos();
+  const { setTodos } = useTodos();
 
   userRef.current = authentication.user;
 
