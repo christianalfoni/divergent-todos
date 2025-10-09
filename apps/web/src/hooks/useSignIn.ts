@@ -21,7 +21,7 @@ export type SignInState =
     };
 
 export function useSignIn() {
-  return pipe<SignInState>()
+  return pipe<unknown, SignInState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
       // Debug: Log what we have
@@ -40,7 +40,9 @@ export function useSignIn() {
           await signInWithCustomToken(auth, customToken);
         } catch (error) {
           throw new Error(
-            `Electron auth failed: ${error instanceof Error ? error.message : String(error)}`
+            `Electron auth failed: ${
+              error instanceof Error ? error.message : String(error)
+            }`
           );
         }
       } else {

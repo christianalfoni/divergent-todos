@@ -26,11 +26,14 @@ export function useDeleteTodo() {
 
   userRef.current = authentication.user;
 
-  return pipe<DeleteTodoState, { id: string }>()
+  return pipe<{ id: string }, DeleteTodoState>()
     .setState({ isDeleting: true, error: null })
     .map(({ id }) => {
       // Optimistic delete
-      setTodos((todos) => todos.filter((todo) => todo.id !== id));
+      setTodos(({ data }) => ({
+        isLoading: false,
+        data: data.filter((todo) => todo.id !== id),
+      }));
       return { id };
     })
     .async(({ id }) => {

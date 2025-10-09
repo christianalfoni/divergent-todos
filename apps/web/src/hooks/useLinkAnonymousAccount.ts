@@ -21,7 +21,7 @@ export type LinkAccountState =
     };
 
 export function useLinkAnonymousAccount() {
-  return pipe<LinkAccountState>()
+  return pipe<unknown, LinkAccountState>()
     .setState({ isLinking: true, error: null })
     .async(async () => {
       const currentUser = auth.currentUser;
@@ -47,7 +47,9 @@ export function useLinkAnonymousAccount() {
           await signInWithCustomToken(auth, customToken);
         } catch (error) {
           throw new Error(
-            `Electron auth linking failed: ${error instanceof Error ? error.message : String(error)}`
+            `Electron auth linking failed: ${
+              error instanceof Error ? error.message : String(error)
+            }`
           );
         }
       } else {

@@ -41,7 +41,9 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
     setIsProcessing(true);
     setError(null);
     try {
-      await openBillingPortal({ returnUrl: window.location.origin });
+      // In Electron, don't pass returnUrl (let server use default)
+      const isElectronEnv = !window.location.origin.startsWith('http');
+      await openBillingPortal(isElectronEnv ? undefined : { returnUrl: window.location.origin });
     } catch (err: any) {
       setError(err.message || "Failed to open billing portal");
       setIsProcessing(false);
@@ -52,10 +54,16 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
     setIsProcessing(true);
     setError(null);
     try {
-      await startSubscription({
-        successUrl: window.location.origin,
-        cancelUrl: window.location.origin,
-      });
+      // In Electron, don't pass URLs (let server use defaults)
+      const isElectronEnv = !window.location.origin.startsWith('http');
+      await startSubscription(
+        isElectronEnv
+          ? undefined
+          : {
+              successUrl: window.location.origin,
+              cancelUrl: window.location.origin,
+            }
+      );
     } catch (err: any) {
       setError(err.message || "Failed to start subscription");
       setIsProcessing(false);

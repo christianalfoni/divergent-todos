@@ -491,8 +491,23 @@ export const createSubscription = onCall(
     const email = req.auth?.token?.email ?? null;
     const customerId = await getOrCreateCustomer(stripe, uid, email);
 
-    const successUrl = req.data?.successUrl || "https://divergent-todos.com/billing/success";
-    const cancelUrl = req.data?.cancelUrl || "https://divergent-todos.com/billing/cancel";
+    // Validate URLs - only accept HTTPS URLs or use defaults
+    const isValidUrl = (url: string | undefined) => {
+      if (!url) return false;
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+      } catch {
+        return false;
+      }
+    };
+
+    const successUrl = isValidUrl(req.data?.successUrl)
+      ? req.data.successUrl
+      : "https://divergent-todos.com/billing/success";
+    const cancelUrl = isValidUrl(req.data?.cancelUrl)
+      ? req.data.cancelUrl
+      : "https://divergent-todos.com/billing/cancel";
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -519,7 +534,20 @@ export const createBillingPortal = onCall(
     const customerId = snap.data()?.subscription?.customerId as string | undefined;
     if (!customerId) throw new HttpsError("failed-precondition", "No customer.");
 
-    const returnUrl = req.data?.returnUrl || "https://divergent-todos.com/account";
+    // Validate URL - only accept HTTPS URLs or use default
+    const isValidUrl = (url: string | undefined) => {
+      if (!url) return false;
+      try {
+        const parsed = new URL(url);
+        return parsed.protocol === 'https:' || parsed.protocol === 'http:';
+      } catch {
+        return false;
+      }
+    };
+
+    const returnUrl = isValidUrl(req.data?.returnUrl)
+      ? req.data.returnUrl
+      : "https://divergent-todos.com/account";
     const portal = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,

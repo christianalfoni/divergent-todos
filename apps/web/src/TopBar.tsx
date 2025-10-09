@@ -254,85 +254,89 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
               </button>
             )}
 
-            {/* Profile dropdown - hide for anonymous users */}
-            {authentication.user && !authentication.user.isAnonymous && (
+            {/* Profile dropdown - always show avatar, menu only for authenticated non-anonymous users */}
+            {authentication.user && !authentication.user.isAnonymous ? (
               <Menu as="div" className="relative">
-              <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
-                <span className="absolute -inset-1.5" />
-                <span className="sr-only">Open user menu</span>
-                {authentication.user.photoURL ? (
-                  <img
-                    alt=""
-                    src={authentication.user.photoURL}
-                    className="size-8 rounded-full outline -outline-offset-1 outline-[var(--color-outline)]"
-                  />
-                ) : (
-                  <span className="inline-block size-8 overflow-hidden rounded-full bg-[var(--color-bg-primary)] outline -outline-offset-1 outline-[var(--color-outline)]">
-                    <svg fill="currentColor" viewBox="0 0 24 24" className="size-full text-[var(--color-text-tertiary)]">
-                      <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                    </svg>
-                  </span>
-                )}
-              </MenuButton>
+                <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
+                  <span className="absolute -inset-1.5" />
+                  <span className="sr-only">Open user menu</span>
+                  {authentication.user.photoURL ? (
+                    <img
+                      alt=""
+                      src={authentication.user.photoURL}
+                      className="size-8 rounded-full outline -outline-offset-1 outline-[var(--color-outline)]"
+                    />
+                  ) : (
+                    <span className="inline-block size-8 overflow-hidden rounded-full bg-[var(--color-bg-primary)] outline -outline-offset-1 outline-[var(--color-outline)]">
+                      <svg fill="currentColor" viewBox="0 0 24 24" className="size-full text-[var(--color-text-tertiary)]">
+                        <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </span>
+                  )}
+                </MenuButton>
 
-              <MenuItems
-                transition
-                className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-[var(--color-bg-primary)] py-1 shadow-lg outline outline-[var(--color-outline)] transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-75 data-leave:ease-in dark:shadow-none dark:-outline-offset-1"
-              >
-                <MenuItem>
-                  <button
-                    onClick={onOpenSubscription}
-                    className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
-                  >
-                    Subscription
-                  </button>
-                </MenuItem>
-
-                {downloadUrl && !authentication.user.isAnonymous && (
+                <MenuItems
+                  transition
+                  className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-[var(--color-bg-primary)] py-1 shadow-lg outline outline-[var(--color-outline)] transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-200 data-enter:ease-out data-leave:duration-75 data-leave:ease-in dark:shadow-none dark:-outline-offset-1"
+                >
                   <MenuItem>
                     <button
-                      onClick={() => setIsDownloadDialogOpen(true)}
+                      onClick={onOpenSubscription}
                       className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                     >
-                      Download app
+                      Subscription
                     </button>
                   </MenuItem>
-                )}
 
-                <div className="my-1 h-px bg-[var(--color-border-primary)]" />
-
-                {themes.map((themeOption) => (
-                  <MenuItem key={themeOption.value}>
-                    <button
-                      onClick={() => setTheme(themeOption.value)}
-                      className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
-                    >
-                      {themeOption.label}
-                      {theme === themeOption.value && (
-                        <span className="ml-2 text-[var(--color-accent-text)]">
-                          ✓
-                        </span>
-                      )}
-                    </button>
-                  </MenuItem>
-                ))}
-
-                {!authentication.user.isAnonymous && (
-                  <>
-                    <div className="my-1 h-px bg-[var(--color-border-primary)]" />
-
+                  {downloadUrl && !authentication.user.isAnonymous && (
                     <MenuItem>
                       <button
-                        onClick={handleSignOut}
+                        onClick={() => setIsDownloadDialogOpen(true)}
                         className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                       >
-                        Sign out
+                        Download app
                       </button>
                     </MenuItem>
-                  </>
-                )}
-              </MenuItems>
-            </Menu>
+                  )}
+
+                  <div className="my-1 h-px bg-[var(--color-border-primary)]" />
+
+                  {themes.map((themeOption) => (
+                    <MenuItem key={themeOption.value}>
+                      <button
+                        onClick={() => setTheme(themeOption.value)}
+                        className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                      >
+                        {themeOption.label}
+                        {theme === themeOption.value && (
+                          <span className="ml-2 text-[var(--color-accent-text)]">
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    </MenuItem>
+                  ))}
+
+                  <div className="my-1 h-px bg-[var(--color-border-primary)]" />
+
+                  <MenuItem>
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                    >
+                      Sign out
+                    </button>
+                  </MenuItem>
+                </MenuItems>
+              </Menu>
+            ) : (
+              <div className="relative flex max-w-xs items-center">
+                <span className="inline-block size-8 overflow-hidden rounded-full bg-[var(--color-bg-primary)] outline -outline-offset-1 outline-[var(--color-outline)]">
+                  <svg fill="currentColor" viewBox="0 0 24 24" className="size-full text-[var(--color-text-tertiary)]">
+                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                  </svg>
+                </span>
+              </div>
             )}
           </div>
         </div>

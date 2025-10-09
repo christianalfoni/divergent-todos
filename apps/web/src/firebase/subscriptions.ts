@@ -10,9 +10,13 @@ export async function startSubscription(options?: {
   cancelUrl?: string;
 }) {
   const fn = httpsCallable(functions, "createSubscription");
+
+  // Check if we're in Electron (non-HTTP origin)
+  const isElectron = !window.location.origin.startsWith('http');
+
   const { data } = await fn({
-    successUrl: options?.successUrl || window.location.origin + "/billing/success",
-    cancelUrl: options?.cancelUrl || window.location.origin + "/billing/cancel",
+    successUrl: options?.successUrl || (isElectron ? undefined : window.location.origin + "/billing/success"),
+    cancelUrl: options?.cancelUrl || (isElectron ? undefined : window.location.origin + "/billing/cancel"),
   });
   const url = (data as any).url;
   if (url) {
@@ -25,8 +29,12 @@ export async function startSubscription(options?: {
  */
 export async function openBillingPortal(options?: { returnUrl?: string }) {
   const fn = httpsCallable(functions, "createBillingPortal");
+
+  // Check if we're in Electron (non-HTTP origin)
+  const isElectron = !window.location.origin.startsWith('http');
+
   const { data } = await fn({
-    returnUrl: options?.returnUrl || window.location.origin + "/account",
+    returnUrl: options?.returnUrl || (isElectron ? undefined : window.location.origin + "/account"),
   });
   const url = (data as any).url;
   if (url) {

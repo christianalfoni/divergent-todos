@@ -17,7 +17,7 @@ export type SignInAnonymouslyState =
     };
 
 export function useSignInAnonymously() {
-  return pipe<SignInAnonymouslyState>()
+  return pipe<unknown, SignInAnonymouslyState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
       await signInAnonymously(auth);
