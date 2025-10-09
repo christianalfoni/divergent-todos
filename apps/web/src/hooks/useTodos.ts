@@ -32,6 +32,10 @@ export function useTodos() {
       "todos",
       () => {
         if (!authentication.user) {
+          setTodos(() => ({
+            isLoading: false,
+            data: [],
+          }));
           return;
         }
 

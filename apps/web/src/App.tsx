@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
@@ -27,6 +27,7 @@ function AppContent() {
   const [authentication] = useAuthentication();
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const [hasSignedIn, setHasSignedIn] = useState(false);
   const onboarding = useOnboarding();
   const profile = authentication.profile;
 
@@ -57,6 +58,14 @@ function AppContent() {
 
   // Check if user needs to see "Get started" button
   const showGetStarted = profile !== null && profile.isOnboarded !== true;
+
+  // Start onboarding when user signs in and has a profile without onboarding completed
+  useEffect(() => {
+    if (hasSignedIn && profile && profile.isOnboarded !== true) {
+      onboarding.startOnboarding();
+      setHasSignedIn(false); // Reset flag after starting onboarding
+    }
+  }, [hasSignedIn, profile, onboarding]);
 
   // Get old uncompleted todos
   const oldUncompletedTodos = useMemo(
@@ -106,6 +115,7 @@ function AppContent() {
       </div>
       <AuthModal
         open={!authentication.isAuthenticating && !authentication.user}
+        onSignIn={() => setHasSignedIn(true)}
       />
       {authentication.user && (
         <SubscriptionDialog

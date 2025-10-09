@@ -41,14 +41,14 @@ interface OnboardingProviderProps {
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(null);
   const [todos, setTodos] = useState<OnboardingTodo[]>([]);
-  const [hasToggledToOneWeek, setHasToggledToOneWeek] = useState(false);
+  const [hasToggled, setHasToggled] = useState(false);
 
   const isOnboarding = currentStep !== null;
 
   const startOnboarding = () => {
     setCurrentStep(ONBOARDING_STEPS[0]);
     setTodos([]); // Reset todos when starting onboarding
-    setHasToggledToOneWeek(false); // Reset week toggle tracking
+    setHasToggled(false); // Reset toggle tracking
   };
 
   const nextStep = () => {
@@ -89,15 +89,17 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
-  const notifyWeekModeToggled = (isThreeWeeks: boolean) => {
+  const notifyWeekModeToggled = (isTwoWeeks: boolean) => {
     if (currentStep === "workdays") {
-      if (!isThreeWeeks) {
-        // User toggled to 1-week mode
-        setHasToggledToOneWeek(true);
-      } else if (hasToggledToOneWeek) {
-        // User toggled back to 2-week mode after having toggled to 1-week
+      // Mark that user has toggled
+      const newHasToggled = true;
+      setHasToggled(newHasToggled);
+
+      // If they've toggled and are now in 2-week mode, complete the step
+      // We check with newHasToggled (always true after first toggle) and current mode
+      if (newHasToggled && isTwoWeeks) {
         nextStep();
-        setHasToggledToOneWeek(false); // Reset for potential future use
+        setHasToggled(false); // Reset for potential future use
       }
     }
   };

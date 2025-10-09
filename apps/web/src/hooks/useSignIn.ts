@@ -24,14 +24,8 @@ export function useSignIn() {
   return pipe<unknown, SignInState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
-      // Debug: Log what we have
-      console.log("window.native:", window.native);
-      console.log("window.native?.auth:", window.native?.auth);
-
       // Check if running in Electron
       if (window.native?.auth) {
-        // Electron flow: Use system browser with secure session exchange
-        console.log("Using Electron native auth flow");
         try {
           // Start auth flow (generates clientNonce, opens browser, exchanges token)
           const customToken = await window.native.auth.startGoogleSignIn();
@@ -46,14 +40,14 @@ export function useSignIn() {
           );
         }
       } else {
-        // Web flow: Use popup
-        console.log("Using web popup auth flow");
         const provider = new GoogleAuthProvider();
         await signInWithPopup(auth, provider);
       }
+
+      // We keep signing in as we are waiting for auth to go through
+      return { isSigningIn: true, error: null };
     })
-    .map(() => ({ isSigningIn: false, error: null } as const))
     .catch((err) => ({ isSigningIn: false, error: String(err) }))
     .setState()
-    .use({ isSigningIn: false, error: null } as const);
+    .use({ isSigningIn: false, error: null });
 }

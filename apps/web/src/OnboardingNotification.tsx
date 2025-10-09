@@ -13,6 +13,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
+import { useViewMode } from "./hooks/useViewMode";
 import { useState } from "react";
 
 export default function OnboardingNotification() {
@@ -20,6 +21,7 @@ export default function OnboardingNotification() {
     useOnboarding();
   const [{ isEditing }, editProfile] = useEditProfile();
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const { viewMode } = useViewMode();
 
   const handleDismiss = async () => {
     await editProfile({ isOnboarded: true });
@@ -38,14 +40,16 @@ export default function OnboardingNotification() {
   const getContent = () => {
     switch (currentStep) {
       case "workdays":
+        const isOneWeekMode = viewMode === "one-week";
         return {
           icon: (
             <CalendarDaysIcon aria-hidden="true" className="size-6 text-blue-500 dark:text-blue-400" />
           ),
-          title: "This app only displays workdays",
-          message:
-            "Weekends are for family, friends and rest. By default, the app shows current and next week. Press TAB to toggle to 1-week mode, then press TAB again to return to 2-week mode.",
-          actionLabel: "Press TAB twice to continue",
+          title: "Toggle between view modes",
+          message: isOneWeekMode
+            ? "The app shows the current week. Press TAB to toggle to 2-week mode."
+            : "The app can show current week or current and next week. Press TAB to toggle to 1-week mode, then press TAB again to return to 2-week mode.",
+          actionLabel: isOneWeekMode ? "Press TAB once to continue" : "Press TAB twice to continue",
           requiresTab: true,
         };
       case "add-todo":
@@ -138,7 +142,7 @@ export default function OnboardingNotification() {
   return (
     <div
       aria-live="assertive"
-      className="pointer-events-none fixed inset-0 flex items-start px-4 pt-20 sm:items-start sm:p-6 sm:pt-20 z-50"
+      className="pointer-events-none fixed inset-0 flex items-start px-4 pt-20 sm:items-start sm:p-6 sm:pt-20 z-[5]"
     >
       <div className="flex w-full flex-col items-end space-y-4">
         <Transition show={isOnboarding}>
