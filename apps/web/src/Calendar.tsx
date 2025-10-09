@@ -7,12 +7,17 @@ import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";
 import { useOnboarding } from "./contexts/OnboardingContext";
-import { getWeekdaysForThreeWeeks, isToday, getDateId, isNextMonday } from "./utils/calendar";
+import {
+  getWeekdaysForThreeWeeks,
+  isToday,
+  isNextMonday,
+} from "./utils/calendar";
 import type { Todo } from "./App";
 import type { Profile } from "./firebase";
 
 interface CalendarProps {
   todos: Todo[];
+  isLoading: boolean;
   onAddTodo: (todo: Omit<Todo, "id">) => void;
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
@@ -28,6 +33,7 @@ const isWeekend = () => {
 
 export default function Calendar({
   todos,
+  isLoading,
   onAddTodo,
   onToggleTodoComplete,
   onMoveTodo,
@@ -45,11 +51,10 @@ export default function Calendar({
 
   const {
     sensors,
-    hoveredDayId,
+    activeTodo,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-    collisionDetection,
   } = useTodoDragAndDrop({ todos, onMoveTodo });
 
   const getTodosForDate = (date: Date): Todo[] => {
@@ -128,11 +133,18 @@ export default function Calendar({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
+      {activeTodo && (
+        <style>{`
+          * {
+            cursor: default !important;
+            user-select: none !important;
+          }
+        `}</style>
+      )}
       <div className="flex-1 w-full flex flex-col overflow-hidden">
         <div
           className={`grid grid-cols-5 ${
@@ -140,7 +152,6 @@ export default function Calendar({
           } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
         >
           {weekdays.map((date, index) => {
-            const dayId = getDateId(date);
             return (
               <DayCell
                 key={index}
@@ -148,19 +159,54 @@ export default function Calendar({
                 isToday={isToday(date)}
                 isNextMonday={isNextMonday(date)}
                 isAuthenticated={!!authentication.user}
+                isLoading={isLoading}
                 todos={getTodosForDate(date)}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={setTimeBoxTodo}
-                isBeingDraggedOver={hoveredDayId === dayId}
               />
             );
           })}
         </div>
       </div>
-      <DragOverlay dropAnimation={null}>{null}</DragOverlay>
+      <DragOverlay dropAnimation={null}>
+        {activeTodo && (
+          <div className="bg-[var(--color-bg-primary)] shadow-lg rounded-md border border-[var(--color-border-primary)] px-3 py-1 opacity-90">
+            <div className="flex gap-3 text-xs/5">
+              <div className="flex h-5 shrink-0 items-center">
+                <div className="group/checkbox grid size-4 grid-cols-1">
+                  <input
+                    disabled
+                    type="checkbox"
+                    checked={activeTodo.completed}
+                    readOnly
+                    className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)]"
+                  />
+                  <svg
+                    fill="none"
+                    viewBox="0 0 14 14"
+                    className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white"
+                  >
+                    <path
+                      d="M3 8L6 11L11 3.5"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="opacity-0 group-has-checked/checkbox:opacity-100"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                className="flex-1 min-w-0 text-xs/5 font-semibold text-[var(--color-accent-text)]"
+                dangerouslySetInnerHTML={{ __html: activeTodo.text }}
+              />
+            </div>
+          </div>
+        )}
+      </DragOverlay>
       <TimeBoxDialog
         open={!!timeBoxTodo}
         todo={timeBoxTodo}

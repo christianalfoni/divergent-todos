@@ -10,11 +10,12 @@ import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 
 interface AuthModalProps {
   open: boolean;
+  onSignIn: () => void;
 }
 
-export default function AuthModal({ open }: AuthModalProps) {
+export default function AuthModal({ open, onSignIn }: AuthModalProps) {
   const [{ isSigningIn, error }, signIn] = useSignIn();
-  const [{ isSigningIn: isSigningInAnonymously }, signInAnonymously] = useSignInAnonymously();
+  const [{ isSigningIn: isSigningInAnonymously, error: anonymousError }, signInAnonymously] = useSignInAnonymously();
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
@@ -57,7 +58,10 @@ export default function AuthModal({ open }: AuthModalProps) {
             <div className="mt-5 sm:mt-6 space-y-3">
               <button
                 type="button"
-                onClick={signIn}
+                onClick={() => {
+                  signIn({});
+                  onSignIn();
+                }}
                 disabled={isSigningIn || isSigningInAnonymously}
                 className="inline-flex w-full justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -66,7 +70,10 @@ export default function AuthModal({ open }: AuthModalProps) {
               {!isElectron && (
                 <button
                   type="button"
-                  onClick={signInAnonymously}
+                  onClick={() => {
+                    signInAnonymously({});
+                    onSignIn();
+                  }}
                   disabled={isSigningIn || isSigningInAnonymously}
                   className="inline-flex w-full justify-center rounded-md bg-[var(--color-bg-secondary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] shadow-xs hover:bg-[var(--color-bg-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -76,6 +83,11 @@ export default function AuthModal({ open }: AuthModalProps) {
               {error && (
                 <p className="mt-2 text-sm text-[var(--color-error-text)]">
                   {error}
+                </p>
+              )}
+              {anonymousError && (
+                <p className="mt-2 text-sm text-[var(--color-error-text)]">
+                  {anonymousError}
                 </p>
               )}
             </div>

@@ -8,7 +8,7 @@ const STORAGE_KEY = "app-view-mode";
 
 function getStoredViewMode(): ViewMode {
   if (typeof window === "undefined") {
-    return "two-weeks";
+    return "one-week";
   }
 
   try {
@@ -20,7 +20,7 @@ function getStoredViewMode(): ViewMode {
     console.error("Failed to parse stored viewMode:", error);
   }
 
-  return "two-weeks";
+  return "one-week";
 }
 
 export function useViewMode() {

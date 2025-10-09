@@ -24,7 +24,7 @@ export function useEditProfile() {
 
   userRef.current = authentication.user;
 
-  return pipe<EditProfileState, Partial<Profile>>()
+  return pipe<Partial<Profile>, EditProfileState>()
     .setState({ isEditing: true, error: null })
     .map((updates) => {
       // Optimistic update

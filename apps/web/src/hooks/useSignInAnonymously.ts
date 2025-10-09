@@ -17,12 +17,11 @@ export type SignInAnonymouslyState =
     };
 
 export function useSignInAnonymously() {
-  return pipe<SignInAnonymouslyState>()
+  return pipe<unknown, SignInAnonymouslyState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
       await signInAnonymously(auth);
     })
-    .map(() => ({ isSigningIn: false, error: null } as const))
     .catch((err) => ({ isSigningIn: false, error: String(err) }))
     .setState()
     .use({ isSigningIn: false, error: null } as const);

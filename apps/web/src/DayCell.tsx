@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
+import TodosLoadingPlaceholder from './TodosLoadingPlaceholder'
 import SmartLinksEditor, { type SmartLinksEditorRef } from './SmartLinksEditor'
 import type { Todo } from './App'
 
@@ -10,16 +11,16 @@ interface DayCellProps {
   isToday: boolean
   isNextMonday: boolean
   isAuthenticated: boolean
+  isLoading: boolean
   todos: Todo[]
   onAddTodo: (todo: Omit<Todo, 'id'>) => void
   onToggleTodoComplete: (todoId: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
-  isBeingDraggedOver: boolean
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartLinksEditorRef>(null)
@@ -85,19 +86,23 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         </span>
       </div>
       <div className="flex-1 overflow-y-auto min-h-0">
-        <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
-          {todos.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onToggleTodoComplete={onToggleTodoComplete}
-              onUpdateTodo={onUpdateTodo}
-              onDeleteTodo={onDeleteTodo}
-              onOpenTimeBox={onOpenTimeBox}
-            />
-          ))}
-        </SortableContext>
-        {isAuthenticated && !isAddingTodo && !isPastDay && (
+        {isLoading ? (
+          <TodosLoadingPlaceholder />
+        ) : (
+          <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
+            {todos.map((todo) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onToggleTodoComplete={onToggleTodoComplete}
+                onUpdateTodo={onUpdateTodo}
+                onDeleteTodo={onDeleteTodo}
+                onOpenTimeBox={onOpenTimeBox}
+              />
+            ))}
+          </SortableContext>
+        )}
+        {isAuthenticated && !isAddingTodo && !isPastDay && !isLoading && (
           <button
             onClick={() => setIsAddingTodo(true)}
             className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"

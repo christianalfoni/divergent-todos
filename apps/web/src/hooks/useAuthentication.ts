@@ -1,7 +1,6 @@
 import { pipe } from "pipesy";
 import { auth, profilesCollection, type Profile } from "../firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { useEffect } from "react";
 import { doc, onSnapshot } from "firebase/firestore";
 
 export type AuthenticationState =
@@ -32,68 +31,70 @@ export type AuthenticationState =
 
 export function useAuthentication() {
   const [authentication, setAuthentication] = pipe<
-    AuthenticationState,
-    (state: AuthenticationState) => AuthenticationState
+    (state: AuthenticationState) => AuthenticationState,
+    AuthenticationState
   >()
     .updateState((state, cb) => cb(state))
-    .useCache("authentication", {
-      isAuthenticating: true,
-      error: null,
-      user: null,
-      profile: null,
-    });
+    .use(
+      {
+        isAuthenticating: true,
+        error: null,
+        user: null,
+        profile: null,
+      },
+      "authentication",
+      () => {
+        let unsubscribeProfile: (() => void) | null = null;
+        // Listen to auth state changes
+        const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+          // Clean up any existing profile listener
+          if (unsubscribeProfile) {
+            unsubscribeProfile();
+            unsubscribeProfile = null;
+          }
 
-  useEffect(() => {
-    let unsubscribeProfile: (() => void) | null = null;
+          if (!user) {
+            // User logged out - clear everything
+            setAuthentication(() => ({
+              isAuthenticating: false,
+              user: null,
+              profile: null,
+              error: null,
+            }));
+            return;
+          }
 
-    // Listen to auth state changes
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
-      // Clean up any existing profile listener
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-        unsubscribeProfile = null;
-      }
+          // Set up profile listener
+          const profileDoc = doc(profilesCollection, user.uid);
+          unsubscribeProfile = onSnapshot(
+            profileDoc,
+            { includeMetadataChanges: true },
+            (snapshot) => {
+              const profile = snapshot.exists()
+                ? snapshot.data({ serverTimestamps: "estimate" })
+                : null;
 
-      if (!user) {
-        // User logged out - clear everything
-        setAuthentication(() => ({
-          isAuthenticating: false,
-          user: null,
-          profile: null,
-          error: null,
-        }));
-        return;
-      }
+              // Update authentication state with profile - now fully authenticated
+              setAuthentication(() => ({
+                isAuthenticating: false,
+                user,
+                profile,
+                error: null,
+              }));
+            }
+          );
+        });
 
-      // Set up profile listener
-      const profileDoc = doc(profilesCollection, user.uid);
-      unsubscribeProfile = onSnapshot(
-        profileDoc,
-        { includeMetadataChanges: true },
-        (snapshot) => {
-          const profile = snapshot.exists()
-            ? snapshot.data({ serverTimestamps: "estimate" })
-            : null;
-
-          // Update authentication state with profile - now fully authenticated
-          setAuthentication(() => ({
-            isAuthenticating: false,
-            user,
-            profile,
-            error: null,
-          }));
-        }
-      );
-    });
-
-    // Cleanup function
-    return () => {
-      unsubscribeAuth();
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-      }
-    };
-  }, [setAuthentication]);
+        // Cleanup function
+        return () => {
+          unsubscribeAuth();
+          if (unsubscribeProfile) {
+            unsubscribeProfile();
+          }
+        };
+      },
+      []
+    );
 
   return [authentication, setAuthentication] as const;
 }

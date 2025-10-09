@@ -22,26 +22,25 @@ export type EditTodoState =
 export function useEditTodo() {
   const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
-  const [, setTodos] = useTodos();
+  const { setTodos } = useTodos();
 
   userRef.current = authentication.user;
 
   return pipe<
-    EditTodoState,
     Pick<Todo, "id" | "completed" | "date" | "description"> & {
       position?: string;
-    }
+    },
+    EditTodoState
   >()
     .setState({ isEditing: true, error: null })
     .map((updates) => {
       // Optimistic update
-      setTodos((todos) =>
-        todos.map((todo) =>
-          todo.id === updates.id
-            ? { ...todo, ...updates }
-            : todo
-        )
-      );
+      setTodos(({ data }) => ({
+        isLoading: false,
+        data: data.map((todo) =>
+          todo.id === updates.id ? { ...todo, ...updates } : todo
+        ),
+      }));
       return updates;
     })
     .async(({ id, description, completed, date, position }) => {

@@ -1,6 +1,12 @@
 import { pipe } from "pipesy";
 import { todosCollection, profilesCollection } from "../firebase";
-import { doc, serverTimestamp, setDoc, increment, writeBatch } from "firebase/firestore";
+import {
+  doc,
+  serverTimestamp,
+  setDoc,
+  increment,
+  writeBatch,
+} from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
 import { useRef } from "react";
 import { generateKeyBetween } from "fractional-indexing";
@@ -28,8 +34,8 @@ export function useAddTodo() {
   profileRef.current = authentication.profile;
 
   return pipe<
-    AddTodoState,
-    { description: string; date: Date; lastPosition: string | null }
+    { description: string; date: Date; lastPosition: string | null },
+    AddTodoState
   >()
     .setState({ isAdding: true, error: null })
     .async(({ description, date, lastPosition }) => {
@@ -43,7 +49,8 @@ export function useAddTodo() {
       const position = generateKeyBetween(lastPosition, null);
 
       // Check if user has an active subscription
-      const hasActiveSubscription = profileRef.current?.subscription?.status === "active";
+      const hasActiveSubscription =
+        profileRef.current?.subscription?.status === "active";
 
       // If no subscription, increment freeTodoCount
       if (!hasActiveSubscription) {

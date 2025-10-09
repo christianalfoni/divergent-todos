@@ -1,30 +1,75 @@
 import { pipe } from "pipesy";
 import { todosCollection, type Todo } from "../firebase";
-import { onSnapshot, query, where, orderBy } from "firebase/firestore";
+import {
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  Timestamp,
+  or,
+  and,
+} from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
-import { useEffect } from "react";
+import { getCurrentWeekStart, getNextWeekEnd } from "../utils/calendar";
+
+export type TodosState = {
+  isLoading: boolean;
+  data: Todo[];
+};
 
 export function useTodos() {
   const [authentication] = useAuthentication();
-
-  const [todos, setTodos] = pipe<Todo[], (todos: Todo[]) => Todo[]>()
+  const [{ isLoading, data }, setTodos] = pipe<
+    (todos: TodosState) => TodosState,
+    TodosState
+  >()
     .updateState((state, cb) => cb(state))
-    .useCache("todos", []);
+    .use(
+      {
+        isLoading: true,
+        data: [],
+      },
+      "todos",
+      () => {
+        if (!authentication.user) {
+          setTodos(() => ({
+            isLoading: authentication.isAuthenticating,
+            data: [],
+          }));
+          return;
+        }
 
-  useEffect(() => {
-    const q = query(
-      todosCollection,
-      where("userId", "==", authentication.user!.uid),
-      orderBy("date", "asc"),
-      orderBy("position", "asc")
+        const currentWeekStart = getCurrentWeekStart();
+        const nextWeekEnd = getNextWeekEnd();
+
+        const q = query(
+          todosCollection,
+          and(
+            where("userId", "==", authentication.user.uid),
+            or(
+              where("completed", "==", false),
+              and(
+                where("completed", "==", true),
+                where("date", ">=", Timestamp.fromDate(currentWeekStart)),
+                where("date", "<=", Timestamp.fromDate(nextWeekEnd))
+              )
+            )
+          ),
+          orderBy("date", "asc"),
+          orderBy("position", "asc")
+        );
+
+        return onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+          setTodos(() => ({
+            isLoading: false,
+            data: snapshot.docs.map((doc) =>
+              doc.data({ serverTimestamps: "estimate" })
+            ),
+          }));
+        });
+      },
+      [authentication.user]
     );
 
-    return onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-      setTodos(() =>
-        snapshot.docs.map((doc) => doc.data({ serverTimestamps: "estimate" }))
-      );
-    });
-  }, [authentication.user, setTodos]);
-
-  return [todos, setTodos] as const;
+  return { isLoading, data, setTodos } as const;
 }
