@@ -3,7 +3,6 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import DayCell from "./DayCell";
 import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
-import TodosLoadingPlaceholder from "./TodosLoadingPlaceholder";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";

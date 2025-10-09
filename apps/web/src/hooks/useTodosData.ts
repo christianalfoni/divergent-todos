@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTodos } from "./useTodos";
 import { useOnboarding } from "../contexts/OnboardingContext";
-import { sortTodosByPosition, convertFirebaseTodoToAppTodo } from "../utils/todos";
+import { convertFirebaseTodoToAppTodo } from "../utils/todos";
 import type { Todo } from "../App";
 
 export function useTodosData() {
