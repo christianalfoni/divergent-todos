@@ -7,7 +7,11 @@ import { useAuthentication } from "./hooks/useAuthentication";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";
 import { useOnboarding } from "./contexts/OnboardingContext";
-import { getWeekdaysForThreeWeeks, isToday, getDateId, isNextMonday } from "./utils/calendar";
+import {
+  getWeekdaysForThreeWeeks,
+  isToday,
+  isNextMonday,
+} from "./utils/calendar";
 import type { Todo } from "./App";
 import type { Profile } from "./firebase";
 
@@ -148,7 +152,6 @@ export default function Calendar({
           } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
         >
           {weekdays.map((date, index) => {
-            const dayId = getDateId(date);
             return (
               <DayCell
                 key={index}
