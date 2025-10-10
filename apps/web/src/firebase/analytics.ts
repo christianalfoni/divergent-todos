@@ -131,3 +131,17 @@ export function trackAppOpened(isElectron: boolean) {
 export function trackAppDownloadInitiated() {
   logEvent(analytics, "app_download_initiated");
 }
+
+// Menu navigation events
+export function trackMenuItemClicked(item: string) {
+  logEvent(analytics, "menu_item_clicked", { item });
+}
+
+// Feedback events
+export function trackFeedbackSubmitted() {
+  logEvent(analytics, "feedback_submitted");
+}
+
+export function trackFeedbackSubmissionFailed(error: string) {
+  logEvent(analytics, "feedback_submission_failed", { error });
+}
