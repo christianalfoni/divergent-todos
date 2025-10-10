@@ -104,7 +104,11 @@ export function trackSubscriptionStarted(value: number = 2) {
 }
 
 export function trackSubscriptionPurchased(value: number = 2) {
-  logEvent(analytics, "purchase", { value, currency: "USD" });
+  logEvent(analytics, "purchase", {
+    value,
+    currency: "USD",
+    transaction_id: `sub_${Date.now()}`,
+  });
 }
 
 export function trackSubscriptionCanceled() {
