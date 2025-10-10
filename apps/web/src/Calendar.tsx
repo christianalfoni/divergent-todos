@@ -24,6 +24,7 @@ interface CalendarProps {
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
   onDeleteTodo: (todoId: string) => void;
+  onMoveTodosFromDay: (date: Date) => void;
   profile: Profile | null;
 }
 
@@ -40,6 +41,7 @@ export default function Calendar({
   onMoveTodo,
   onUpdateTodo,
   onDeleteTodo,
+  onMoveTodosFromDay,
   profile,
 }: CalendarProps) {
   const [authentication] = useAuthentication();
@@ -175,6 +177,7 @@ export default function Calendar({
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={handleOpenTimeBox}
+                onMoveTodosFromDay={onMoveTodosFromDay}
               />
             );
           })}
