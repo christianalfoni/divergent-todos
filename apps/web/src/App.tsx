@@ -179,6 +179,19 @@ export default function App() {
     return <MobileBlocker />;
   }
 
+  // In Electron, skip the router entirely
+  const isElectron = window.navigator.userAgent.includes("Electron");
+
+  if (isElectron) {
+    return (
+      <CacheProvider>
+        <OnboardingProvider>
+          <AppContent />
+        </OnboardingProvider>
+      </CacheProvider>
+    );
+  }
+
   return (
     <BrowserRouter>
       <CacheProvider>

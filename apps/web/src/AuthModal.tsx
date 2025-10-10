@@ -55,7 +55,7 @@ export default function AuthModal({ open, onSignIn }: AuthModalProps) {
                   <p className="text-xs text-[var(--color-text-secondary)] mt-3">
                     By signing in, you agree to our{" "}
                     <a
-                      href="/terms"
+                      href={isElectron ? "https://divergent-todos.com/terms" : "/terms"}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] underline"
