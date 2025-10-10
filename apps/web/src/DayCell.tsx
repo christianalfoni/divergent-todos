@@ -13,7 +13,7 @@ interface DayCellProps {
   isAuthenticated: boolean
   isLoading: boolean
   todos: Todo[]
-  onAddTodo: (todo: Omit<Todo, 'id'>) => void
+  onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
   onToggleTodoComplete: (todoId: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
@@ -47,7 +47,6 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           url: undefined, // URL is now embedded in HTML
           completed: false,
           date: date.toISOString().split('T')[0],
-          position: '',
         })
         editorRef.current?.clear()
         setNewTodoHtml('')

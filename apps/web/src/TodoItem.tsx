@@ -36,7 +36,7 @@ export default function TodoItem({
   const editorRef = useRef<SmartLinksEditorRef>(null);
   const originalHtmlRef = useRef<string>(todo.text);
   const lastClickTimeRef = useRef<number>(0);
-  const clickTimeoutRef = useRef<number | null>(null);
+  const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,

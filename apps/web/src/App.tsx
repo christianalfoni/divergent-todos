@@ -36,6 +36,27 @@ function AppContent() {
   const onboarding = useOnboarding();
   const profile = authentication.profile;
 
+  // Debug: Check for duplicate positions
+  useEffect(() => {
+    const positionMap = new Map<string, string[]>();
+    todos.forEach(todo => {
+      const date = todo.date;
+      if (!positionMap.has(date)) {
+        positionMap.set(date, []);
+      }
+      positionMap.get(date)!.push(todo.position);
+    });
+
+    positionMap.forEach((positions, date) => {
+      const duplicates = positions.filter((pos, index) => positions.indexOf(pos) !== index);
+      if (duplicates.length > 0) {
+        console.error(`🔴 Duplicate positions found for date ${date}:`, duplicates);
+        const todosForDate = todos.filter(t => t.date === date);
+        console.error('All todos for this date:', todosForDate.map(t => ({ id: t.id, position: t.position, text: t.text })));
+      }
+    });
+  }, [todos]);
+
   // Initialize theme system
   useTheme();
 
