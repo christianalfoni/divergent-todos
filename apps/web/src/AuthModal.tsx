@@ -52,6 +52,17 @@ export default function AuthModal({ open, onSignIn }: AuthModalProps) {
                     Please sign in with your Google account to access your
                     todos.
                   </p>
+                  <p className="text-xs text-[var(--color-text-secondary)] mt-3">
+                    By signing in, you agree to our{" "}
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] underline"
+                    >
+                      Terms of Service
+                    </a>
+                  </p>
                 </div>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
@@ -6,6 +7,7 @@ import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
 import TopBar from "./TopBar";
 import MobileBlocker from "./MobileBlocker";
+import Terms from "./Terms";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTheme } from "./hooks/useTheme";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -154,10 +156,15 @@ export default function App() {
   }
 
   return (
-    <CacheProvider>
-      <OnboardingProvider>
-        <AppContent />
-      </OnboardingProvider>
-    </CacheProvider>
+    <BrowserRouter>
+      <CacheProvider>
+        <OnboardingProvider>
+          <Routes>
+            <Route path="/" element={<AppContent />} />
+            <Route path="/terms" element={<Terms />} />
+          </Routes>
+        </OnboardingProvider>
+      </CacheProvider>
+    </BrowserRouter>
   );
 }
