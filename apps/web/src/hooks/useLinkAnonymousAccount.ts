@@ -5,6 +5,7 @@ import {
 } from "firebase/auth";
 import { pipe } from "pipesy";
 import { auth } from "../firebase";
+import { trackAccountLink } from "../firebase/analytics";
 
 export type LinkAccountState =
   | {
@@ -58,6 +59,9 @@ export function useLinkAnonymousAccount() {
         const provider = new GoogleAuthProvider();
         await linkWithPopup(currentUser, provider);
       }
+
+      // Track successful account linking
+      trackAccountLink();
     })
     .map(() => ({ isLinking: false, error: null } as const))
     .catch((err) => ({ isLinking: false, error: String(err) }))

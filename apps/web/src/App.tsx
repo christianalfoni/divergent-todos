@@ -13,6 +13,7 @@ import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
+import { trackAppOpened, trackBulkTodoMove } from "./firebase/analytics";
 
 export interface Todo {
   id: string;
@@ -45,6 +46,12 @@ function AppContent() {
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
+
+  // Track app opened only once on mount
+  useEffect(() => {
+    trackAppOpened(isElectron);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Check for active subscription
   const hasActiveSubscription = profile?.subscription?.status === "active";
@@ -80,6 +87,9 @@ function AppContent() {
     oldUncompletedTodos.forEach((todo) => {
       todoOperations.moveTodo(todo.id, targetDateString);
     });
+
+    // Track bulk todo move
+    trackBulkTodoMove(oldUncompletedTodos.length);
   };
 
   return (

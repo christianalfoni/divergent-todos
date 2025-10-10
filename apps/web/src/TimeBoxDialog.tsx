@@ -9,6 +9,7 @@ import { ClockIcon } from "@heroicons/react/24/outline";
 import type { Todo } from "./App";
 import { useWoodDoorKnock } from "./hooks/useWoodDoorKnock";
 import { useOnboarding } from "./contexts/OnboardingContext";
+import { trackTimeboxOpened, trackTimeboxClosed } from "./firebase/analytics";
 
 interface TimeBoxDialogProps {
   open: boolean;
@@ -62,6 +63,10 @@ export default function TimeBoxDialog({
     setTimeRemaining(null);
     setIsTimerActive(false);
     setIsCompleting(false);
+
+    // Track timebox close
+    trackTimeboxClosed();
+
     onClose();
     // Notify onboarding that timebox was closed
     onboarding.notifyTimeboxClosed();
