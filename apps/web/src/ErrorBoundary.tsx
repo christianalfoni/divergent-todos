@@ -1,4 +1,4 @@
-import { Component, ReactNode } from 'react';
+import { Component, type ReactNode } from 'react';
 import { ExclamationTriangleIcon, CheckCircleIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { submitFeedback } from './firebase/feedback';
 
@@ -75,7 +75,6 @@ ${errorInfo || 'No component stack available'}
         window.location.reload();
       }, 1500);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to send feedback';
       this.setState({
         errorMessage: 'Failed to send error report. You can still refresh the page.',
         status: 'error'

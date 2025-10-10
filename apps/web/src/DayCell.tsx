@@ -13,7 +13,7 @@ interface DayCellProps {
   isAuthenticated: boolean
   isLoading: boolean
   todos: Todo[]
-  onAddTodo: (todo: Omit<Todo, 'id'>) => void
+  onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
   onToggleTodoComplete: (todoId: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void

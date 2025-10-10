@@ -19,7 +19,7 @@ import { trackTimeboxOpened } from "./firebase/analytics";
 interface CalendarProps {
   todos: Todo[];
   isLoading: boolean;
-  onAddTodo: (todo: Omit<Todo, "id">) => void;
+  onAddTodo: (todo: Omit<Todo, "id" | "position"> & { position?: string }) => void;
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
