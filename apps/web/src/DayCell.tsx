@@ -47,7 +47,6 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           url: undefined, // URL is now embedded in HTML
           completed: false,
           date: date.toISOString().split('T')[0],
-          position: '',
         })
         editorRef.current?.clear()
         setNewTodoHtml('')

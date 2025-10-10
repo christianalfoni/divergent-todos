@@ -35,7 +35,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
   const onboarding = useOnboarding();
 
   const handleAddTodo = useCallback(
-    (todo: Omit<Todo, "id">) => {
+    (todo: Omit<Todo, "id" | "position"> & { position?: string }) => {
       const dateObj = new Date(todo.date);
 
       if (onboarding.isOnboarding) {
@@ -150,7 +150,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
         let newPosition: string;
 
-        if (newIndex === undefined) {
+        if (newIndex === undefined || todosInTargetDate.length === 0) {
           // Moving to a date without specific position - place at end
           const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
           newPosition = generateKeyBetween(lastTodo?.position || null, null);
@@ -182,7 +182,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
         let newPosition: string;
 
-        if (newIndex === undefined) {
+        if (newIndex === undefined || todosInTargetDate.length === 0) {
           // Moving to a date without specific position - place at end
           const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
           newPosition = generateKeyBetween(lastTodo?.position || null, null);
@@ -259,17 +259,21 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
   const moveTodosInBatch = useCallback(
     (todoIds: string[], newDate: string) => {
       if (onboarding.isOnboarding) {
+        // Get todos for target date (excluding todos being moved)
+        const todosInTargetDate = sortTodosByPosition(
+          onboarding.todos.filter((t) => t.date.toISOString().split("T")[0] === newDate && !todoIds.includes(t.id))
+        );
+
+        // Track the last position to chain the new positions
+        let lastPosition = todosInTargetDate.length > 0 ? todosInTargetDate[todosInTargetDate.length - 1].position : null;
+
         // In onboarding mode, move todos one by one using local state
         todoIds.forEach((todoId) => {
           const todo = onboarding.todos.find((t) => t.id === todoId);
           if (!todo) return;
 
-          const todosInTargetDate = sortTodosByPosition(
-            onboarding.todos.filter((t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId)
-          );
-
-          const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
-          const newPosition = generateKeyBetween(lastTodo?.position || null, null);
+          const newPosition = generateKeyBetween(lastPosition, null);
+          lastPosition = newPosition; // Update for next todo
           const dateObj = new Date(newDate);
 
           onboarding.editTodo(todoId, {
@@ -278,20 +282,23 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           });
         });
       } else {
+        // Get todos for target date (excluding todos being moved)
+        const todosInTargetDate = sortTodosByPosition(
+          firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === newDate && !todoIds.includes(t.id))
+        );
+
+        // Track the last position to chain the new positions
+        let lastPosition = todosInTargetDate.length > 0 ? todosInTargetDate[todosInTargetDate.length - 1].position : null;
+
         // Build array of updates for batch operation
         const updates = todoIds
           .map((todoId) => {
             const todo = firebaseTodos.find((t) => t.id === todoId);
             if (!todo) return null;
 
-            // Get todos for target date (excluding todos being moved)
-            const todosInTargetDate = sortTodosByPosition(
-              firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === newDate && !todoIds.includes(t.id))
-            );
-
-            // Calculate new position (append to end)
-            const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
-            const newPosition = generateKeyBetween(lastTodo?.position || null, null);
+            // Calculate new position (append to end, chaining from previous)
+            const newPosition = generateKeyBetween(lastPosition, null);
+            lastPosition = newPosition; // Update for next todo
             const dateObj = new Date(newDate);
 
             return {
