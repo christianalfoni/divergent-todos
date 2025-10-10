@@ -5,6 +5,7 @@ import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
 import TopBar from "./TopBar";
+import MobileBlocker from "./MobileBlocker";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTheme } from "./hooks/useTheme";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -14,6 +15,7 @@ import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import { trackAppOpened, trackBulkTodoMove } from "./firebase/analytics";
+import { isMobileDevice } from "./utils/device";
 
 export interface Todo {
   id: string;
@@ -146,6 +148,11 @@ function AppContent() {
 }
 
 export default function App() {
+  // Check if device is mobile and show blocker if so
+  if (isMobileDevice()) {
+    return <MobileBlocker />;
+  }
+
   return (
     <CacheProvider>
       <OnboardingProvider>
