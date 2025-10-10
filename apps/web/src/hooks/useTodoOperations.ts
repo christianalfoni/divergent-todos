@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { generateKeyBetween } from "fractional-indexing";
 import { useAddTodo } from "./useAddTodo";
 import { useEditTodo } from "./useEditTodo";
+import { useBatchEditTodos } from "./useBatchEditTodos";
 import { useDeleteTodo } from "./useDeleteTodo";
 import { useHittingWood } from "./useHittingWood";
 import { useOnboarding } from "../contexts/OnboardingContext";
@@ -28,6 +29,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
   const { data: firebaseTodos } = useTodos();
   const [, addTodo] = useAddTodo();
   const [, editTodo] = useEditTodo();
+  const [, batchEditTodos] = useBatchEditTodos();
   const [, deleteTodo] = useDeleteTodo();
   const hittingWood = useHittingWood();
   const onboarding = useOnboarding();
@@ -254,10 +256,68 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     [onboarding, deleteTodo]
   );
 
+  const moveTodosInBatch = useCallback(
+    (todoIds: string[], newDate: string) => {
+      if (onboarding.isOnboarding) {
+        // In onboarding mode, move todos one by one using local state
+        todoIds.forEach((todoId) => {
+          const todo = onboarding.todos.find((t) => t.id === todoId);
+          if (!todo) return;
+
+          const todosInTargetDate = sortTodosByPosition(
+            onboarding.todos.filter((t) => t.date.toISOString().split("T")[0] === newDate && t.id !== todoId)
+          );
+
+          const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
+          const newPosition = generateKeyBetween(lastTodo?.position || null, null);
+          const dateObj = new Date(newDate);
+
+          onboarding.editTodo(todoId, {
+            date: dateObj,
+            position: newPosition,
+          });
+        });
+      } else {
+        // Build array of updates for batch operation
+        const updates = todoIds
+          .map((todoId) => {
+            const todo = firebaseTodos.find((t) => t.id === todoId);
+            if (!todo) return null;
+
+            // Get todos for target date (excluding todos being moved)
+            const todosInTargetDate = sortTodosByPosition(
+              firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === newDate && !todoIds.includes(t.id))
+            );
+
+            // Calculate new position (append to end)
+            const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
+            const newPosition = generateKeyBetween(lastTodo?.position || null, null);
+            const dateObj = new Date(newDate);
+
+            return {
+              id: todoId,
+              description: todo.description,
+              completed: todo.completed,
+              date: dateObj,
+              position: newPosition,
+            };
+          })
+          .filter((update): update is NonNullable<typeof update> => update !== null);
+
+        // Execute batch update
+        if (updates.length > 0) {
+          batchEditTodos(updates);
+        }
+      }
+    },
+    [onboarding, firebaseTodos, batchEditTodos]
+  );
+
   return {
     handleAddTodo,
     toggleTodoComplete,
     moveTodo,
+    moveTodosInBatch,
     updateTodo,
     handleDeleteTodo,
   };

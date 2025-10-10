@@ -18,9 +18,10 @@ interface DayCellProps {
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
+  onMoveTodosFromDay: (date: Date) => void
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartLinksEditorRef>(null)
@@ -65,6 +66,9 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
   const month = date.toLocaleDateString('en-US', { month: 'short' })
   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
 
+  // Check if day has uncompleted todos
+  const hasUncompletedTodos = todos.some(todo => !todo.completed)
+
   return (
     <div
       ref={setNodeRef}
@@ -102,29 +106,56 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
             ))}
           </SortableContext>
         )}
-        {isAuthenticated && !isAddingTodo && !isPastDay && !isLoading && (
-          <button
-            onClick={() => setIsAddingTodo(true)}
-            className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
-          >
-            <div className="flex h-5 w-4 shrink-0 items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-4 h-4"
+        {isAuthenticated && !isAddingTodo && !isLoading && (
+          <>
+            {!isPastDay ? (
+              <button
+                onClick={() => setIsAddingTodo(true)}
+                className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-            </div>
-            <span>Add to-do</span>
-          </button>
+                <div className="flex h-5 w-4 shrink-0 items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 4.5v15m7.5-7.5h-15"
+                    />
+                  </svg>
+                </div>
+                <span>Add to-do</span>
+              </button>
+            ) : hasUncompletedTodos ? (
+              <button
+                onClick={() => onMoveTodosFromDay(date)}
+                className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+              >
+                <div className="flex h-5 w-4 shrink-0 items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-4 h-4"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                    />
+                  </svg>
+                </div>
+                <span>Move uncompleted to-dos</span>
+              </button>
+            ) : null}
+          </>
         )}
         {isAuthenticated && isAddingTodo && !isPastDay && (
           <div className="mt-2 px-3">

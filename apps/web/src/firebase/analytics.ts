@@ -60,6 +60,10 @@ export function trackBulkTodoMove(count: number) {
   logEvent(analytics, "todos_bulk_moved", { count });
 }
 
+export function trackDayTodosMoved(count: number) {
+  logEvent(analytics, "day_todos_moved", { count });
+}
+
 // Feature usage
 export function trackTimeboxOpened() {
   logEvent(analytics, "timebox_opened");

@@ -1,10 +1,13 @@
 import { useState, useMemo, useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
 import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
 import TopBar from "./TopBar";
+import MobileBlocker from "./MobileBlocker";
+import Terms from "./Terms";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTheme } from "./hooks/useTheme";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -13,7 +16,8 @@ import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
-import { trackAppOpened, trackBulkTodoMove } from "./firebase/analytics";
+import { trackAppOpened, trackBulkTodoMove, trackDayTodosMoved } from "./firebase/analytics";
+import { isMobileDevice } from "./utils/device";
 
 export interface Todo {
   id: string;
@@ -84,12 +88,33 @@ function AppContent() {
   const moveOldTodosToNextWorkday = () => {
     const targetDate = getNextWorkday();
     const targetDateString = targetDate.toISOString().split("T")[0];
-    oldUncompletedTodos.forEach((todo) => {
-      todoOperations.moveTodo(todo.id, targetDateString);
-    });
+    const todoIds = oldUncompletedTodos.map((todo) => todo.id);
+
+    // Use batch operation for better performance
+    todoOperations.moveTodosInBatch(todoIds, targetDateString);
 
     // Track bulk todo move
     trackBulkTodoMove(oldUncompletedTodos.length);
+  };
+
+  // Move uncompleted todos from a specific day to current or next working day
+  const moveTodosFromDay = (date: Date) => {
+    const targetDate = getNextWorkday();
+    const targetDateString = targetDate.toISOString().split("T")[0];
+    const dateString = date.toISOString().split("T")[0];
+
+    // Get uncompleted todos from this specific day
+    const uncompletedTodos = todos.filter(
+      (todo) => todo.date === dateString && !todo.completed
+    );
+
+    const todoIds = uncompletedTodos.map((todo) => todo.id);
+
+    // Use batch operation for better performance
+    todoOperations.moveTodosInBatch(todoIds, targetDateString);
+
+    // Track day todos move
+    trackDayTodosMoved(uncompletedTodos.length);
   };
 
   return (
@@ -120,6 +145,9 @@ function AppContent() {
           onDeleteTodo={
             authentication.user ? todoOperations.handleDeleteTodo : () => {}
           }
+          onMoveTodosFromDay={
+            authentication.user ? moveTodosFromDay : () => {}
+          }
           profile={profile}
         />
       </div>
@@ -146,11 +174,21 @@ function AppContent() {
 }
 
 export default function App() {
+  // Check if device is mobile and show blocker if so
+  if (isMobileDevice()) {
+    return <MobileBlocker />;
+  }
+
   return (
-    <CacheProvider>
-      <OnboardingProvider>
-        <AppContent />
-      </OnboardingProvider>
-    </CacheProvider>
+    <BrowserRouter>
+      <CacheProvider>
+        <OnboardingProvider>
+          <Routes>
+            <Route path="/" element={<AppContent />} />
+            <Route path="/terms" element={<Terms />} />
+          </Routes>
+        </OnboardingProvider>
+      </CacheProvider>
+    </BrowserRouter>
   );
 }

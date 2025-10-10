@@ -12,6 +12,7 @@ import { useOnboarding } from "./contexts/OnboardingContext";
 import DownloadAppDialog from "./DownloadAppDialog";
 import FeedbackDialog from "./FeedbackDialog";
 import { trackMenuItemClicked } from "./firebase/analytics";
+import { ARTICLE_URL } from "./constants/links";
 
 function getDownloadUrl(): string | null {
   // Check if running in Electron
@@ -373,7 +374,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
 
                   <MenuItem>
                     <a
-                      href="https://medium.com/@christianalfoni/divergent-todos-the-story-behind-the-app-5f327fb90fdc"
+                      href={ARTICLE_URL}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={() => trackMenuItemClicked("introduction_article")}
