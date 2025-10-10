@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import DayCell from "./DayCell";
 import TimeBoxDialog from "./TimeBoxDialog";
@@ -14,6 +14,7 @@ import {
 } from "./utils/calendar";
 import type { Todo } from "./App";
 import type { Profile } from "./firebase";
+import { trackTimeboxOpened } from "./firebase/analytics";
 
 interface CalendarProps {
   todos: Todo[];
@@ -48,6 +49,14 @@ export default function Calendar({
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
   const [, setVisibilityTrigger] = useState(0);
   const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), []);
+
+  // Wrap setTimeBoxTodo to track analytics imperatively
+  const handleOpenTimeBox = useCallback((todo: Todo | null) => {
+    if (todo) {
+      trackTimeboxOpened();
+    }
+    setTimeBoxTodo(todo);
+  }, []);
 
   const {
     sensors,
@@ -165,7 +174,7 @@ export default function Calendar({
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
-                onOpenTimeBox={setTimeBoxTodo}
+                onOpenTimeBox={handleOpenTimeBox}
               />
             );
           })}

@@ -9,6 +9,7 @@ import { ClockIcon } from "@heroicons/react/24/outline";
 import type { Todo } from "./App";
 import { useWoodDoorKnock } from "./hooks/useWoodDoorKnock";
 import { useOnboarding } from "./contexts/OnboardingContext";
+import { trackTimeboxClosed } from "./firebase/analytics";
 
 interface TimeBoxDialogProps {
   open: boolean;
@@ -62,6 +63,10 @@ export default function TimeBoxDialog({
     setTimeRemaining(null);
     setIsTimerActive(false);
     setIsCompleting(false);
+
+    // Track timebox close
+    trackTimeboxClosed();
+
     onClose();
     // Notify onboarding that timebox was closed
     onboarding.notifyTimeboxClosed();
@@ -78,10 +83,16 @@ export default function TimeBoxDialog({
   if (!todo) return null;
 
   return (
-    <Dialog open={open} onClose={isTimerActive ? () => {} : onClose} className="relative z-[60]">
+    <Dialog
+      open={open}
+      onClose={isTimerActive ? () => {} : onClose}
+      className="relative z-[60]"
+    >
       <DialogBackdrop
         transition
-        className={`fixed inset-0 ${isTimerActive ? 'backdrop-blur-md' : ''} bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in`}
+        className={`fixed inset-0 ${
+          isTimerActive ? "backdrop-blur-md" : ""
+        } bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in`}
       />
 
       <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">

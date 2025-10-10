@@ -2,6 +2,7 @@ import { pipe } from "pipesy";
 import { auth, profilesCollection, type Profile } from "../firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
+import { trackUser, trackUserProperties } from "../firebase/analytics";
 
 export type AuthenticationState =
   | {
@@ -55,6 +56,7 @@ export function useAuthentication() {
 
           if (!user) {
             // User logged out - clear everything
+            trackUser(null);
             setAuthentication(() => ({
               isAuthenticating: false,
               user: null,
@@ -63,6 +65,12 @@ export function useAuthentication() {
             }));
             return;
           }
+
+          // Track user authentication
+          trackUser(user.uid);
+          trackUserProperties({
+            isElectron: window.navigator.userAgent.includes("Electron") ? "true" : "false",
+          });
 
           // Set up profile listener
           const profileDoc = doc(profilesCollection, user.uid);

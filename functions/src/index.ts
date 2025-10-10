@@ -7,6 +7,7 @@ import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import Stripe from "stripe";
 import { logger } from "firebase-functions";
+import { Resend } from "resend";
 
 initializeApp();
 
@@ -24,6 +25,7 @@ const googleClientSecret = defineSecret("GOOGLE_CLIENT_SECRET");
 const STRIPE_API_KEY = defineSecret("STRIPE_API_KEY");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 const STRIPE_PRICE_ID = defineSecret("STRIPE_PRICE_ID");
+const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
 
 interface AuthSession {
   sid: string;
@@ -708,6 +710,50 @@ export const stripeWebhook = onRequest(
     } catch (err) {
       logger.error("Webhook handler error", err);
       res.status(500).send("Webhook handler error");
+    }
+  }
+);
+
+// ============================================================================
+// Feedback Function
+// ============================================================================
+
+export const submitFeedback = onCall(
+  { secrets: [RESEND_API_KEY] },
+  async (req) => {
+    const uid = req.auth?.uid;
+    if (!uid) throw new HttpsError("unauthenticated", "Login required.");
+
+    const { feedback } = req.data;
+    if (!feedback || typeof feedback !== "string" || !feedback.trim()) {
+      throw new HttpsError("invalid-argument", "Feedback is required.");
+    }
+
+    const email = req.auth?.token?.email || "anonymous";
+    const displayName = req.auth?.token?.name || "Anonymous User";
+
+    try {
+      const resend = new Resend(RESEND_API_KEY.value());
+
+      await resend.emails.send({
+        from: "post@divergent-todos.com",
+        to: "christianalfoni@gmail.com",
+        subject: "Feedback",
+        html: `
+          <h2>New Feedback Received</h2>
+          <p><strong>From:</strong> ${displayName}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>User ID:</strong> ${uid}</p>
+          <h3>Feedback:</h3>
+          <p>${feedback.replace(/\n/g, "<br>")}</p>
+        `,
+      });
+
+      logger.info("Feedback sent successfully", { uid, email });
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to send feedback email", error);
+      throw new HttpsError("internal", "Failed to send feedback. Please try again later.");
     }
   }
 );

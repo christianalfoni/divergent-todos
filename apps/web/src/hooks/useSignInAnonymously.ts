@@ -1,6 +1,7 @@
 import { signInAnonymously } from "firebase/auth";
 import { pipe } from "pipesy";
 import { auth } from "../firebase";
+import { trackSignIn } from "../firebase/analytics";
 
 export type SignInAnonymouslyState =
   | {
@@ -21,6 +22,9 @@ export function useSignInAnonymously() {
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
       await signInAnonymously(auth);
+
+      // Track anonymous sign-in
+      trackSignIn("anonymous");
     })
     .catch((err) => ({ isSigningIn: false, error: String(err) }))
     .setState()

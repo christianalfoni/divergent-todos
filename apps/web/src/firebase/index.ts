@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
+import { getAnalytics } from "firebase/analytics";
 import { todoConverter } from "./types/todo";
 import { profileConverter } from "./types/profile";
 // import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check'
@@ -20,6 +21,7 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
+export const analytics = getAnalytics(app);
 
 // Initialize collections with converters
 export const todosCollection = collection(db, "todos").withConverter(todoConverter);

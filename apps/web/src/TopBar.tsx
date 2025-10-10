@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
-import { RocketLaunchIcon, SparklesIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import { RocketLaunchIcon, SparklesIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { CodeBracketIcon } from "@heroicons/react/20/solid";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { auth, type Profile } from "./firebase";
 import { useTheme, type Theme } from "./hooks/useTheme";
@@ -9,6 +10,8 @@ import UpdateNotification from "./UpdateNotification";
 import { openBillingPortal } from "./firebase/subscriptions";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import DownloadAppDialog from "./DownloadAppDialog";
+import FeedbackDialog from "./FeedbackDialog";
+import { trackMenuItemClicked } from "./firebase/analytics";
 
 function getDownloadUrl(): string | null {
   // Check if running in Electron
@@ -56,13 +59,39 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const { isOnboarding, currentStep } = useOnboarding();
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
 
   const subscriptionStatus = profile?.subscription?.status;
   const showPaymentWarning = subscriptionStatus === "past_due" || subscriptionStatus === "unpaid";
   const showDownloadButton = !authentication.isAuthenticating && !profile?.hasInstalledApp && downloadUrl && !authentication.user?.isAnonymous;
 
   const handleSignOut = () => {
+    trackMenuItemClicked("sign_out");
     signOut(auth);
+  };
+
+  const handleSubscriptionClick = () => {
+    trackMenuItemClicked("subscription");
+    onOpenSubscription?.();
+  };
+
+  const handleDownloadAppClick = () => {
+    trackMenuItemClicked("download_app");
+    setIsDownloadDialogOpen(true);
+  };
+
+  const handleThemeClick = (theme: Theme) => {
+    trackMenuItemClicked(`theme_${theme}`);
+    setTheme(theme);
+  };
+
+  const handleGitHubClick = () => {
+    trackMenuItemClicked("open_source_code");
+  };
+
+  const handleFeedbackClick = () => {
+    trackMenuItemClicked("feedback");
+    setIsFeedbackDialogOpen(true);
   };
 
   const handleOpenBillingPortal = async () => {
@@ -257,7 +286,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
             {/* Profile dropdown - always show avatar, menu only for authenticated non-anonymous users */}
             {authentication.user && !authentication.user.isAnonymous ? (
               <Menu as="div" className="relative">
-                <MenuButton className="relative flex max-w-xs items-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]">
+                <MenuButton className="relative flex max-w-xs items-center p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] rounded-md">
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">Open user menu</span>
                   {authentication.user.photoURL ? (
@@ -281,9 +310,13 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                 >
                   <MenuItem>
                     <button
-                      onClick={onOpenSubscription}
-                      className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                      onClick={handleSubscriptionClick}
+                      className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                     >
+                      <BanknotesIcon
+                        aria-hidden="true"
+                        className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                      />
                       Subscription
                     </button>
                   </MenuItem>
@@ -291,46 +324,116 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                   {downloadUrl && !authentication.user.isAnonymous && (
                     <MenuItem>
                       <button
-                        onClick={() => setIsDownloadDialogOpen(true)}
-                        className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                        onClick={handleDownloadAppClick}
+                        className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                       >
+                        <ArrowDownTrayIcon
+                          aria-hidden="true"
+                          className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                        />
                         Download app
                       </button>
                     </MenuItem>
                   )}
 
-                  <div className="my-1 h-px bg-[var(--color-border-primary)]" />
+                  <div className="flex items-center px-4 my-1">
+                    <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                    <div className="relative flex justify-center">
+                      <span className="bg-[var(--color-bg-primary)] px-2 text-xs text-[var(--color-text-tertiary)]">Themes</span>
+                    </div>
+                    <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                  </div>
 
                   {themes.map((themeOption) => (
                     <MenuItem key={themeOption.value}>
                       <button
-                        onClick={() => setTheme(themeOption.value)}
-                        className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                        onClick={() => handleThemeClick(themeOption.value)}
+                        className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                       >
-                        {themeOption.label}
-                        {theme === themeOption.value && (
-                          <span className="ml-2 text-[var(--color-accent-text)]">
-                            ✓
-                          </span>
+                        {theme === themeOption.value ? (
+                          <CheckIcon
+                            aria-hidden="true"
+                            className="mr-3 size-5 text-[var(--color-accent-text)]"
+                          />
+                        ) : (
+                          <span className="mr-3 size-5" aria-hidden="true" />
                         )}
+                        {themeOption.label}
                       </button>
                     </MenuItem>
                   ))}
+
+                  <div className="flex items-center px-4 my-1">
+                    <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                    <div className="relative flex justify-center">
+                      <span className="bg-[var(--color-bg-primary)] px-2 text-xs text-[var(--color-text-tertiary)]">Resources</span>
+                    </div>
+                    <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                  </div>
+
+                  <MenuItem>
+                    <a
+                      href="https://medium.com/@christianalfoni/divergent-todos-the-story-behind-the-app-5f327fb90fdc"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => trackMenuItemClicked("introduction_article")}
+                      className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                    >
+                      <DocumentTextIcon
+                        aria-hidden="true"
+                        className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                      />
+                      Introduction Article
+                    </a>
+                  </MenuItem>
+
+                  <MenuItem>
+                    <a
+                      href="https://github.com/christianalfoni/divergent-todos"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={handleGitHubClick}
+                      className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                    >
+                      <CodeBracketIcon
+                        aria-hidden="true"
+                        className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                      />
+                      Open Source Code
+                    </a>
+                  </MenuItem>
+
+                  <MenuItem>
+                    <button
+                      onClick={handleFeedbackClick}
+                      className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                    >
+                      <ChatBubbleLeftRightIcon
+                        aria-hidden="true"
+                        className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                      />
+                      Feedback
+                    </button>
+                  </MenuItem>
 
                   <div className="my-1 h-px bg-[var(--color-border-primary)]" />
 
                   <MenuItem>
                     <button
                       onClick={handleSignOut}
-                      className="block w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                      className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                     >
+                      <ArrowRightStartOnRectangleIcon
+                        aria-hidden="true"
+                        className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                      />
                       Sign out
                     </button>
                   </MenuItem>
                 </MenuItems>
               </Menu>
             ) : (
-              <div className="relative flex max-w-xs items-center">
+              <div className="relative flex max-w-xs items-center p-2 rounded-md">
                 <span className="inline-block size-8 overflow-hidden rounded-full bg-[var(--color-bg-primary)] outline -outline-offset-1 outline-[var(--color-outline)]">
                   <svg fill="currentColor" viewBox="0 0 24 24" className="size-full text-[var(--color-text-tertiary)]">
                     <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -346,6 +449,11 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
         open={isDownloadDialogOpen}
         onClose={() => setIsDownloadDialogOpen(false)}
         downloadUrl={downloadUrl}
+      />
+
+      <FeedbackDialog
+        open={isFeedbackDialogOpen}
+        onClose={() => setIsFeedbackDialogOpen(false)}
       />
     </nav>
   );

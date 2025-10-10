@@ -15,6 +15,11 @@ import {
   stopSubscription,
   resumeSubscription,
 } from "./firebase/subscriptions";
+import {
+  trackSubscriptionStarted,
+  trackSubscriptionCanceled,
+  trackSubscriptionResumed,
+} from "./firebase/analytics";
 
 interface SubscriptionDialogProps {
   open: boolean;
@@ -54,6 +59,9 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
     setIsProcessing(true);
     setError(null);
     try {
+      // Track subscription start
+      trackSubscriptionStarted();
+
       // In Electron, don't pass URLs (let server use defaults)
       const isElectronEnv = !window.location.origin.startsWith('http');
       await startSubscription(
@@ -75,6 +83,10 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
     setError(null);
     try {
       await stopSubscription();
+
+      // Track subscription cancellation
+      trackSubscriptionCanceled();
+
       setIsProcessing(false);
       onClose();
     } catch (err: any) {
@@ -88,6 +100,10 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
     setError(null);
     try {
       await resumeSubscription();
+
+      // Track subscription resume
+      trackSubscriptionResumed();
+
       setIsProcessing(false);
       onClose();
     } catch (err: any) {

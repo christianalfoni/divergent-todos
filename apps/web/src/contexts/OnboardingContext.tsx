@@ -1,5 +1,11 @@
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
+import {
+  trackOnboardingStarted,
+  trackOnboardingStepCompleted,
+  trackOnboardingCompleted,
+  trackOnboardingSkipped,
+} from "../firebase/analytics";
 
 export type OnboardingStep =
   | "workdays"
@@ -63,12 +69,19 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const isOnboarding = currentStep !== null;
 
   const startOnboarding = () => {
+    trackOnboardingStarted();
     setCurrentStep(ONBOARDING_STEPS[0]);
     setTodos([]); // Reset todos when starting onboarding
   };
 
   const nextStep = () => {
     const currentIndex = ONBOARDING_STEPS.indexOf(currentStep!);
+
+    // Track step completion before advancing
+    if (currentStep) {
+      trackOnboardingStepCompleted(currentStep);
+    }
+
     if (currentIndex < ONBOARDING_STEPS.length - 1) {
       setCurrentStep(ONBOARDING_STEPS[currentIndex + 1]);
     } else {
@@ -77,6 +90,13 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   };
 
   const completeOnboarding = () => {
+    // Track if onboarding was skipped or completed
+    if (currentStep === "congratulations") {
+      trackOnboardingCompleted();
+    } else if (currentStep) {
+      trackOnboardingSkipped(currentStep);
+    }
+
     setCurrentStep(null);
     setTodos([]); // Clear todos when completing onboarding
   };

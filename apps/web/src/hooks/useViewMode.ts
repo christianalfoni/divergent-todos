@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthentication } from "./useAuthentication";
 import { useEditProfile } from "./useEditProfile";
+import { trackViewModeChanged } from "../firebase/analytics";
 
 export type ViewMode = "one-week" | "two-weeks";
 
@@ -48,6 +49,9 @@ export function useViewMode() {
     setViewMode(newViewMode);
     // Update profile with new viewMode (profile is source of truth)
     editProfile({ viewMode: newViewMode });
+
+    // Track view mode change
+    trackViewModeChanged(newViewMode);
   };
 
   return {

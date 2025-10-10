@@ -9,6 +9,15 @@ import { useTodos } from "./useTodos";
 import { sortTodosByPosition } from "../utils/todos";
 import type { Todo } from "../App";
 import type { Profile } from "../firebase";
+import {
+  trackTodoCreated,
+  trackTodoCompleted,
+  trackTodoUncompleted,
+  trackTodoEdited,
+  trackTodoDeleted,
+  trackTodoMoved,
+  trackFreeLimitReached,
+} from "../firebase/analytics";
 
 interface UseTodoOperationsProps {
   profile: Profile | null;
@@ -60,6 +69,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         const freeTodoCount = profile?.freeTodoCount ?? 0;
 
         if (!hasActiveSubscription && freeTodoCount >= 20) {
+          trackFreeLimitReached(freeTodoCount);
           onShowSubscriptionDialog();
           return;
         }
@@ -73,6 +83,13 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
         addTodo({ description: todo.text, date: dateObj, lastPosition });
       }
+
+      // Track todo creation
+      const hasUrl = todo.text.includes('data-url="');
+      trackTodoCreated({
+        hasUrl,
+        isOnboarding: onboarding.isOnboarding,
+      });
     },
     [onboarding, firebaseTodos, profile, addTodo, onShowSubscriptionDialog]
   );
@@ -106,6 +123,13 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           completed: !todo.completed,
           date: todo.date,
         });
+
+        // Track todo completion/uncompletion
+        if (!todo.completed) {
+          trackTodoCompleted({ isOnboarding: onboarding.isOnboarding });
+        } else {
+          trackTodoUncompleted({ isOnboarding: onboarding.isOnboarding });
+        }
       }
     },
     [onboarding, firebaseTodos, hittingWood, editTodo]
@@ -177,6 +201,13 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           date: dateObj,
           position: newPosition,
         });
+
+        // Track todo movement
+        const sameDay = todo.date.toISOString().split("T")[0] === newDate;
+        trackTodoMoved({
+          sameDay,
+          isOnboarding: onboarding.isOnboarding,
+        });
       }
     },
     [onboarding, firebaseTodos, editTodo]
@@ -200,6 +231,9 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           completed: todo.completed,
           date: todo.date,
         });
+
+        // Track todo edit
+        trackTodoEdited({ isOnboarding: onboarding.isOnboarding });
       }
     },
     [onboarding, firebaseTodos, editTodo]
@@ -213,6 +247,9 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       } else {
         deleteTodo({ id: todoId });
       }
+
+      // Track todo deletion
+      trackTodoDeleted({ isOnboarding: onboarding.isOnboarding });
     },
     [onboarding, deleteTodo]
   );

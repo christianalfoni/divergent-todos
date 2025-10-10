@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuthentication } from "./useAuthentication";
 import { useEditProfile } from "./useEditProfile";
+import { trackThemeChanged } from "../firebase/analytics";
 
 export type ThemeMode = "light" | "dark" | "system";
 export type Theme = "default" | "ocean" | "forest" | "sunset";
@@ -123,6 +124,9 @@ export function useTheme() {
       mode,
       effectiveMode: mode === "system" ? getSystemTheme() : mode,
     }));
+
+    // Track theme change
+    trackThemeChanged(mode);
   };
 
   const setTheme = (theme: Theme) => {
