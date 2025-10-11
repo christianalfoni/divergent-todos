@@ -10,6 +10,7 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ClipboardIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
@@ -82,7 +83,7 @@ export default function OnboardingNotification() {
           ),
           title: "Edit your todos anytime",
           message:
-            "Click on any todo to edit its text. When you're done, click outside the todo to save your changes.",
+            "Click on any todo to edit its text. Links don't activate edit mode, so click next to them. During edit mode, use backspace to remove links. Click outside the todo to save your changes.",
           actionLabel: "Edit and save a todo to continue",
           requiresEditTodo: true,
         };
@@ -158,9 +159,12 @@ export default function OnboardingNotification() {
                     {content.message}
                   </p>
                   {!content.hideActionLabel && content.actionLabel && (
-                    <p className="mt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                      {content.actionLabel}
-                    </p>
+                    <div className="mt-2 flex items-center gap-x-2">
+                      <ClipboardDocumentCheckIcon aria-hidden="true" className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        {content.actionLabel}
+                      </p>
+                    </div>
                   )}
                   {content.showCopyButton && (
                     <div className="mt-3">
