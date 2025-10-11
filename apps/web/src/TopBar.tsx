@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
-import { RocketLaunchIcon, SparklesIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import { RocketLaunchIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { CodeBracketIcon } from "@heroicons/react/20/solid";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { auth, type Profile } from "./firebase";

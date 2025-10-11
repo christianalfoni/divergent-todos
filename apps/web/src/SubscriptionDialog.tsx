@@ -41,9 +41,10 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
 
   // Listen for window close events in Electron
   useEffect(() => {
-    if (!window.native?.onWindowClosed) return;
+    const onWindowClosed = window.native?.onWindowClosed;
+    if (!onWindowClosed) return;
 
-    const unsubscribe = window.native.onWindowClosed(() => {
+    const unsubscribe = onWindowClosed(() => {
       // When checkout window closes, we're waiting for webhook to update subscription
       setIsProcessing(false);
       setIsWaitingForWebhook(true);
