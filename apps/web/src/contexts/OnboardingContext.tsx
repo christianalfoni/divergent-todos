@@ -25,7 +25,7 @@ interface OnboardingContextValue {
   nextStep: () => void;
   completeOnboarding: () => void;
   notifyTodoEditCompleted: () => void;
-  notifyWeekModeToggled: (isThreeWeeks: boolean) => void;
+  notifyWeekModeToggled: () => void;
   notifyTodoMoved: () => void;
   notifyTodoDeleted: () => void;
   notifyTimeboxClosed: () => void;
@@ -106,12 +106,10 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
-  const notifyWeekModeToggled = (isTwoWeeks: boolean) => {
+  const notifyWeekModeToggled = () => {
     if (currentStep === "workdays") {
-      // If they've toggled and are now in 2-week mode, complete the step
-      if (isTwoWeeks) {
-        nextStep();
-      }
+      // Complete the step on any TAB press
+      nextStep();
     }
   };
 
