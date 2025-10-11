@@ -22,7 +22,7 @@ export type SignInState =
     };
 
 export function useSignIn() {
-  return pipe<unknown, SignInState>()
+  const [signInState, signIn] = pipe<unknown, SignInState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
       // Check if running in Electron
@@ -51,7 +51,12 @@ export function useSignIn() {
       // We keep signing in as we are waiting for auth to go through
       return { isSigningIn: true, error: null };
     })
+    // We delay setting the state because we are waiting for auth event
+    .delay(1000)
+    .map(() => ({ isSigningIn: false, error: null }))
     .catch((err) => ({ isSigningIn: false, error: String(err) }))
     .setState()
     .use({ isSigningIn: false, error: null });
+
+  return [signInState, signIn] as const;
 }
