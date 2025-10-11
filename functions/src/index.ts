@@ -223,36 +223,106 @@ export const authCallback = onRequest(
           <head>
             <title>Redirecting to Divergent Todos...</title>
             <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="color-scheme" content="light dark">
             <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+
               body {
                 font-family: system-ui, -apple-system, sans-serif;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 min-height: 100vh;
-                margin: 0;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
+                background: rgb(249, 250, 251);
+                color: rgb(17, 24, 39);
               }
+
               .container {
+                background: rgb(255, 255, 255);
+                border-radius: 12px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+                padding: 3rem 2rem;
                 text-align: center;
-                padding: 2rem;
+                max-width: 400px;
+                width: 90%;
               }
-              .icon { font-size: 3rem; margin-bottom: 1rem; }
-              h1 { margin: 0 0 1rem 0; }
-              p { margin: 0.5rem 0; opacity: 0.9; }
+
+              .icon {
+                width: 64px;
+                height: 64px;
+                margin: 0 auto 1.5rem;
+                background: rgb(238, 242, 255);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+              }
+
+              h1 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                color: rgb(17, 24, 39);
+              }
+
+              p {
+                color: rgb(107, 114, 128);
+                margin-bottom: 1.5rem;
+                line-height: 1.5;
+              }
+
               .button {
                 display: inline-block;
-                margin-top: 1.5rem;
                 padding: 0.75rem 1.5rem;
-                background: white;
-                color: #667eea;
+                background: rgb(79, 70, 229);
+                color: white;
                 text-decoration: none;
                 border-radius: 8px;
-                font-weight: 600;
-                transition: transform 0.2s;
+                font-weight: 500;
+                transition: background 0.2s;
               }
-              .button:hover { transform: scale(1.05); }
+
+              .button:hover {
+                background: rgb(99, 102, 241);
+              }
+
+              @media (prefers-color-scheme: dark) {
+                body {
+                  background: rgb(17, 24, 39);
+                  color: rgb(255, 255, 255);
+                }
+
+                .container {
+                  background: rgb(31, 41, 55);
+                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+                }
+
+                .icon {
+                  background: rgba(99, 102, 241, 0.1);
+                }
+
+                h1 {
+                  color: rgb(255, 255, 255);
+                }
+
+                p {
+                  color: rgb(156, 163, 175);
+                }
+
+                .button {
+                  background: rgb(99, 102, 241);
+                }
+
+                .button:hover {
+                  background: rgb(129, 140, 248);
+                }
+              }
             </style>
             <script>
               // Auto-redirect after 1 second
@@ -279,34 +349,120 @@ export const authCallback = onRequest(
           <head>
             <title>Authentication Error</title>
             <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta name="color-scheme" content="light dark">
             <style>
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
+
               body {
                 font-family: system-ui, -apple-system, sans-serif;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 min-height: 100vh;
-                margin: 0;
-                background: #f5f5f5;
+                background: rgb(249, 250, 251);
+                color: rgb(17, 24, 39);
+                padding: 1rem;
               }
+
               .error-box {
-                background: white;
-                padding: 2rem;
-                border-radius: 8px;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                background: rgb(255, 255, 255);
+                border-radius: 12px;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+                padding: 3rem 2rem;
                 max-width: 500px;
+                width: 100%;
               }
-              h1 { color: #d32f2f; margin-top: 0; }
-              p { color: #666; line-height: 1.5; }
+
+              .icon {
+                width: 64px;
+                height: 64px;
+                margin: 0 auto 1.5rem;
+                background: rgb(254, 243, 199);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2rem;
+                text-align: center;
+              }
+
+              h1 {
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: rgb(220, 38, 38);
+                margin-bottom: 1rem;
+              }
+
+              p {
+                color: rgb(107, 114, 128);
+                line-height: 1.6;
+                margin-bottom: 0.75rem;
+              }
+
+              .error-detail {
+                margin-top: 1.5rem;
+                padding: 1rem;
+                background: rgb(243, 244, 246);
+                border-radius: 8px;
+                border-left: 3px solid rgb(220, 38, 38);
+              }
+
+              .error-detail small {
+                color: rgb(107, 114, 128);
+                font-size: 0.875rem;
+                font-family: monospace;
+                word-break: break-word;
+              }
+
+              @media (prefers-color-scheme: dark) {
+                body {
+                  background: rgb(17, 24, 39);
+                  color: rgb(255, 255, 255);
+                }
+
+                .error-box {
+                  background: rgb(31, 41, 55);
+                  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px -1px rgba(0, 0, 0, 0.3);
+                }
+
+                .icon {
+                  background: rgba(245, 158, 11, 0.1);
+                }
+
+                h1 {
+                  color: rgb(248, 113, 113);
+                }
+
+                p {
+                  color: rgb(156, 163, 175);
+                }
+
+                .error-detail {
+                  background: rgb(55, 65, 81);
+                  border-left-color: rgb(248, 113, 113);
+                }
+
+                .error-detail small {
+                  color: rgb(156, 163, 175);
+                }
+              }
             </style>
           </head>
           <body>
             <div class="error-box">
+              <div class="icon">⚠</div>
               <h1>Authentication Failed</h1>
               <p>There was an error signing you in. Please close this window and try again.</p>
-              <p><small>Error: ${
-                error instanceof Error ? error.message : "Unknown error"
-              }</small></p>
+              <div class="error-detail">
+                <small>Error: ${
+                  error instanceof Error ? error.message : "Unknown error"
+                }</small>
+              </div>
             </div>
           </body>
         </html>
