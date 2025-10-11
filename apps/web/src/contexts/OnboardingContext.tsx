@@ -18,21 +18,9 @@ export type OnboardingStep =
   | "congratulations"
   | null;
 
-export interface OnboardingTodo {
-  id: string;
-  description: string;
-  completed: boolean;
-  date: Date;
-  position: string;
-}
-
 interface OnboardingContextValue {
   isOnboarding: boolean;
   currentStep: OnboardingStep;
-  todos: OnboardingTodo[];
-  addTodo: (todo: Omit<OnboardingTodo, "id">) => void;
-  editTodo: (id: string, updates: Partial<Omit<OnboardingTodo, "id">>) => void;
-  deleteTodo: (id: string) => void;
   startOnboarding: () => void;
   nextStep: () => void;
   completeOnboarding: () => void;
@@ -41,6 +29,8 @@ interface OnboardingContextValue {
   notifyTodoMoved: () => void;
   notifyTodoDeleted: () => void;
   notifyTimeboxClosed: () => void;
+  notifyTodoAdded: () => void;
+  notifyTodoAddedWithUrl: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(
@@ -64,14 +54,12 @@ interface OnboardingProviderProps {
 
 export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(null);
-  const [todos, setTodos] = useState<OnboardingTodo[]>([]);
 
   const isOnboarding = currentStep !== null;
 
   const startOnboarding = () => {
     trackOnboardingStarted();
     setCurrentStep(ONBOARDING_STEPS[0]);
-    setTodos([]); // Reset todos when starting onboarding
   };
 
   const nextStep = () => {
@@ -98,28 +86,18 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
 
     setCurrentStep(null);
-    setTodos([]); // Clear todos when completing onboarding
   };
 
-  const addTodo = (todo: Omit<OnboardingTodo, "id">) => {
-    const newTodo: OnboardingTodo = {
-      ...todo,
-      id: crypto.randomUUID(),
-    };
-    setTodos((prev) => [...prev, newTodo]);
+  const notifyTodoAdded = () => {
+    if (currentStep === "add-todo") {
+      nextStep();
+    }
   };
 
-  const editTodo = (
-    id: string,
-    updates: Partial<Omit<OnboardingTodo, "id">>
-  ) => {
-    setTodos((prev) =>
-      prev.map((todo) => (todo.id === id ? { ...todo, ...updates } : todo))
-    );
-  };
-
-  const deleteTodo = (id: string) => {
-    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  const notifyTodoAddedWithUrl = () => {
+    if (currentStep === "add-todo-with-url") {
+      nextStep();
+    }
   };
 
   const notifyTodoEditCompleted = () => {
@@ -160,10 +138,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       value={{
         isOnboarding,
         currentStep,
-        todos,
-        addTodo,
-        editTodo,
-        deleteTodo,
         startOnboarding,
         nextStep,
         completeOnboarding,
@@ -172,6 +146,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         notifyTodoMoved,
         notifyTodoDeleted,
         notifyTimeboxClosed,
+        notifyTodoAdded,
+        notifyTodoAddedWithUrl,
       }}
     >
       {children}

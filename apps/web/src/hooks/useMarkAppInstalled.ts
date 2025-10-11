@@ -12,11 +12,11 @@ export function useMarkAppInstalled() {
   const [authentication] = useAuthentication();
 
   useEffect(() => {
-    // Check if running in Electron
-    const isElectron = window.navigator.userAgent.includes("Electron");
+    // Check if running in Electron by checking for window.native API
+    const isElectron = !!window.native;
 
-    // Only proceed if in Electron, user is authenticated, and profile exists
-    if (!isElectron || !authentication.user || !authentication.profile) {
+    // Only proceed if in Electron, user is authenticated (and not anonymous), and profile exists
+    if (!isElectron || !authentication.user || authentication.user.isAnonymous || !authentication.profile) {
       return;
     }
 

@@ -4,6 +4,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('native', {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
   openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  openInWindow: (url: string, options?: { title?: string }) => ipcRenderer.invoke('shell:openInWindow', url, options),
   auth: {
     startGoogleSignIn: () => ipcRenderer.invoke('auth:startGoogleSignIn'),
   },

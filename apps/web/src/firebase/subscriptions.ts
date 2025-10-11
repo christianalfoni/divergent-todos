@@ -20,7 +20,12 @@ export async function startSubscription(options?: {
   });
   const url = (data as any).url;
   if (url) {
-    window.location.href = url;
+    // Open in BrowserWindow if in Electron, otherwise navigate
+    if (window.native?.openInWindow) {
+      window.native.openInWindow(url, { title: 'Subscribe to Divergent Todos' });
+    } else {
+      window.location.href = url;
+    }
   }
 }
 
@@ -38,7 +43,12 @@ export async function openBillingPortal(options?: { returnUrl?: string }) {
   });
   const url = (data as any).url;
   if (url) {
-    window.location.href = url;
+    // Open in BrowserWindow if in Electron, otherwise navigate
+    if (window.native?.openInWindow) {
+      window.native.openInWindow(url, { title: 'Manage Billing' });
+    } else {
+      window.location.href = url;
+    }
   }
 }
 

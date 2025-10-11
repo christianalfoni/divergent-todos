@@ -32,6 +32,7 @@ function AppContent() {
   const [authentication] = useAuthentication();
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasSignedIn, setHasSignedIn] = useState(false);
   const onboarding = useOnboarding();
   const profile = authentication.profile;
@@ -148,6 +149,7 @@ function AppContent() {
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           showGetStarted={showGetStarted}
           onOpenOnboarding={onboarding.startOnboarding}
+          onOpenAuthModal={() => setShowAuthModal(true)}
         />
         {authentication.user && <OnboardingNotification />}
         <Calendar
@@ -173,8 +175,11 @@ function AppContent() {
         />
       </div>
       <AuthModal
-        open={!authentication.isAuthenticating && !authentication.user}
-        onSignIn={() => setHasSignedIn(true)}
+        open={(!authentication.isAuthenticating && !authentication.user) || showAuthModal}
+        onSignIn={() => {
+          setHasSignedIn(true);
+          setShowAuthModal(false);
+        }}
       />
       {authentication.user && (
         <SubscriptionDialog

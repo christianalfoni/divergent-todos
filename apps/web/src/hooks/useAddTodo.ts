@@ -52,7 +52,7 @@ export function useAddTodo() {
       const hasActiveSubscription =
         profileRef.current?.subscription?.status === "active";
 
-      // If no subscription, increment freeTodoCount
+      // If no subscription, increment freeTodoCount (applies to both web and desktop)
       if (!hasActiveSubscription) {
         const batch = writeBatch(todosCollection.firestore);
 

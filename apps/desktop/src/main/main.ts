@@ -136,6 +136,20 @@ async function createWindow() {
     },
   })
 
+  // Intercept window.open and new window requests
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    // Allow navigation to app's own domain/localhost in dev
+    const appOrigin = app.isPackaged ? 'file://' : 'http://localhost:5173'
+
+    if (url.startsWith(appOrigin)) {
+      return { action: 'allow' }
+    }
+
+    // Open external URLs in system browser by default
+    shell.openExternal(url)
+    return { action: 'deny' }
+  })
+
   if (!app.isPackaged) {
     await win.loadURL('http://localhost:5173') // Vite dev server (renderer)
     win.webContents.openDevTools({ mode: 'detach' })
@@ -164,6 +178,31 @@ ipcMain.handle('app:getVersion', () => app.getVersion())
 // Open URL in default browser
 ipcMain.handle('shell:openExternal', async (_event, url: string) => {
   await shell.openExternal(url)
+})
+
+// Open URL in modal window (for Stripe, billing, etc.)
+ipcMain.handle('shell:openInWindow', async (_event, url: string, options?: { title?: string }) => {
+  const modalWindow = new BrowserWindow({
+    width: 1000,
+    height: 800,
+    title: options?.title || 'Payment',
+    parent: win || undefined,
+    modal: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true,
+    },
+  })
+
+  await modalWindow.loadURL(url)
+
+  // Focus parent window when modal closes
+  modalWindow.on('closed', () => {
+    if (win && !win.isDestroyed()) {
+      win.focus()
+    }
+  })
 })
 
 // Update IPC handlers

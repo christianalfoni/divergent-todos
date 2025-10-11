@@ -5,6 +5,7 @@ declare global {
     native?: {
       getVersion: () => Promise<string>
       openExternal: (url: string) => Promise<void>
+      openInWindow: (url: string, options?: { title?: string }) => Promise<void>
       auth: {
         startGoogleSignIn: () => Promise<string>
       }

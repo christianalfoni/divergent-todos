@@ -30,7 +30,7 @@ export function useSignInAnonymously() {
       return { isSigningIn: true, error: null };
     })
     // We delay setting the state because we are waiting for auth event
-    .delay(1000)
+    .delay(5000)
     .map(() => ({ isSigningIn: false, error: null }))
     .catch((err) => ({ isSigningIn: false, error: String(err) }))
     .setState()
