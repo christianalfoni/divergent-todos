@@ -181,7 +181,7 @@ export default function OnboardingNotification() {
                         disabled={isEditing}
                         className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isEditing ? "Loading..." : "Get started"}
+                        {isEditing ? "Loading..." : "Complete"}
                       </button>
                     </div>
                   )}

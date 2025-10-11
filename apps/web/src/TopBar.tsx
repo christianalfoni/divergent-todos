@@ -465,6 +465,22 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                         </MenuItem>
                       )}
 
+                      <MenuItem>
+                        <button
+                          onClick={() => {
+                            trackMenuItemClicked("restart_onboarding");
+                            onOpenOnboarding?.();
+                          }}
+                          className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                        >
+                          <RocketLaunchIcon
+                            aria-hidden="true"
+                            className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                          />
+                          Get started
+                        </button>
+                      </MenuItem>
+
                       <div className="flex items-center px-4 my-1">
                         <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
                         <div className="relative flex justify-center">
