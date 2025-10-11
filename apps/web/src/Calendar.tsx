@@ -91,8 +91,8 @@ export default function Calendar({
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     if (isWeekend) {
-      // Show next week (second 5 days)
-      return allWeekdays.slice(5, 10);
+      // Show next week (first 5 days, since allWeekdays starts from next Monday on weekends)
+      return allWeekdays.slice(0, 5);
     }
 
     // Show current week (first 5 days)
@@ -106,7 +106,7 @@ export default function Calendar({
         const newViewMode = viewMode === "two-weeks" ? "one-week" : "two-weeks";
         setViewMode(newViewMode);
         // Notify onboarding context about the toggle
-        onboarding.notifyWeekModeToggled(newViewMode === "two-weeks");
+        onboarding.notifyWeekModeToggled();
       }
     };
 

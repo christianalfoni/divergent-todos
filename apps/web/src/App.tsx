@@ -32,6 +32,7 @@ function AppContent() {
   const [authentication] = useAuthentication();
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [hasSignedIn, setHasSignedIn] = useState(false);
   const onboarding = useOnboarding();
   const profile = authentication.profile;
@@ -77,16 +78,6 @@ function AppContent() {
     trackAppOpened(isElectron);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Check for active subscription
-  const hasActiveSubscription = profile?.subscription?.status === "active";
-
-  // In Electron, require active subscription - but only show dialog after auth is complete
-  const requiresSubscription =
-    isElectron &&
-    !authentication.isAuthenticating &&
-    profile !== null &&
-    !hasActiveSubscription;
 
   // Check if user needs to see "Get started" button
   const showGetStarted = profile !== null && profile.isOnboarded !== true;
@@ -148,6 +139,7 @@ function AppContent() {
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           showGetStarted={showGetStarted}
           onOpenOnboarding={onboarding.startOnboarding}
+          onOpenAuthModal={() => setShowAuthModal(true)}
         />
         {authentication.user && <OnboardingNotification />}
         <Calendar
@@ -173,21 +165,18 @@ function AppContent() {
         />
       </div>
       <AuthModal
-        open={!authentication.isAuthenticating && !authentication.user}
-        onSignIn={() => setHasSignedIn(true)}
+        open={(!authentication.isAuthenticating && !authentication.user) || showAuthModal}
+        onSignIn={() => {
+          setHasSignedIn(true);
+          setShowAuthModal(false);
+        }}
       />
       {authentication.user && (
         <SubscriptionDialog
-          open={showSubscriptionDialog || requiresSubscription}
-          onClose={() => {
-            // Only allow closing if not required (i.e., not in Electron or has subscription)
-            if (!requiresSubscription) {
-              setShowSubscriptionDialog(false);
-            }
-          }}
+          open={showSubscriptionDialog}
+          onClose={() => setShowSubscriptionDialog(false)}
           user={authentication.user}
           profile={profile}
-          isElectron={isElectron}
         />
       )}
     </div>

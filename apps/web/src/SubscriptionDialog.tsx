@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -26,21 +26,41 @@ interface SubscriptionDialogProps {
   onClose: () => void;
   user: User | null;
   profile: Profile | null;
-  isElectron?: boolean;
 }
 
-export default function SubscriptionDialog({ open, onClose, user, profile, isElectron = false }: SubscriptionDialogProps) {
+export default function SubscriptionDialog({ open, onClose, user, profile }: SubscriptionDialogProps) {
   const [{ isLinking, error: linkError }, linkAccount] = useLinkAnonymousAccount();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(false);
 
   const isAnonymous = user?.isAnonymous ?? true;
   const subscriptionStatus = profile?.subscription?.status;
   const cancelAtPeriodEnd = profile?.subscription?.cancelAtPeriodEnd ?? false;
   const currentPeriodEnd = profile?.subscription?.currentPeriodEnd;
 
-  // In Electron, don't allow closing if no subscription
-  const canClose = !isElectron || subscriptionStatus === "active";
+  // Listen for window close events in Electron
+  useEffect(() => {
+    const onWindowClosed = window.native?.onWindowClosed;
+    if (!onWindowClosed) return;
+
+    const unsubscribe = onWindowClosed(() => {
+      // When checkout window closes, we're waiting for webhook to update subscription
+      setIsProcessing(false);
+      setIsWaitingForWebhook(true);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // When subscription becomes active, clear the waiting state
+  useEffect(() => {
+    if (isWaitingForWebhook && subscriptionStatus === "active") {
+      setIsWaitingForWebhook(false);
+    }
+  }, [isWaitingForWebhook, subscriptionStatus]);
 
   const handleOpenBillingPortal = async () => {
     setIsProcessing(true);
@@ -49,6 +69,7 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
       // In Electron, don't pass returnUrl (let server use default)
       const isElectronEnv = !window.location.origin.startsWith('http');
       await openBillingPortal(isElectronEnv ? undefined : { returnUrl: window.location.origin });
+      setIsProcessing(false);
     } catch (err: any) {
       setError(err.message || "Failed to open billing portal");
       setIsProcessing(false);
@@ -121,18 +142,22 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
   let secondaryButtonText = "";
   let secondaryButtonAction: () => void = () => {};
 
-  // In Electron, users are always signed in (never anonymous)
-  if (isAnonymous && !isElectron) {
+  // Show waiting state when checkout completed but webhook hasn't updated subscription yet
+  if (isWaitingForWebhook) {
+    title = "Processing subscription...";
+    description = "Your payment was successful! We're activating your subscription now. This usually takes a few seconds.";
+    primaryButtonText = "Activating...";
+    primaryButtonAction = () => {};
+    isPrimaryButtonDisabled = true;
+  } else if (isAnonymous) {
     title = "Sign in required";
     description = "Please sign in with your Google account to subscribe and unlock unlimited todos. Your existing todos will be preserved.";
     primaryButtonText = isLinking ? "Signing in..." : "Sign in with Google";
     primaryButtonAction = () => linkAccount(undefined);
     isPrimaryButtonDisabled = isLinking;
   } else if (!subscriptionStatus || subscriptionStatus === "incomplete") {
-    title = isElectron ? "Subscription required" : "Subscribe for unlimited todos";
-    description = isElectron
-      ? "The desktop app requires an active subscription. Get unlimited todos for just $2/month."
-      : "Get unlimited todos for just $2/month. Continue adding todos without limits.";
+    title = "Subscribe for unlimited todos";
+    description = "Get unlimited todos for just $2/month. Continue adding todos without limits.";
     primaryButtonText = isProcessing ? "Starting..." : "Subscribe - $2/month";
     primaryButtonAction = handleStartSubscription;
     isPrimaryButtonDisabled = isProcessing;
@@ -192,7 +217,7 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
   return (
     <Dialog
       open={open}
-      onClose={canClose ? onClose : () => {}}
+      onClose={onClose}
       className="relative z-10"
     >
       <DialogBackdrop

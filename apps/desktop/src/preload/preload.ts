@@ -4,6 +4,12 @@ import { contextBridge, ipcRenderer } from 'electron'
 contextBridge.exposeInMainWorld('native', {
   getVersion: () => ipcRenderer.invoke('app:getVersion'),
   openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
+  openInWindow: (url: string, options?: { title?: string }) => ipcRenderer.invoke('shell:openInWindow', url, options),
+  onWindowClosed: (callback: () => void) => {
+    const listener = () => callback()
+    ipcRenderer.on('window:closed', listener)
+    return () => ipcRenderer.removeListener('window:closed', listener)
+  },
   auth: {
     startGoogleSignIn: () => ipcRenderer.invoke('auth:startGoogleSignIn'),
   },

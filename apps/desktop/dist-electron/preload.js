@@ -3,6 +3,12 @@ const electron = require("electron");
 electron.contextBridge.exposeInMainWorld("native", {
   getVersion: () => electron.ipcRenderer.invoke("app:getVersion"),
   openExternal: (url) => electron.ipcRenderer.invoke("shell:openExternal", url),
+  openInWindow: (url, options) => electron.ipcRenderer.invoke("shell:openInWindow", url, options),
+  onWindowClosed: (callback) => {
+    const listener = () => callback();
+    electron.ipcRenderer.on("window:closed", listener);
+    return () => electron.ipcRenderer.removeListener("window:closed", listener);
+  },
   auth: {
     startGoogleSignIn: () => electron.ipcRenderer.invoke("auth:startGoogleSignIn")
   },

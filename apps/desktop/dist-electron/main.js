@@ -14856,6 +14856,14 @@ async function createWindow() {
       sandbox: true
     }
   });
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    const appOrigin = require$$1$4.app.isPackaged ? "file://" : "http://localhost:5173";
+    if (url.startsWith(appOrigin)) {
+      return { action: "allow" };
+    }
+    require$$1$4.shell.openExternal(url);
+    return { action: "deny" };
+  });
   if (!require$$1$4.app.isPackaged) {
     await win.loadURL("http://localhost:5173");
     win.webContents.openDevTools({ mode: "detach" });
@@ -14876,6 +14884,27 @@ async function createWindow() {
 require$$1$4.ipcMain.handle("app:getVersion", () => require$$1$4.app.getVersion());
 require$$1$4.ipcMain.handle("shell:openExternal", async (_event, url) => {
   await require$$1$4.shell.openExternal(url);
+});
+require$$1$4.ipcMain.handle("shell:openInWindow", async (_event, url, options) => {
+  const modalWindow = new require$$1$4.BrowserWindow({
+    width: 1e3,
+    height: 800,
+    title: options?.title || "Payment",
+    parent: win || void 0,
+    modal: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: true
+    }
+  });
+  await modalWindow.loadURL(url);
+  modalWindow.on("closed", () => {
+    if (win && !win.isDestroyed()) {
+      win.focus();
+      win.webContents.send("window:closed");
+    }
+  });
 });
 require$$1$4.ipcMain.handle("update:check", async () => {
   if (!require$$1$4.app.isPackaged) {

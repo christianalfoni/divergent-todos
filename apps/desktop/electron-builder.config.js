@@ -58,7 +58,29 @@ module.exports = {
   },
   win: {
     target: ['nsis', 'portable'],
-    artifactName: 'Divergent-Todos-win-${arch}.${ext}',
+    // Code signing configuration
+    // Option A: Azure Trusted Signing (uncomment and configure)
+    // azureSignOptions: {
+    //   endpoint: 'https://eus.codesigning.azure.net',
+    //   codeSigningAccountName: process.env.AZURE_SIGNING_ACCOUNT_NAME,
+    //   certificateProfileName: process.env.AZURE_SIGNING_CERTIFICATE_PROFILE,
+    // },
+    // Option B: Traditional certificate (uses environment variables)
+    // CSC_LINK and CSC_KEY_PASSWORD (or WIN_CSC_LINK/WIN_CSC_KEY_PASSWORD)
+    // Option C: EV Certificate (uncomment and configure)
+    // certificateSubjectName: 'Your Company Name',
+  },
+  nsis: {
+    oneClick: false, // Show installation directory choice
+    allowToChangeInstallationDirectory: true,
+    createDesktopShortcut: true,
+    createStartMenuShortcut: true,
+    shortcutName: 'Divergent Todos',
+    runAfterFinish: true, // Launch app after installation
+    artifactName: 'Divergent-Todos-Setup-${arch}.${ext}', // Clearly named as setup
+  },
+  portable: {
+    artifactName: 'Divergent-Todos-Standalone-${arch}.${ext}', // Clearly named as standalone
   },
   linux: {
     target: ['AppImage', 'deb'],

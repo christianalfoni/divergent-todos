@@ -10,10 +10,10 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ClipboardIcon,
+  ClipboardDocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
-import { useViewMode } from "./hooks/useViewMode";
 import { useState } from "react";
 
 export default function OnboardingNotification() {
@@ -21,7 +21,6 @@ export default function OnboardingNotification() {
     useOnboarding();
   const [{ isEditing }, editProfile] = useEditProfile();
   const [copiedUrl, setCopiedUrl] = useState(false);
-  const { viewMode } = useViewMode();
 
   const handleDismiss = async () => {
     await editProfile({ isOnboarded: true });
@@ -40,16 +39,13 @@ export default function OnboardingNotification() {
   const getContent = () => {
     switch (currentStep) {
       case "workdays":
-        const isOneWeekMode = viewMode === "one-week";
         return {
           icon: (
             <CalendarDaysIcon aria-hidden="true" className="size-6 text-blue-500 dark:text-blue-400" />
           ),
           title: "Toggle between view modes",
-          message: isOneWeekMode
-            ? "The app shows the current week. Press TAB to toggle to 2-week mode."
-            : "The app can show current week or current and next week. Press TAB to toggle to 1-week mode, then press TAB again to return to 2-week mode.",
-          actionLabel: isOneWeekMode ? "Press TAB once to continue" : "Press TAB twice to continue",
+          message: "Press TAB to flip between different calendar views. Try it now to see how it works!",
+          actionLabel: "Press TAB to continue",
           requiresTab: true,
         };
       case "add-todo":
@@ -82,7 +78,7 @@ export default function OnboardingNotification() {
           ),
           title: "Edit your todos anytime",
           message:
-            "Click on any todo to edit its text. When you're done, click outside the todo to save your changes.",
+            "Click on any todo to edit its text. Links don't activate edit mode, so click next to them. During edit mode, use backspace to remove links. Click outside the todo to save your changes.",
           actionLabel: "Edit and save a todo to continue",
           requiresEditTodo: true,
         };
@@ -158,9 +154,12 @@ export default function OnboardingNotification() {
                     {content.message}
                   </p>
                   {!content.hideActionLabel && content.actionLabel && (
-                    <p className="mt-2 text-sm font-medium text-indigo-600 dark:text-indigo-400">
-                      {content.actionLabel}
-                    </p>
+                    <div className="mt-2 flex items-center gap-x-2">
+                      <ClipboardDocumentCheckIcon aria-hidden="true" className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                        {content.actionLabel}
+                      </p>
+                    </div>
                   )}
                   {content.showCopyButton && (
                     <div className="mt-3">
@@ -182,7 +181,7 @@ export default function OnboardingNotification() {
                         disabled={isEditing}
                         className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {isEditing ? "Loading..." : "Get started"}
+                        {isEditing ? "Loading..." : "Complete"}
                       </button>
                     </div>
                   )}

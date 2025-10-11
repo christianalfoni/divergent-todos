@@ -4,6 +4,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
 import TodosLoadingPlaceholder from './TodosLoadingPlaceholder'
 import SmartLinksEditor, { type SmartLinksEditorRef } from './SmartLinksEditor'
+import { useOnboarding } from './contexts/OnboardingContext'
 import type { Todo } from './App'
 
 interface DayCellProps {
@@ -21,14 +22,18 @@ interface DayCellProps {
   onMoveTodosFromDay: (date: Date) => void
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
+export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartLinksEditorRef>(null)
+  const { isOnboarding } = useOnboarding()
   const dayId = date.toISOString().split('T')[0]
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const isPastDay = date < today
+
+  // During onboarding, allow adding todos on any day
+  const canAddTodo = isOnboarding || !isPastDay
 
   const { setNodeRef } = useDroppable({
     id: dayId,
@@ -77,7 +82,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         <time
           dateTime={date.toISOString().split('T')[0]}
           className={`text-xs font-semibold w-fit shrink-0 ${
-            isToday || isNextMonday
+            isToday
               ? 'text-[var(--color-accent-primary)]'
               : 'text-[var(--color-text-primary)]'
           }`}
@@ -107,7 +112,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         )}
         {isAuthenticated && !isAddingTodo && !isLoading && (
           <>
-            {!isPastDay ? (
+            {canAddTodo ? (
               <button
                 onClick={() => setIsAddingTodo(true)}
                 className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
@@ -156,7 +161,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
             ) : null}
           </>
         )}
-        {isAuthenticated && isAddingTodo && !isPastDay && (
+        {isAuthenticated && isAddingTodo && canAddTodo && (
           <div className="mt-2 px-3">
             <div className="flex gap-3">
               <div className="flex h-5 shrink-0 items-center">
