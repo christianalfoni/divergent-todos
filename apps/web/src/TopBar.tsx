@@ -32,7 +32,7 @@ function getDownloadUrl(): string | null {
 
   // Windows detection
   if (platform.includes("win") || userAgent.includes("windows")) {
-    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-win-x64.exe";
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-Setup-x64.exe";
   }
 
   // Linux detection
