@@ -1,15 +1,24 @@
 export function getWeekdaysForThreeWeeks() {
   const today = new Date()
   const currentDay = today.getDay()
+  const isWeekend = currentDay === 0 || currentDay === 6
 
-  // Calculate days offset to get to Monday of current week
-  const daysToCurrentMonday = currentDay === 0 ? 6 : currentDay - 1
+  // Calculate days offset to get to Monday
+  // If it's weekend, start from next Monday instead of current Monday
+  let daysToMonday: number
+  if (isWeekend) {
+    // Saturday (6) -> +2 days, Sunday (0) -> +1 day
+    daysToMonday = currentDay === 0 ? 1 : 2
+  } else {
+    // Weekday -> go back to Monday of current week
+    daysToMonday = -(currentDay - 1)
+  }
 
   const weekdays: Date[] = []
 
-  // Start from Monday of current week
+  // Start from Monday (current week Monday on weekdays, next week Monday on weekends)
   const startDate = new Date(today)
-  startDate.setDate(today.getDate() - daysToCurrentMonday)
+  startDate.setDate(today.getDate() + daysToMonday)
 
   // Add 10 weekdays (Monday-Friday for 2 weeks)
   let addedDays = 0
@@ -47,6 +56,23 @@ export function isToday(date: Date): boolean {
 
 export function getDateId(date: Date): string {
   return date.toISOString().split('T')[0]
+}
+
+export function getRelativeDayLabel(date: Date): string | null {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const targetDate = new Date(date)
+  targetDate.setHours(0, 0, 0, 0)
+
+  const diffTime = targetDate.getTime() - today.getTime()
+  const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
+
+  if (diffDays === 0) return '(today)'
+  if (diffDays === 1) return '(tomorrow)'
+  if (diffDays > 1 && diffDays <= 7) return `(${diffDays} days)`
+
+  return null
 }
 
 export function getNextMonday(): Date {

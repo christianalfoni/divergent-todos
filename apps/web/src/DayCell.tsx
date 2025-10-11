@@ -82,7 +82,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         <time
           dateTime={date.toISOString().split('T')[0]}
           className={`text-xs font-semibold w-fit shrink-0 ${
-            isToday || isNextMonday
+            isToday
               ? 'text-[var(--color-accent-primary)]'
               : 'text-[var(--color-text-primary)]'
           }`}
