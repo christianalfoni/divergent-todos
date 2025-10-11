@@ -197,10 +197,11 @@ ipcMain.handle('shell:openInWindow', async (_event, url: string, options?: { tit
 
   await modalWindow.loadURL(url)
 
-  // Focus parent window when modal closes
+  // Focus parent window when modal closes and notify renderer
   modalWindow.on('closed', () => {
     if (win && !win.isDestroyed()) {
       win.focus()
+      win.webContents.send('window:closed')
     }
   })
 })

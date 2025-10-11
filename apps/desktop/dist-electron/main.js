@@ -14902,6 +14902,7 @@ require$$1$4.ipcMain.handle("shell:openInWindow", async (_event, url, options) =
   modalWindow.on("closed", () => {
     if (win && !win.isDestroyed()) {
       win.focus();
+      win.webContents.send("window:closed");
     }
   });
 });

@@ -79,16 +79,6 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Check for active subscription
-  const hasActiveSubscription = profile?.subscription?.status === "active";
-
-  // In Electron, require active subscription - but only show dialog after auth is complete
-  const requiresSubscription =
-    isElectron &&
-    !authentication.isAuthenticating &&
-    profile !== null &&
-    !hasActiveSubscription;
-
   // Check if user needs to see "Get started" button
   const showGetStarted = profile !== null && profile.isOnboarded !== true;
 
@@ -183,16 +173,10 @@ function AppContent() {
       />
       {authentication.user && (
         <SubscriptionDialog
-          open={showSubscriptionDialog || requiresSubscription}
-          onClose={() => {
-            // Only allow closing if not required (i.e., not in Electron or has subscription)
-            if (!requiresSubscription) {
-              setShowSubscriptionDialog(false);
-            }
-          }}
+          open={showSubscriptionDialog}
+          onClose={() => setShowSubscriptionDialog(false)}
           user={authentication.user}
           profile={profile}
-          isElectron={isElectron}
         />
       )}
     </div>

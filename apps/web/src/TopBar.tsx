@@ -65,6 +65,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
 
   const subscriptionStatus = profile?.subscription?.status;
   const showPaymentWarning = subscriptionStatus === "past_due" || subscriptionStatus === "unpaid";
+  const showCancellationNotice = profile?.subscription?.cancelAtPeriodEnd && profile?.subscription?.currentPeriodEnd;
 
   const handleSignOut = () => {
     trackMenuItemClicked("sign_out");
@@ -196,6 +197,13 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
               )
             )}
 
+            {/* Subscription cancellation notice */}
+            {authentication.user && showCancellationNotice && !showPaymentWarning && (
+              <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 inset-ring inset-ring-yellow-600/20 dark:bg-yellow-400/10 dark:text-yellow-500 dark:inset-ring-yellow-400/20">
+                Subscription ends {new Date(profile?.subscription?.currentPeriodEnd!).toLocaleDateString()}
+              </span>
+            )}
+
             {/* Payment warning indicators for past_due (yellow) and unpaid (red) */}
             {authentication.user && showPaymentWarning && (
               <button
@@ -240,7 +248,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                 onClick={onOpenSubscription}
                 className="group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
               >
-                <SparklesIcon
+                <BanknotesIcon
                   aria-hidden="true"
                   className="size-6 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
                 />

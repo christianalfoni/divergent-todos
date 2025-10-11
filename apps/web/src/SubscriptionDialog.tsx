@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogBackdrop,
@@ -26,21 +26,40 @@ interface SubscriptionDialogProps {
   onClose: () => void;
   user: User | null;
   profile: Profile | null;
-  isElectron?: boolean;
 }
 
-export default function SubscriptionDialog({ open, onClose, user, profile, isElectron = false }: SubscriptionDialogProps) {
+export default function SubscriptionDialog({ open, onClose, user, profile }: SubscriptionDialogProps) {
   const [{ isLinking, error: linkError }, linkAccount] = useLinkAnonymousAccount();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(false);
 
   const isAnonymous = user?.isAnonymous ?? true;
   const subscriptionStatus = profile?.subscription?.status;
   const cancelAtPeriodEnd = profile?.subscription?.cancelAtPeriodEnd ?? false;
   const currentPeriodEnd = profile?.subscription?.currentPeriodEnd;
 
-  // Can close if not in Electron, or if in Electron and has active subscription
-  const canClose = !isElectron || subscriptionStatus === "active";
+  // Listen for window close events in Electron
+  useEffect(() => {
+    if (!window.native?.onWindowClosed) return;
+
+    const unsubscribe = window.native.onWindowClosed(() => {
+      // When checkout window closes, we're waiting for webhook to update subscription
+      setIsProcessing(false);
+      setIsWaitingForWebhook(true);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
+  // When subscription becomes active, clear the waiting state
+  useEffect(() => {
+    if (isWaitingForWebhook && subscriptionStatus === "active") {
+      setIsWaitingForWebhook(false);
+    }
+  }, [isWaitingForWebhook, subscriptionStatus]);
 
   const handleOpenBillingPortal = async () => {
     setIsProcessing(true);
@@ -122,8 +141,14 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
   let secondaryButtonText = "";
   let secondaryButtonAction: () => void = () => {};
 
-  // Anonymous users (both web and desktop) need to sign in to subscribe
-  if (isAnonymous) {
+  // Show waiting state when checkout completed but webhook hasn't updated subscription yet
+  if (isWaitingForWebhook) {
+    title = "Processing subscription...";
+    description = "Your payment was successful! We're activating your subscription now. This usually takes a few seconds.";
+    primaryButtonText = "Activating...";
+    primaryButtonAction = () => {};
+    isPrimaryButtonDisabled = true;
+  } else if (isAnonymous) {
     title = "Sign in required";
     description = "Please sign in with your Google account to subscribe and unlock unlimited todos. Your existing todos will be preserved.";
     primaryButtonText = isLinking ? "Signing in..." : "Sign in with Google";
@@ -191,7 +216,7 @@ export default function SubscriptionDialog({ open, onClose, user, profile, isEle
   return (
     <Dialog
       open={open}
-      onClose={canClose ? onClose : () => {}}
+      onClose={onClose}
       className="relative z-10"
     >
       <DialogBackdrop

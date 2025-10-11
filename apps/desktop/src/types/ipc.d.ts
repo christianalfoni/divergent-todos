@@ -6,6 +6,7 @@ declare global {
       getVersion: () => Promise<string>
       openExternal: (url: string) => Promise<void>
       openInWindow: (url: string, options?: { title?: string }) => Promise<void>
+      onWindowClosed: (callback: () => void) => () => void
       auth: {
         startGoogleSignIn: () => Promise<string>
       }
