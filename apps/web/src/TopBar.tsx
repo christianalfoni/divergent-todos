@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
-import { RocketLaunchIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import { AcademicCapIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon } from "@heroicons/react/24/outline";
 import { CodeBracketIcon } from "@heroicons/react/20/solid";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { auth, type Profile } from "./firebase";
 import { useTheme, type Theme } from "./hooks/useTheme";
+import { useFontSize, type FontSize } from "./hooks/useFontSize";
 import UpdateNotification from "./UpdateNotification";
 import { openBillingPortal } from "./firebase/subscriptions";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -49,14 +50,15 @@ interface TopBarProps {
   onMoveOldTodos?: () => void;
   profile?: Profile | null;
   onOpenSubscription?: () => void;
-  showGetStarted?: boolean;
+  showTutorial?: boolean;
   onOpenOnboarding?: () => void;
   onOpenAuthModal?: () => void;
 }
 
-export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription, showGetStarted, onOpenOnboarding, onOpenAuthModal }: TopBarProps) {
+export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription, showTutorial, onOpenOnboarding, onOpenAuthModal }: TopBarProps) {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
+  const { fontSize, setFontSize } = useFontSize();
   const downloadUrl = getDownloadUrl();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const { isOnboarding, currentStep } = useOnboarding();
@@ -85,6 +87,11 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
   const handleThemeClick = (theme: Theme) => {
     trackMenuItemClicked(`theme_${theme}`);
     setTheme(theme);
+  };
+
+  const handleFontSizeClick = (size: FontSize) => {
+    trackMenuItemClicked(`font_size_${size}`);
+    setFontSize(size);
   };
 
   const handleGitHubClick = () => {
@@ -116,6 +123,12 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
     { value: "ocean", label: "Ocean" },
     { value: "forest", label: "Forest" },
     { value: "sunset", label: "Sunset" },
+  ];
+
+  const fontSizes: { value: FontSize; label: string }[] = [
+    { value: "small", label: "Small" },
+    { value: "medium", label: "Medium" },
+    { value: "large", label: "Large" },
   ];
 
   return (
@@ -169,11 +182,11 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
             {/* Update notification */}
             {authentication.user && <UpdateNotification />}
 
-            {/* Get Started button or Onboarding badge */}
-            {authentication.user && showGetStarted && onOpenOnboarding && (
+            {/* Tutorial button or Onboarding badge */}
+            {authentication.user && showTutorial && onOpenOnboarding && (
               isOnboarding ? (
                 <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 inset-ring inset-ring-yellow-600/20 dark:bg-yellow-400/10 dark:text-yellow-500 dark:inset-ring-yellow-400/20">
-                  Onboarding {
+                  Tutorial {
                     currentStep === "workdays" ? "1/7" :
                     currentStep === "add-todo" ? "2/7" :
                     currentStep === "add-todo-with-url" ? "3/7" :
@@ -188,11 +201,11 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                   onClick={onOpenOnboarding}
                   className="group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
                 >
-                  <RocketLaunchIcon
+                  <AcademicCapIcon
                     aria-hidden="true"
                     className="size-6 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
                   />
-                  Get started
+                  Tutorial
                 </button>
               )
             )}
@@ -369,6 +382,33 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                       <div className="flex items-center px-4 my-1">
                         <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
                         <div className="relative flex justify-center">
+                          <span className="bg-[var(--color-bg-primary)] px-2 text-xs text-[var(--color-text-tertiary)]">Text</span>
+                        </div>
+                        <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                      </div>
+
+                      {fontSizes.map((sizeOption) => (
+                        <MenuItem key={sizeOption.value}>
+                          <button
+                            onClick={() => handleFontSizeClick(sizeOption.value)}
+                            className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                          >
+                            {fontSize === sizeOption.value ? (
+                              <CheckIcon
+                                aria-hidden="true"
+                                className="mr-3 size-5 text-[var(--color-accent-text)]"
+                              />
+                            ) : (
+                              <span className="mr-3 size-5" aria-hidden="true" />
+                            )}
+                            {sizeOption.label}
+                          </button>
+                        </MenuItem>
+                      ))}
+
+                      <div className="flex items-center px-4 my-1">
+                        <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                        <div className="relative flex justify-center">
                           <span className="bg-[var(--color-bg-primary)] px-2 text-xs text-[var(--color-text-tertiary)]">Resources</span>
                         </div>
                         <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
@@ -473,11 +513,11 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                           }}
                           className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
                         >
-                          <RocketLaunchIcon
+                          <AcademicCapIcon
                             aria-hidden="true"
                             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
                           />
-                          Get started
+                          Tutorial
                         </button>
                       </MenuItem>
 
@@ -504,6 +544,33 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                               <span className="mr-3 size-5" aria-hidden="true" />
                             )}
                             {themeOption.label}
+                          </button>
+                        </MenuItem>
+                      ))}
+
+                      <div className="flex items-center px-4 my-1">
+                        <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                        <div className="relative flex justify-center">
+                          <span className="bg-[var(--color-bg-primary)] px-2 text-xs text-[var(--color-text-tertiary)]">Text</span>
+                        </div>
+                        <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
+                      </div>
+
+                      {fontSizes.map((sizeOption) => (
+                        <MenuItem key={sizeOption.value}>
+                          <button
+                            onClick={() => handleFontSizeClick(sizeOption.value)}
+                            className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                          >
+                            {fontSize === sizeOption.value ? (
+                              <CheckIcon
+                                aria-hidden="true"
+                                className="mr-3 size-5 text-[var(--color-accent-text)]"
+                              />
+                            ) : (
+                              <span className="mr-3 size-5" aria-hidden="true" />
+                            )}
+                            {sizeOption.label}
                           </button>
                         </MenuItem>
                       ))}

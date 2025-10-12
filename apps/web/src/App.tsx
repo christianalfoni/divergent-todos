@@ -10,6 +10,7 @@ import MobileBlocker from "./MobileBlocker";
 import Terms from "./Terms";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTheme } from "./hooks/useTheme";
+import { useFontSize } from "./hooks/useFontSize";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
 import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
@@ -33,7 +34,6 @@ function AppContent() {
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [hasSignedIn, setHasSignedIn] = useState(false);
   const onboarding = useOnboarding();
   const profile = authentication.profile;
 
@@ -61,6 +61,9 @@ function AppContent() {
   // Initialize theme system
   useTheme();
 
+  // Initialize font size system
+  useFontSize();
+
   // Mark app as installed when running in desktop app (only when authenticated)
   useMarkAppInstalled();
 
@@ -79,16 +82,8 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Check if user needs to see "Get started" button
-  const showGetStarted = profile !== null && profile.isOnboarded !== true;
-
-  // Start onboarding when user signs in and has a profile without onboarding completed
-  useEffect(() => {
-    if (hasSignedIn && profile && profile.isOnboarded !== true) {
-      onboarding.startOnboarding();
-      setHasSignedIn(false); // Reset flag after starting onboarding
-    }
-  }, [hasSignedIn, profile, onboarding]);
+  // Check if user needs to see "Tutorial" button
+  const showTutorial = profile !== null && profile.isOnboarded !== true;
 
   // Get old uncompleted todos
   const oldUncompletedTodos = useMemo(
@@ -137,7 +132,7 @@ function AppContent() {
           onMoveOldTodos={moveOldTodosToNextWorkday}
           profile={profile}
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
-          showGetStarted={showGetStarted}
+          showTutorial={showTutorial}
           onOpenOnboarding={onboarding.startOnboarding}
           onOpenAuthModal={() => setShowAuthModal(true)}
         />
@@ -167,7 +162,6 @@ function AppContent() {
       <AuthModal
         open={(!authentication.isAuthenticating && !authentication.user) || showAuthModal}
         onSignIn={() => {
-          setHasSignedIn(true);
           setShowAuthModal(false);
         }}
       />

@@ -251,6 +251,7 @@ const SmartLinksEditor = forwardRef<SmartLinksEditorRef, Props>(function SmartLi
           outline: "none",
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
+          fontSize: "var(--todo-text-size)",
         }}
       />
       <style>{`
