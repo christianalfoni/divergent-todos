@@ -21,8 +21,12 @@ export type OnboardingStep =
 interface OnboardingContextValue {
   isOnboarding: boolean;
   currentStep: OnboardingStep;
+  currentStepIndex: number;
+  totalSteps: number;
   startOnboarding: () => void;
   nextStep: () => void;
+  previousStep: () => void;
+  goToStep: (step: number) => void;
   completeOnboarding: () => void;
   notifyTodoEditCompleted: () => void;
   notifyWeekModeToggled: () => void;
@@ -56,6 +60,8 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(null);
 
   const isOnboarding = currentStep !== null;
+  const currentStepIndex = currentStep ? ONBOARDING_STEPS.indexOf(currentStep) : -1;
+  const totalSteps = ONBOARDING_STEPS.length;
 
   const startOnboarding = () => {
     trackOnboardingStarted();
@@ -74,6 +80,19 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       setCurrentStep(ONBOARDING_STEPS[currentIndex + 1]);
     } else {
       setCurrentStep(null);
+    }
+  };
+
+  const previousStep = () => {
+    const currentIndex = ONBOARDING_STEPS.indexOf(currentStep!);
+    if (currentIndex > 0) {
+      setCurrentStep(ONBOARDING_STEPS[currentIndex - 1]);
+    }
+  };
+
+  const goToStep = (stepIndex: number) => {
+    if (stepIndex >= 0 && stepIndex < ONBOARDING_STEPS.length) {
+      setCurrentStep(ONBOARDING_STEPS[stepIndex]);
     }
   };
 
@@ -136,8 +155,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
       value={{
         isOnboarding,
         currentStep,
+        currentStepIndex,
+        totalSteps,
         startOnboarding,
         nextStep,
+        previousStep,
+        goToStep,
         completeOnboarding,
         notifyTodoEditCompleted,
         notifyWeekModeToggled,

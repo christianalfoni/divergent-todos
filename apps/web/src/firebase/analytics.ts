@@ -81,6 +81,10 @@ export function trackThemeChanged(theme: "light" | "dark" | "system") {
   logEvent(analytics, "theme_changed", { theme });
 }
 
+export function trackFontSizeChanged(fontSize: "small" | "medium" | "large") {
+  logEvent(analytics, "font_size_changed", { font_size: fontSize });
+}
+
 export function trackWeekendToggled(includeWeekends: boolean) {
   logEvent(analytics, "weekend_toggled", { include_weekends: includeWeekends });
 }

@@ -12,6 +12,7 @@ export interface Profile {
   freeTodoCount?: number;
   isOnboarded?: boolean;
   hasInstalledApp?: boolean;
+  fontSize?: "small" | "medium" | "large";
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -34,6 +35,7 @@ interface ProfileFirestore {
   freeTodoCount?: number;
   isOnboarded?: boolean;
   hasInstalledApp?: boolean;
+  fontSize?: "small" | "medium" | "large";
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -72,6 +74,10 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (profile.hasInstalledApp !== undefined) {
       result.hasInstalledApp = profile.hasInstalledApp;
+    }
+
+    if (profile.fontSize !== undefined) {
+      result.fontSize = profile.fontSize;
     }
 
     if (profile.subscription !== undefined) {
@@ -114,6 +120,10 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
 
     if (data.hasInstalledApp !== undefined) {
       profile.hasInstalledApp = data.hasInstalledApp;
+    }
+
+    if (data.fontSize !== undefined) {
+      profile.fontSize = data.fontSize;
     }
 
     if (data.subscription !== undefined) {

@@ -11,13 +11,15 @@ import {
   CheckCircleIcon,
   ClipboardIcon,
   ClipboardDocumentCheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
 import { useState } from "react";
 
 export default function OnboardingNotification() {
-  const { isOnboarding, currentStep, completeOnboarding } =
+  const { isOnboarding, currentStep, currentStepIndex, totalSteps, previousStep, nextStep, completeOnboarding } =
     useOnboarding();
   const [{ isEditing }, editProfile] = useEditProfile();
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -45,7 +47,7 @@ export default function OnboardingNotification() {
           ),
           title: "Toggle between view modes",
           message: "Press TAB to flip between different calendar views. Try it now to see how it works!",
-          actionLabel: "Press TAB to continue",
+          actionLabel: "Press TAB",
           requiresTab: true,
         };
       case "add-todo":
@@ -56,7 +58,7 @@ export default function OnboardingNotification() {
           title: "Let's add your first todo",
           message:
             "Try adding a todo by clicking on any day.",
-          actionLabel: "Add a todo to continue",
+          actionLabel: "Add a todo",
           requiresAddTodo: true,
         };
       case "add-todo-with-url":
@@ -66,8 +68,8 @@ export default function OnboardingNotification() {
           ),
           title: "Add a todo with a URL",
           message:
-            "Todos can include URLs. Click the button below to copy a sample URL, then paste it into a new todo description.",
-          actionLabel: "Add a todo with URL to continue",
+            "Todos can include URLs. Copy a sample URL, then paste it into a new todo description.",
+          actionLabel: "Add a todo with URL",
           requiresAddTodoWithUrl: true,
           showCopyButton: true,
         };
@@ -79,7 +81,7 @@ export default function OnboardingNotification() {
           title: "Edit your todos anytime",
           message:
             "Click on any todo to edit its text. Links don't activate edit mode, so click next to them. During edit mode, use backspace to remove links. Click outside the todo to save your changes.",
-          actionLabel: "Edit and save a todo to continue",
+          actionLabel: "Edit and save a todo",
           requiresEditTodo: true,
         };
       case "move-todo":
@@ -90,7 +92,7 @@ export default function OnboardingNotification() {
           title: "Move todos around",
           message:
             "Drag and drop todos to reorder them within a day or move them to different days.",
-          actionLabel: "Move a todo to continue",
+          actionLabel: "Move a todo",
           requiresMoveTodo: true,
         };
       case "delete-todo":
@@ -101,7 +103,7 @@ export default function OnboardingNotification() {
           title: "Delete todos",
           message:
             "To delete a todo, click on it to edit, then remove all the text content and press Enter.",
-          actionLabel: "Delete a todo to continue",
+          actionLabel: "Delete a todo",
           requiresDeleteTodo: true,
         };
       case "timebox":
@@ -112,7 +114,7 @@ export default function OnboardingNotification() {
           title: "Use the timebox feature",
           message:
             "Double-click on any todo to open the timebox. This helps you focus on one task at a time with a timer.",
-          actionLabel: "Open and close timebox to continue",
+          actionLabel: "Open and close timebox",
           requiresTimebox: true,
         };
       case "congratulations":
@@ -145,58 +147,87 @@ export default function OnboardingNotification() {
           <div className="pointer-events-auto w-full max-w-sm rounded-lg bg-white shadow-lg outline-1 outline-black/5 transition data-closed:opacity-0 data-enter:transform data-enter:duration-300 data-enter:ease-out data-closed:data-enter:translate-y-2 data-leave:duration-100 data-leave:ease-in data-closed:data-enter:sm:translate-x-2 data-closed:data-enter:sm:translate-y-0 dark:bg-gray-800 dark:-outline-offset-1 dark:outline-white/10">
             <div className="p-4">
               <div className="flex items-start">
-                <div className="shrink-0">{content.icon}</div>
-                <div className="ml-3 w-0 flex-1 pt-0.5">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {content.title}
-                  </p>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    {content.message}
-                  </p>
-                  {!content.hideActionLabel && content.actionLabel && (
-                    <div className="mt-2 flex items-center gap-x-2">
-                      <ClipboardDocumentCheckIcon aria-hidden="true" className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
-                      <p className="text-sm font-bold text-gray-900 dark:text-white">
-                        {content.actionLabel}
-                      </p>
-                    </div>
-                  )}
-                  {content.showCopyButton && (
-                    <div className="mt-3">
+                <div className="w-0 flex-1 pt-0.5">
+                  <div className="flex items-center gap-x-2">
+                    <div className="shrink-0">{content.icon}</div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      {content.title}
+                    </p>
+                  </div>
+                  <div className="mt-3 mb-4">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {content.message}
+                    </p>
+                    {!content.hideActionLabel && content.actionLabel && (
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <ClipboardDocumentCheckIcon aria-hidden="true" className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">
+                          {content.actionLabel}
+                        </span>
+                        {content.showCopyButton && (
+                          <button
+                            type="button"
+                            onClick={handleCopyUrl}
+                            className="inline-flex items-center gap-x-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400 dark:hover:bg-indigo-400/20 dark:focus-visible:outline-indigo-500"
+                          >
+                            <ClipboardIcon aria-hidden="true" className="size-3" />
+                            {copiedUrl ? "Copied!" : "Copy URL"}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    {/* Navigation arrows on the left */}
+                    <div className="flex items-center gap-x-2">
                       <button
                         type="button"
-                        onClick={handleCopyUrl}
-                        className="inline-flex items-center gap-x-1.5 rounded-md bg-white px-2.5 py-1.5 text-sm font-semibold text-gray-900 shadow-xs outline-1 outline-gray-300 hover:bg-gray-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-white/10 dark:text-white dark:shadow-none dark:outline-white/10 dark:hover:bg-white/20 dark:focus-visible:outline-indigo-500"
+                        onClick={previousStep}
+                        disabled={currentStepIndex === 0}
+                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed dark:hover:text-white dark:focus:outline-indigo-500"
+                        title="Previous step"
                       >
-                        <ClipboardIcon aria-hidden="true" className="-ml-0.5 size-5" />
-                        {copiedUrl ? "Copied!" : "Copy sample URL"}
+                        <span className="sr-only">Previous step</span>
+                        <ChevronLeftIcon aria-hidden="true" className="size-5" />
                       </button>
-                    </div>
-                  )}
-                  {currentStep === "congratulations" && (
-                    <div className="mt-3 flex justify-end">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {currentStepIndex + 1} / {totalSteps}
+                      </span>
                       <button
                         type="button"
-                        onClick={handleDismiss}
-                        disabled={isEditing}
-                        className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={nextStep}
+                        disabled={currentStepIndex === totalSteps - 1}
+                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed dark:hover:text-white dark:focus:outline-indigo-500"
+                        title="Next step"
                       >
-                        {isEditing ? "Loading..." : "Complete"}
+                        <span className="sr-only">Next step</span>
+                        <ChevronRightIcon aria-hidden="true" className="size-5" />
                       </button>
                     </div>
-                  )}
-                  {currentStep !== "congratulations" && (
-                    <div className="mt-3 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={handleDismiss}
-                        disabled={isEditing}
-                        className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Skip onboarding
-                      </button>
+
+                    {/* Action buttons on the right */}
+                    <div className="flex items-center gap-x-2">
+                      {currentStep === "congratulations" ? (
+                        <button
+                          type="button"
+                          onClick={handleDismiss}
+                          disabled={isEditing}
+                          className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isEditing ? "Loading..." : "Complete"}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={handleDismiss}
+                          disabled={isEditing}
+                          className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Skip tutorial
+                        </button>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
                 <div className="ml-4 flex shrink-0">
                   <button
