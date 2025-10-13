@@ -14877,6 +14877,7 @@ async function createWindow() {
   }
   win.on("focus", () => {
     if (require$$1$4.app.isPackaged) {
+      win?.webContents.send("update:reset");
       mainExports.autoUpdater.checkForUpdates();
     }
   });
