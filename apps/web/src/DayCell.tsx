@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
@@ -26,6 +26,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartLinksEditorRef>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { isOnboarding } = useOnboarding()
   const dayId = date.toISOString().split('T')[0]
   const today = new Date()
@@ -66,6 +67,23 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
     setIsAddingTodo(false)
   }
 
+  const handleAddTodoClick = () => {
+    setIsAddingTodo(true)
+    // Scroll to bottom after state update
+    setTimeout(() => {
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+      }
+    }, 0)
+  }
+
+  // Keep scroll at bottom while editing new todo
+  useEffect(() => {
+    if (isAddingTodo && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+    }
+  }, [isAddingTodo, newTodoHtml])
+
   const dayNumber = date.getDate()
   const month = date.toLocaleDateString('en-US', { month: 'short' })
   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
@@ -93,7 +111,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
           {dayName}
         </span>
       </div>
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
         {isLoading ? (
           <TodosLoadingPlaceholder />
         ) : (
@@ -114,7 +132,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
           <>
             {canAddTodo ? (
               <button
-                onClick={() => setIsAddingTodo(true)}
+                onClick={handleAddTodoClick}
                 className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
               >
                 <div className="flex h-5 w-4 shrink-0 items-center justify-center">
