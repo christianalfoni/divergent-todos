@@ -14,6 +14,7 @@ declare global {
         check: () => Promise<any>
         download: () => Promise<any>
         install: () => void
+        onReset: (callback: () => void) => () => void
         onChecking: (callback: () => void) => () => void
         onAvailable: (callback: (info: { version: string }) => void) => () => void
         onNotAvailable: (callback: (info: { version: string }) => void) => () => void

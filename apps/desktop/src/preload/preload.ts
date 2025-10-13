@@ -17,6 +17,11 @@ contextBridge.exposeInMainWorld('native', {
     check: () => ipcRenderer.invoke('update:check'),
     download: () => ipcRenderer.invoke('update:download'),
     install: () => ipcRenderer.invoke('update:install'),
+    onReset: (callback: () => void) => {
+      const listener = () => callback()
+      ipcRenderer.on('update:reset', listener)
+      return () => ipcRenderer.removeListener('update:reset', listener)
+    },
     onChecking: (callback: () => void) => {
       const listener = () => callback()
       ipcRenderer.on('update:checking', listener)

@@ -28,6 +28,10 @@ export default function UpdateNotification() {
     if (!isDesktop || !window.native?.updater) return;
 
     // Set up event listeners and collect cleanup functions
+    const unsubscribeReset = window.native.updater.onReset(() => {
+      setUpdateState({ type: 'idle' });
+    });
+
     const unsubscribeChecking = window.native.updater.onChecking(() => {
       setUpdateState({ type: 'checking' });
     });
@@ -58,6 +62,7 @@ export default function UpdateNotification() {
 
     // Cleanup all listeners on unmount
     return () => {
+      unsubscribeReset();
       unsubscribeChecking();
       unsubscribeAvailable();
       unsubscribeNotAvailable();

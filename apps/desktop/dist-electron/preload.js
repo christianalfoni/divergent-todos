@@ -16,6 +16,11 @@ electron.contextBridge.exposeInMainWorld("native", {
     check: () => electron.ipcRenderer.invoke("update:check"),
     download: () => electron.ipcRenderer.invoke("update:download"),
     install: () => electron.ipcRenderer.invoke("update:install"),
+    onReset: (callback) => {
+      const listener = () => callback();
+      electron.ipcRenderer.on("update:reset", listener);
+      return () => electron.ipcRenderer.removeListener("update:reset", listener);
+    },
     onChecking: (callback) => {
       const listener = () => callback();
       electron.ipcRenderer.on("update:checking", listener);

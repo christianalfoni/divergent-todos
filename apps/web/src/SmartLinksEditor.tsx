@@ -231,6 +231,12 @@ const SmartLinksEditor = forwardRef<SmartLinksEditorRef, Props>(function SmartLi
   };
 
   const handleBlur = () => {
+    // Don't trigger blur handler if the entire window/document lost focus
+    // (user switched to another app). Only blur when clicking within the app.
+    if (!document.hasFocus()) {
+      return;
+    }
+
     if (externalOnBlur) {
       externalOnBlur();
     }
