@@ -100,6 +100,11 @@ From root directory:
 - `pnpm dev:desktop` - Start Electron app
 - `pnpm build:web` - Build web app for production
 - `pnpm build:desktop` - Build desktop app for production
+- `pnpm typecheck` - Run TypeScript type checking across all packages
+
+## Type Checking
+
+When making changes to the codebase, always run `pnpm typecheck` to check for TypeScript errors before committing. Fix any type errors that are reported.
 
 ## Firebase Integration
 
