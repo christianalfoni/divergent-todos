@@ -1,28 +1,33 @@
-import { logEvent, setUserId, setUserProperties } from "firebase/analytics";
-import { analytics } from "./index";
+import { amplitude } from "./amplitude";
 
 // User tracking
 export function trackUser(userId: string | null) {
   if (userId) {
-    setUserId(analytics, userId);
+    amplitude.setUserId(userId);
+  } else {
+    amplitude.reset();
   }
 }
 
-export function trackUserProperties(properties: Record<string, string>) {
-  setUserProperties(analytics, properties);
+export function trackUserProperties(properties: Record<string, string | number | boolean>) {
+  const identify = new amplitude.Identify();
+  Object.entries(properties).forEach(([key, value]) => {
+    identify.set(key, value);
+  });
+  amplitude.identify(identify);
 }
 
 // Authentication events
 export function trackSignIn(method: "google" | "anonymous") {
-  logEvent(analytics, "login", { method });
+  amplitude.track("login", { method });
 }
 
 export function trackSignUp(method: "google" | "anonymous") {
-  logEvent(analytics, "sign_up", { method });
+  amplitude.track("sign_up", { method });
 }
 
 export function trackAccountLink() {
-  logEvent(analytics, "account_linked");
+  amplitude.track("account_linked");
 }
 
 // Todo events
@@ -30,89 +35,89 @@ export function trackTodoCreated(params?: {
   hasUrl?: boolean;
   isOnboarding?: boolean;
 }) {
-  logEvent(analytics, "todo_created", params);
+  amplitude.track("todo_created", params);
 }
 
 export function trackTodoCompleted(params?: { isOnboarding?: boolean }) {
-  logEvent(analytics, "todo_completed", params);
+  amplitude.track("todo_completed", params);
 }
 
 export function trackTodoUncompleted(params?: { isOnboarding?: boolean }) {
-  logEvent(analytics, "todo_uncompleted", params);
+  amplitude.track("todo_uncompleted", params);
 }
 
 export function trackTodoEdited(params?: { isOnboarding?: boolean }) {
-  logEvent(analytics, "todo_edited", params);
+  amplitude.track("todo_edited", params);
 }
 
 export function trackTodoDeleted(params?: { isOnboarding?: boolean }) {
-  logEvent(analytics, "todo_deleted", params);
+  amplitude.track("todo_deleted", params);
 }
 
 export function trackTodoMoved(params?: {
   sameDay?: boolean;
   isOnboarding?: boolean;
 }) {
-  logEvent(analytics, "todo_moved", params);
+  amplitude.track("todo_moved", params);
 }
 
 export function trackBulkTodoMove(count: number) {
-  logEvent(analytics, "todos_bulk_moved", { count });
+  amplitude.track("todos_bulk_moved", { count });
 }
 
 export function trackDayTodosMoved(count: number) {
-  logEvent(analytics, "day_todos_moved", { count });
+  amplitude.track("day_todos_moved", { count });
 }
 
 // Feature usage
 export function trackTimeboxOpened() {
-  logEvent(analytics, "timebox_opened");
+  amplitude.track("timebox_opened");
 }
 
 export function trackTimeboxClosed() {
-  logEvent(analytics, "timebox_closed");
+  amplitude.track("timebox_closed");
 }
 
 export function trackViewModeChanged(mode: "one-week" | "two-weeks") {
-  logEvent(analytics, "view_mode_changed", { mode });
+  amplitude.track("view_mode_changed", { mode });
 }
 
 export function trackThemeChanged(theme: "light" | "dark" | "system") {
-  logEvent(analytics, "theme_changed", { theme });
+  amplitude.track("theme_changed", { theme });
 }
 
 export function trackFontSizeChanged(fontSize: "small" | "medium" | "large") {
-  logEvent(analytics, "font_size_changed", { font_size: fontSize });
+  amplitude.track("font_size_changed", { font_size: fontSize });
 }
 
 export function trackWeekendToggled(includeWeekends: boolean) {
-  logEvent(analytics, "weekend_toggled", { include_weekends: includeWeekends });
+  amplitude.track("weekend_toggled", { include_weekends: includeWeekends });
 }
 
 // Onboarding events
 export function trackOnboardingStarted() {
-  logEvent(analytics, "onboarding_started");
+  amplitude.track("onboarding_started");
 }
 
 export function trackOnboardingStepCompleted(step: string) {
-  logEvent(analytics, "onboarding_step_completed", { step });
+  amplitude.track("onboarding_step_completed", { step });
 }
 
 export function trackOnboardingCompleted() {
-  logEvent(analytics, "onboarding_completed");
+  amplitude.track("onboarding_completed");
 }
 
 export function trackOnboardingSkipped(atStep: string) {
-  logEvent(analytics, "onboarding_skipped", { step: atStep });
+  amplitude.track("onboarding_skipped", { step: atStep });
 }
 
-// Subscription events (use Firebase's predefined events)
+// Subscription events
 export function trackSubscriptionStarted(value: number = 2) {
-  logEvent(analytics, "begin_checkout", { value, currency: "USD" });
+  amplitude.track("begin_checkout", { value, currency: "USD" });
 }
 
 export function trackSubscriptionPurchased(value: number = 2) {
-  logEvent(analytics, "purchase", {
+  amplitude.track("purchase", {
     value,
     currency: "USD",
     transaction_id: `sub_${Date.now()}`,
@@ -120,40 +125,40 @@ export function trackSubscriptionPurchased(value: number = 2) {
 }
 
 export function trackSubscriptionCanceled() {
-  logEvent(analytics, "subscription_canceled");
+  amplitude.track("subscription_canceled");
 }
 
 export function trackSubscriptionResumed() {
-  logEvent(analytics, "subscription_resumed");
+  amplitude.track("subscription_resumed");
 }
 
 export function trackSubscriptionPaymentFailed() {
-  logEvent(analytics, "subscription_payment_failed");
+  amplitude.track("subscription_payment_failed");
 }
 
 export function trackFreeLimitReached(todoCount: number) {
-  logEvent(analytics, "free_limit_reached", { todo_count: todoCount });
+  amplitude.track("free_limit_reached", { todo_count: todoCount });
 }
 
 // App events
 export function trackAppOpened(isElectron: boolean) {
-  logEvent(analytics, "app_opened", { is_electron: isElectron });
+  amplitude.track("app_opened", { is_electron: isElectron });
 }
 
 export function trackAppDownloadInitiated() {
-  logEvent(analytics, "app_download_initiated");
+  amplitude.track("app_download_initiated");
 }
 
 // Menu navigation events
 export function trackMenuItemClicked(item: string) {
-  logEvent(analytics, "menu_item_clicked", { item });
+  amplitude.track("menu_item_clicked", { item });
 }
 
 // Feedback events
 export function trackFeedbackSubmitted() {
-  logEvent(analytics, "feedback_submitted");
+  amplitude.track("feedback_submitted");
 }
 
 export function trackFeedbackSubmissionFailed(error: string) {
-  logEvent(analytics, "feedback_submission_failed", { error });
+  amplitude.track("feedback_submission_failed", { error });
 }
