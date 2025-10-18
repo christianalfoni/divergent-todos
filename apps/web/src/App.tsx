@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
+import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
@@ -33,9 +34,32 @@ function AppContent() {
   const [authentication] = useAuthentication();
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalState, setAuthModalState] = useState<{ open: boolean; autoTrigger?: "google" | "anonymous" | null }>({ open: false, autoTrigger: null });
+  const [hasLeftLandingPage, setHasLeftLandingPage] = useState(() => {
+    // Check if user has already left the landing page
+    return localStorage.getItem('hasLeftLandingPage') === 'true';
+  });
   const onboarding = useOnboarding();
   const profile = authentication.profile;
+
+  // Track if we've seen an authenticated user in this session
+  const [hadAuthenticatedUser, setHadAuthenticatedUser] = useState(false);
+
+  useEffect(() => {
+    if (authentication.user) {
+      setHadAuthenticatedUser(true);
+    }
+  }, [authentication.user]);
+
+  // Clear the localStorage flag when user signs out (only if they were previously authenticated)
+  // This allows them to see the landing page again after sign out
+  useEffect(() => {
+    if (!authentication.user && !authentication.isAuthenticating && hadAuthenticatedUser && hasLeftLandingPage) {
+      // User was authenticated but now is signed out
+      localStorage.removeItem('hasLeftLandingPage');
+      setHasLeftLandingPage(false);
+    }
+  }, [authentication.user, authentication.isAuthenticating, hadAuthenticatedUser, hasLeftLandingPage]);
 
   // Debug: Check for duplicate positions
   useEffect(() => {
@@ -124,6 +148,31 @@ function AppContent() {
     trackDayTodosMoved(uncompletedTodos.length);
   };
 
+  // Show landing page if:
+  // - Not running in Electron (desktop app never shows landing page) AND
+  // - User is not authenticated AND
+  // - User hasn't left the landing page yet (no localStorage flag)
+  // This way, first-time users see landing page immediately,
+  // but returning users who clicked past it won't see it during auth loading
+  const showLandingPage = !isElectron && !authentication.user && !hasLeftLandingPage;
+
+  if (showLandingPage) {
+    return (
+      <LandingPage
+        onSignInGoogle={() => {
+          localStorage.setItem('hasLeftLandingPage', 'true');
+          setHasLeftLandingPage(true);
+          setAuthModalState({ open: true, autoTrigger: "google" });
+        }}
+        onSignInAnonymous={() => {
+          localStorage.setItem('hasLeftLandingPage', 'true');
+          setHasLeftLandingPage(true);
+          setAuthModalState({ open: true, autoTrigger: "anonymous" });
+        }}
+      />
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -134,7 +183,7 @@ function AppContent() {
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           showTutorial={showTutorial}
           onOpenOnboarding={onboarding.startOnboarding}
-          onOpenAuthModal={() => setShowAuthModal(true)}
+          onOpenAuthModal={() => setAuthModalState({ open: true, autoTrigger: null })}
         />
         {authentication.user && <OnboardingNotification />}
         <Calendar
@@ -160,10 +209,11 @@ function AppContent() {
         />
       </div>
       <AuthModal
-        open={(!authentication.isAuthenticating && !authentication.user) || showAuthModal}
+        open={(!authentication.isAuthenticating && !authentication.user) || authModalState.open}
         onSignIn={() => {
-          setShowAuthModal(false);
+          setAuthModalState({ open: false, autoTrigger: null });
         }}
+        autoTrigger={authModalState.autoTrigger}
       />
       {authentication.user && (
         <SubscriptionDialog

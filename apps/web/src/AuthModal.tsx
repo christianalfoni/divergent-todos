@@ -4,6 +4,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
+import { useEffect } from "react";
 import { UserCircleIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
@@ -13,9 +14,10 @@ import { useAuthentication } from "./hooks/useAuthentication";
 interface AuthModalProps {
   open: boolean;
   onSignIn: () => void;
+  autoTrigger?: "google" | "anonymous" | null;
 }
 
-export default function AuthModal({ open, onSignIn }: AuthModalProps) {
+export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProps) {
   const [authentication] = useAuthentication();
   const [{ isSigningIn, error }, signIn] = useSignIn();
   const [{ isSigningIn: isSigningInAnonymously, error: anonymousError }, signInAnonymously] = useSignInAnonymously();
@@ -26,6 +28,23 @@ export default function AuthModal({ open, onSignIn }: AuthModalProps) {
 
   // Check if the user is anonymous (for account linking)
   const isAnonymous = authentication.user?.isAnonymous ?? false;
+
+  // Auto-trigger sign in when modal opens with autoTrigger prop
+  useEffect(() => {
+    if (!open || !autoTrigger) return;
+
+    if (autoTrigger === "google") {
+      if (isAnonymous) {
+        linkAccount({});
+      } else {
+        signIn({});
+      }
+      onSignIn();
+    } else if (autoTrigger === "anonymous") {
+      signInAnonymously({});
+      onSignIn();
+    }
+  }, [open, autoTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Dialog open={open} onClose={() => {}} className="relative z-10">

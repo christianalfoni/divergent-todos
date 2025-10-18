@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
-import { AcademicCapIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon } from "@heroicons/react/24/outline";
+import { AcademicCapIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon, PlayCircleIcon } from "@heroicons/react/24/outline";
 import { CodeBracketIcon } from "@heroicons/react/20/solid";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { auth, type Profile } from "./firebase";
@@ -13,7 +13,7 @@ import { useOnboarding } from "./contexts/OnboardingContext";
 import DownloadAppDialog from "./DownloadAppDialog";
 import FeedbackDialog from "./FeedbackDialog";
 import { trackMenuItemClicked } from "./firebase/analytics";
-import { ARTICLE_URL } from "./constants/links";
+import { ARTICLE_URL, YOUTUBE_VIDEO_URL } from "./constants/links";
 
 function getDownloadUrl(): string | null {
   // Check if running in Electron
@@ -416,6 +416,22 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
 
                       <MenuItem>
                         <a
+                          href={YOUTUBE_VIDEO_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackMenuItemClicked("welcome_video")}
+                          className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                        >
+                          <PlayCircleIcon
+                            aria-hidden="true"
+                            className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                          />
+                          Welcome Video
+                        </a>
+                      </MenuItem>
+
+                      <MenuItem>
+                        <a
                           href={ARTICLE_URL}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -582,6 +598,22 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                         </div>
                         <div aria-hidden="true" className="w-full border-t border-[var(--color-border-primary)]" />
                       </div>
+
+                      <MenuItem>
+                        <a
+                          href={YOUTUBE_VIDEO_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => trackMenuItemClicked("welcome_video")}
+                          className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+                        >
+                          <PlayCircleIcon
+                            aria-hidden="true"
+                            className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+                          />
+                          Welcome Video
+                        </a>
+                      </MenuItem>
 
                       <MenuItem>
                         <a
