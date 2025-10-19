@@ -69,6 +69,7 @@ export function useAuthentication() {
           // Track user authentication
           trackUser(user.uid);
           trackUserProperties({
+            authMethod: user.isAnonymous ? "anonymous" : "google",
             isElectron: window.navigator.userAgent.includes("Electron") ? "true" : "false",
           });
 
