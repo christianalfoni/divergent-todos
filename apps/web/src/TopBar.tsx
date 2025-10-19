@@ -426,7 +426,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                             aria-hidden="true"
                             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
                           />
-                          Welcome Video
+                          Pep Talk
                         </a>
                       </MenuItem>
 
@@ -611,7 +611,7 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
                             aria-hidden="true"
                             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
                           />
-                          Welcome Video
+                          Pep Talk
                         </a>
                       </MenuItem>
 
