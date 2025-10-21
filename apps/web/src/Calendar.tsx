@@ -49,8 +49,8 @@ export default function Calendar({
   const { viewMode, setViewMode } = useViewMode();
   const [timeBoxTodo, setTimeBoxTodo] = useState<Todo | null>(null);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
-  const [, setVisibilityTrigger] = useState(0);
-  const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), []);
+  const [visibilityTrigger, setVisibilityTrigger] = useState(0);
+  const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), [visibilityTrigger]);
 
   // Wrap setTimeBoxTodo to track analytics imperatively
   const handleOpenTimeBox = useCallback((todo: Todo | null) => {
