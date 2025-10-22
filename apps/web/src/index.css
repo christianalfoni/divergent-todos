@@ -596,3 +596,213 @@
     opacity: 1;
   }
 }
+
+/* Monday Motivation Dialog */
+.monday-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.monday-dialog-overlay.visible {
+  opacity: 1;
+}
+
+.monday-dialog {
+  background-color: var(--color-bg-dialog);
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95) translateY(-10px);
+  opacity: 0;
+  transition: transform 0.2s ease-out, opacity 0.2s ease-out;
+}
+
+.monday-dialog.visible {
+  transform: scale(1) translateY(0);
+  opacity: 1;
+}
+
+.monday-dialog-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--color-border-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.monday-dialog-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.monday-dialog-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--color-accent-primary);
+}
+
+.monday-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+
+.monday-dialog-close:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-text-primary);
+}
+
+.monday-dialog-content {
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.monday-dialog-stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border-primary);
+}
+
+.monday-dialog-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.monday-dialog-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-accent-primary);
+  line-height: 1;
+}
+
+.monday-dialog-stat-label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.monday-dialog-daily-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.monday-dialog-day-labels {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.monday-dialog-day-label {
+  width: 2rem;
+  height: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.monday-dialog-day-squares {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.monday-dialog-day-square {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 4px;
+}
+
+.monday-dialog-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.monday-dialog-tag {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background-color: var(--color-accent-light);
+  color: var(--color-accent-text);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.monday-dialog-testimonial {
+  margin-top: 1.5rem;
+}
+
+.monday-dialog-blockquote {
+  text-align: center;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.monday-dialog-blockquote p {
+  margin: 0;
+}
+
+.monday-dialog-actions {
+  padding: 1rem 1.5rem;
+  background-color: var(--color-bg-dialog-footer);
+  border-top: 1px solid var(--color-border-primary);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.monday-dialog-button {
+  background-color: var(--color-accent-primary);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: 8px;
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.monday-dialog-button:hover {
+  background-color: var(--color-accent-hover);
+}

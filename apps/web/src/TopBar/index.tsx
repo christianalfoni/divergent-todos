@@ -138,6 +138,12 @@ export default function TopBar({
                   onOpenSubscription={onOpenSubscription}
                 />
               )}
+
+              {/* Divider */}
+              {authentication.user && (
+                <div className="h-8 w-px bg-[var(--color-border-primary)]" />
+              )}
+
               {authentication.user && <UpdateNotification />}
 
               {authentication.user && showTutorial && onOpenOnboarding && (
