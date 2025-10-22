@@ -917,6 +917,14 @@ async function generateWeekSummaryWithOpenAI(
   week: number,
   year: number
 ): Promise<SummaryResult> {
+  // Get unique dates with activity
+  const activeDates = new Set(completedTodos.map(todo => todo.date));
+
+  // Determine which weekdays had activity
+  const activitySummary = completedTodos.length > 0
+    ? `Active days: ${Array.from(activeDates).sort().join(", ")}`
+    : "No activity this week";
+
   // Format todos with rich metadata for AI analysis
   const todosText = completedTodos
     .map((todo) => {
@@ -936,6 +944,8 @@ async function generateWeekSummaryWithOpenAI(
 
   const prompt = `Given these completed todos from Week ${week}, ${year}, analyze the underlying patterns and context:
 
+${activitySummary}
+
 ${todosText}
 
 CONTEXT METADATA GUIDE:
@@ -945,25 +955,30 @@ CONTEXT METADATA GUIDE:
 - "Same-day" tasks suggest quick wins or reactive work
 - "Focused session" indicates intentional time-boxing and deep work
 - Links suggest external dependencies or reference work
+- Missing dates in the week (Mon-Fri) indicate days with no activity - likely time off, meetings, or non-work focus
 
 ANALYSIS INSTRUCTIONS:
 Generate two summaries as JSON that extract insights from these patterns:
 
 1. FORMAL SUMMARY (formalSummary):
+   - Write in FIRST PERSON ("I...") as if the user wrote it themselves
    - Abstract people/customers and focus on types of tasks completed
-   - Identify thematic patterns from tags (e.g., "heavy bug fixing week", "feature development sprint")
+   - Identify thematic patterns from tags (e.g., "I focused on bug fixes this week", "I worked on feature development")
    - Note work style indicators (quick wins vs. long-running tasks, focused vs. reactive work)
    - Mention priority shifts if high move counts are present
-   - Use for activity heatmap view
+   - If 2+ weekdays have no activity, acknowledge light week (e.g., "Lighter week with time off mid-week" or "Focused work on Monday and Friday")
+   - Use a reflective, matter-of-fact tone
    - Keep to 2-3 sentences
+   - Example: "I tackled several urgent bugs and refactored core modules. The work was focused and methodical, with most tasks completed same-day."
 
 2. PERSONAL SUMMARY (personalSummary):
-   - Cheer the user on with encouraging, personalized insights
-   - Celebrate their work patterns (e.g., "decisive execution" for low move counts, "adaptability" for high moves)
-   - Acknowledge focused work if present
-   - Recognize balanced mix of quick wins and complex tasks
+   - Write in SECOND PERSON ("You...") with encouraging, personalized insights
+   - Cheer the user on and celebrate their work patterns
+   - Acknowledge their strengths (e.g., "decisive execution" for low move counts, "adaptability" for high moves)
+   - Recognize focused work if present
    - Use a warm, motivational tone
    - Keep to 2-3 sentences
+   - Example: "You demonstrated strong focus this week with decisive execution. Your ability to balance quick wins with complex refactoring shows great prioritization skills!"
 
 Return format: {"formalSummary": "...", "personalSummary": "..."}`;
 
