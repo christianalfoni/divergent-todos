@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CacheProvider } from "pipesy";
 import Calendar from "./Calendar";
+import Activity from "./Activity";
 import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
@@ -28,6 +29,10 @@ export interface Todo {
   completed: boolean;
   date: string; // ISO date string (YYYY-MM-DD)
   position: string;
+  moveCount?: number;
+  createdAt?: Date;
+  completedAt?: Date;
+  completedWithTimeBox?: boolean;
 }
 
 function AppContent() {
@@ -39,6 +44,8 @@ function AppContent() {
     // Check if user has already left the landing page
     return localStorage.getItem('hasLeftLandingPage') === 'true';
   });
+  const [currentView, setCurrentView] = useState<"calendar" | "activity">("calendar");
+  const [activityYear, setActivityYear] = useState(() => new Date().getFullYear());
   const onboarding = useOnboarding();
   const profile = authentication.profile;
 
@@ -184,29 +191,37 @@ function AppContent() {
           showTutorial={showTutorial}
           onOpenOnboarding={onboarding.startOnboarding}
           onOpenAuthModal={() => setAuthModalState({ open: true, autoTrigger: null })}
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          activityYear={activityYear}
+          onActivityYearChange={setActivityYear}
         />
         {authentication.user && <OnboardingNotification />}
-        <Calendar
-          todos={todos}
-          isLoading={authentication.isAuthenticating || isLoading}
-          onAddTodo={
-            authentication.user ? todoOperations.handleAddTodo : () => {}
-          }
-          onToggleTodoComplete={
-            authentication.user ? todoOperations.toggleTodoComplete : () => {}
-          }
-          onMoveTodo={authentication.user ? todoOperations.moveTodo : () => {}}
-          onUpdateTodo={
-            authentication.user ? todoOperations.updateTodo : () => {}
-          }
-          onDeleteTodo={
-            authentication.user ? todoOperations.handleDeleteTodo : () => {}
-          }
-          onMoveTodosFromDay={
-            authentication.user ? moveTodosFromDay : () => {}
-          }
-          profile={profile}
-        />
+        {currentView === "calendar" ? (
+          <Calendar
+            todos={todos}
+            isLoading={authentication.isAuthenticating || isLoading}
+            onAddTodo={
+              authentication.user ? todoOperations.handleAddTodo : () => {}
+            }
+            onToggleTodoComplete={
+              authentication.user ? todoOperations.toggleTodoComplete : () => {}
+            }
+            onMoveTodo={authentication.user ? todoOperations.moveTodo : () => {}}
+            onUpdateTodo={
+              authentication.user ? todoOperations.updateTodo : () => {}
+            }
+            onDeleteTodo={
+              authentication.user ? todoOperations.handleDeleteTodo : () => {}
+            }
+            onMoveTodosFromDay={
+              authentication.user ? moveTodosFromDay : () => {}
+            }
+            profile={profile}
+          />
+        ) : (
+          <Activity year={activityYear} />
+        )}
       </div>
       <AuthModal
         open={(!authentication.isAuthenticating && !authentication.user) || authModalState.open}

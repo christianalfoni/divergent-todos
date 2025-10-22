@@ -16,6 +16,9 @@ export interface Todo {
   position: string; // Fractional index for ordering
   createdAt: Date;
   updatedAt: Date;
+  moveCount?: number; // Number of times todo has been moved/rescheduled
+  completedAt?: Date; // When the todo was marked complete
+  completedWithTimeBox?: boolean; // Whether completed during a time-boxed session
 }
 
 // Firestore data format (with Timestamps instead of Dates)
@@ -27,6 +30,9 @@ interface TodoFirestore {
   position: string; // Fractional index for ordering
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  moveCount?: number;
+  completedAt?: Timestamp;
+  completedWithTimeBox?: boolean;
 }
 
 // Firestore converter for Todo
@@ -48,6 +54,12 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
         todo.updatedAt instanceof Date
           ? Timestamp.fromDate(todo.updatedAt)
           : todo.updatedAt,
+      moveCount: todo.moveCount,
+      completedAt:
+        todo.completedAt instanceof Date
+          ? Timestamp.fromDate(todo.completedAt)
+          : undefined,
+      completedWithTimeBox: todo.completedWithTimeBox,
     };
   },
   fromFirestore: (
@@ -64,6 +76,9 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
       position: data.position,
       createdAt: data.createdAt.toDate(),
       updatedAt: data.updatedAt.toDate(),
+      moveCount: data.moveCount,
+      completedAt: data.completedAt?.toDate(),
+      completedWithTimeBox: data.completedWithTimeBox,
     };
   },
 };

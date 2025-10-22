@@ -871,6 +871,328 @@ export const stripeWebhook = onRequest(
 );
 
 // ============================================================================
+// AI Summary Generation
+// ============================================================================
+
+const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
+const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
+
+interface CompletedTodo {
+  date: string;
+  text: string;
+  createdAt: string;
+  completedAt: string;
+  moveCount: number;
+  completedWithTimeBox: boolean;
+  hasUrl: boolean;
+  tags: string[];
+}
+
+interface SummaryResult {
+  formalSummary: string;
+  personalSummary: string;
+}
+
+// Extract tags from HTML description
+function extractTags(html: string): string[] {
+  const tags: string[] = [];
+  const tagRegex = /<span[^>]*data-tag="([^"]+)"[^>]*>/g;
+  let match;
+
+  while ((match = tagRegex.exec(html)) !== null) {
+    tags.push(match[1]);
+  }
+
+  return tags;
+}
+
+// Check if description contains a URL
+function hasUrl(html: string): boolean {
+  return html.includes('data-url="') || html.includes('href="');
+}
+
+async function generateWeekSummaryWithOpenAI(
+  apiKey: string,
+  completedTodos: CompletedTodo[],
+  week: number,
+  year: number
+): Promise<SummaryResult> {
+  // Format todos with rich metadata for AI analysis
+  const todosText = completedTodos
+    .map((todo) => {
+      const timeToComplete = new Date(todo.completedAt).getTime() - new Date(todo.createdAt).getTime();
+      const daysToComplete = Math.round(timeToComplete / (1000 * 60 * 60 * 24));
+      const parts = [
+        `- ${todo.date}: ${todo.text}`,
+        todo.tags.length > 0 ? `[tags: ${todo.tags.join(", ")}]` : "",
+        todo.moveCount > 0 ? `[moved ${todo.moveCount} times]` : "",
+        daysToComplete > 0 ? `[${daysToComplete}d to complete]` : "[same-day]",
+        todo.completedWithTimeBox ? "[focused session]" : "",
+        todo.hasUrl ? "[has link]" : "",
+      ];
+      return parts.filter(Boolean).join(" ");
+    })
+    .join("\n");
+
+  const prompt = `Given these completed todos from Week ${week}, ${year}, analyze the underlying patterns and context:
+
+${todosText}
+
+CONTEXT METADATA GUIDE:
+- Tags indicate work categories (e.g., bug, feature, docs, urgent)
+- Move count shows deprioritization/uncertainty (high moves = shifting priorities)
+- Time to completion reveals task complexity and procrastination patterns
+- "Same-day" tasks suggest quick wins or reactive work
+- "Focused session" indicates intentional time-boxing and deep work
+- Links suggest external dependencies or reference work
+
+ANALYSIS INSTRUCTIONS:
+Generate two summaries as JSON that extract insights from these patterns:
+
+1. FORMAL SUMMARY (formalSummary):
+   - Abstract people/customers and focus on types of tasks completed
+   - Identify thematic patterns from tags (e.g., "heavy bug fixing week", "feature development sprint")
+   - Note work style indicators (quick wins vs. long-running tasks, focused vs. reactive work)
+   - Mention priority shifts if high move counts are present
+   - Use for activity heatmap view
+   - Keep to 2-3 sentences
+
+2. PERSONAL SUMMARY (personalSummary):
+   - Cheer the user on with encouraging, personalized insights
+   - Celebrate their work patterns (e.g., "decisive execution" for low move counts, "adaptability" for high moves)
+   - Acknowledge focused work if present
+   - Recognize balanced mix of quick wins and complex tasks
+   - Use a warm, motivational tone
+   - Keep to 2-3 sentences
+
+Return format: {"formalSummary": "...", "personalSummary": "..."}`;
+
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are an assistant that generates concise, meaningful summaries of completed work. Return only valid JSON.",
+        },
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+      temperature: 0.7,
+      response_format: { type: "json_object" },
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`OpenAI API error: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) {
+    throw new Error("No response from OpenAI");
+  }
+
+  return JSON.parse(content) as SummaryResult;
+}
+
+// Helper to get date range for a week
+function getWeekDateRange(year: number, week: number): { start: Date; end: Date } {
+  let weekNumber = 0;
+  let weekStart: Date | null = null;
+  let weekEnd: Date | null = null;
+
+  for (let m = 0; m < 12; m++) {
+    const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const currentDate = new Date(year, m, day);
+      const dayOfWeek = currentDate.getDay();
+
+      // Skip weekends
+      if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+      // Start of new week (Monday)
+      if (dayOfWeek === 1) {
+        weekNumber++;
+        if (weekNumber === week) {
+          weekStart = new Date(currentDate);
+        }
+      }
+
+      // If we're in the target week and it's Friday, this is the end
+      if (weekNumber === week && dayOfWeek === 5) {
+        weekEnd = new Date(currentDate);
+        return { start: weekStart!, end: weekEnd };
+      }
+
+      // If we've moved past the target week, return what we have
+      if (weekNumber > week && weekStart) {
+        weekEnd = new Date(year, m, day - 1); // Previous day was the end
+        return { start: weekStart, end: weekEnd };
+      }
+    }
+  }
+
+  // If we didn't find a Friday (partial week at year end), use last weekday
+  if (weekStart && !weekEnd) {
+    weekEnd = new Date(year, 11, 31); // Last day of year
+  }
+
+  return { start: weekStart!, end: weekEnd! };
+}
+
+export const generateWeekSummary = onCall(
+  { secrets: [OPENAI_API_KEY] },
+  async (req) => {
+    const callerUid = req.auth?.uid;
+
+    // Check admin access
+    if (callerUid !== ADMIN_UID) {
+      logger.warn("Unauthorized generateWeekSummary attempt", { uid: callerUid });
+      throw new HttpsError("permission-denied", "Admin access required");
+    }
+
+    const { userId, week, year } = req.data;
+
+    if (!userId || !week) {
+      throw new HttpsError("invalid-argument", "userId and week are required");
+    }
+
+    const targetYear = year || new Date().getFullYear();
+
+    logger.info("Starting generateWeekSummary", { userId, week, year: targetYear });
+
+    try {
+      // Calculate date range for the week
+      const { start: weekStart, end: weekEnd } = getWeekDateRange(targetYear, week);
+
+      logger.info("Calculated week date range", {
+        week,
+        weekStart: weekStart.toISOString().split("T")[0],
+        weekEnd: weekEnd.toISOString().split("T")[0],
+      });
+
+      // Query todos collection for completed todos in this date range
+      // Note: We query by the todo's date field (which day it's assigned to),
+      // not by completedAt (when it was marked complete)
+      logger.info("Querying todos collection...");
+      const todosSnapshot = await db
+        .collection("todos")
+        .where("userId", "==", userId)
+        .where("completed", "==", true)
+        .where("date", ">=", Timestamp.fromDate(weekStart))
+        .where("date", "<=", Timestamp.fromDate(new Date(weekEnd.getTime() + 86400000 - 1)))
+        .orderBy("date", "asc")
+        .orderBy("position", "asc")
+        .get();
+
+      logger.info("Todos query completed", {
+        found: todosSnapshot.size,
+      });
+
+      if (todosSnapshot.empty) {
+        logger.warn("No completed todos found for this week");
+        throw new HttpsError(
+          "not-found",
+          `No completed todos found for user ${userId}, week ${week}, year ${targetYear}`
+        );
+      }
+
+      // Build activity data structure with enriched metadata
+      const completedTodos: CompletedTodo[] = [];
+
+      todosSnapshot.docs.forEach((doc) => {
+        const todo = doc.data();
+        const todoDate = todo.date.toDate();
+        const description = todo.description || "";
+
+        completedTodos.push({
+          date: todoDate.toISOString().split("T")[0],
+          text: description,
+          createdAt: todo.createdAt?.toDate().toISOString() || todoDate.toISOString(),
+          completedAt: todo.completedAt?.toDate().toISOString() || todo.updatedAt?.toDate().toISOString() || todoDate.toISOString(),
+          moveCount: todo.moveCount || 0,
+          completedWithTimeBox: todo.completedWithTimeBox || false,
+          hasUrl: hasUrl(description),
+          tags: extractTags(description),
+        });
+      });
+
+      // Todos are already sorted by date and position from the query
+      // (grouped by day, ordered by user's arrangement within each day)
+
+      logger.info("Built activity data", {
+        totalTodos: completedTodos.length,
+        sampleTodos: completedTodos.slice(0, 3),
+      });
+
+      // Generate AI summaries
+      logger.info("Calling OpenAI API...");
+      const result = await generateWeekSummaryWithOpenAI(
+        OPENAI_API_KEY.value(),
+        completedTodos,
+        week,
+        targetYear
+      );
+
+      logger.info("AI summaries generated successfully", {
+        formalLength: result.formalSummary.length,
+        personalLength: result.personalSummary.length,
+      });
+
+      // Calculate month from week start date
+      const month = weekStart.getMonth();
+
+      // Create or update activity document
+      const activityDocId = `${userId}_${targetYear}_${week}`;
+      const activityRef = db.collection("activity").doc(activityDocId);
+
+      logger.info("Writing activity document...", { docId: activityDocId });
+
+      await activityRef.set({
+        userId,
+        year: targetYear,
+        week,
+        month,
+        completedTodos,
+        aiSummary: result.formalSummary,
+        aiPersonalSummary: result.personalSummary,
+        aiSummaryGeneratedAt: Timestamp.now(),
+        createdAt: Timestamp.now(),
+      });
+
+      logger.info("Successfully created/updated activity document");
+
+      return {
+        success: true,
+        docId: activityDocId,
+        weekStart: weekStart.toISOString().split("T")[0],
+        weekEnd: weekEnd.toISOString().split("T")[0],
+        totalTodos: completedTodos.length,
+        formalSummary: result.formalSummary,
+        personalSummary: result.personalSummary,
+      };
+    } catch (error) {
+      logger.error("Error in generateWeekSummary", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", `Failed to generate summary: ${error}`);
+    }
+  }
+);
+
+// ============================================================================
 // Feedback Function
 // ============================================================================
 

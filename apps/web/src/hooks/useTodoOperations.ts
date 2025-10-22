@@ -94,6 +94,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         description: todo.description,
         completed: !todo.completed,
         date: todo.date,
+        completedAt: !todo.completed ? new Date() : undefined,
       });
 
       // Track todo completion/uncompletion
@@ -132,12 +133,17 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       // Convert string date to Date object
       const dateObj = new Date(newDate);
 
+      // Increment moveCount only when actually changing dates
+      const isChangingDate = todo.date.toISOString().split("T")[0] !== newDate;
+      const newMoveCount = isChangingDate ? (todo.moveCount || 0) + 1 : (todo.moveCount || 0);
+
       editTodo({
         id: todoId,
         description: todo.description,
         completed: todo.completed,
         date: dateObj,
         position: newPosition,
+        moveCount: newMoveCount,
       });
 
       // Track todo movement
@@ -214,12 +220,16 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           lastPosition = newPosition; // Update for next todo
           const dateObj = new Date(newDate);
 
+          // Increment moveCount since batch move always changes dates
+          const newMoveCount = (todo.moveCount || 0) + 1;
+
           return {
             id: todoId,
             description: todo.description,
             completed: todo.completed,
             date: dateObj,
             position: newPosition,
+            moveCount: newMoveCount,
           };
         })
         .filter((update): update is NonNullable<typeof update> => update !== null);

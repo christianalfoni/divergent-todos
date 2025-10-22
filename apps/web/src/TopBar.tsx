@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { signOut } from "firebase/auth";
-import { AcademicCapIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon, PlayCircleIcon } from "@heroicons/react/24/outline";
+import { AcademicCapIcon, ArrowDownTrayIcon, ArrowRightStartOnRectangleIcon, BanknotesIcon, CheckIcon, DocumentTextIcon, ChatBubbleLeftRightIcon, UserCircleIcon, PlayCircleIcon, ChartBarIcon, CalendarIcon } from "@heroicons/react/24/outline";
 import { CodeBracketIcon } from "@heroicons/react/20/solid";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { auth, type Profile } from "./firebase";
@@ -53,9 +53,13 @@ interface TopBarProps {
   showTutorial?: boolean;
   onOpenOnboarding?: () => void;
   onOpenAuthModal?: () => void;
+  currentView?: "calendar" | "activity";
+  onViewChange?: (view: "calendar" | "activity") => void;
+  activityYear?: number;
+  onActivityYearChange?: (year: number) => void;
 }
 
-export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription, showTutorial, onOpenOnboarding, onOpenAuthModal }: TopBarProps) {
+export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOpenSubscription, showTutorial, onOpenOnboarding, onOpenAuthModal, currentView = "calendar", onViewChange, activityYear, onActivityYearChange }: TopBarProps) {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
   const { fontSize, setFontSize } = useFontSize();
@@ -134,8 +138,8 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
   return (
     <nav className="border-b bg-[var(--color-bg-nav)] border-[var(--color-border-primary)]">
       <div className="px-4">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
+        <div className="relative flex h-16 justify-between">
+          <div className="flex items-center gap-6">
             <div className="flex shrink-0 items-center gap-3">
               <svg
                 width="32"
@@ -178,7 +182,60 @@ export default function TopBar({ oldTodoCount = 0, onMoveOldTodos, profile, onOp
               </span>
             </div>
           </div>
+
+          {/* Activity Year Navigation - Centered */}
+          {authentication.user && currentView === "activity" && activityYear && onActivityYearChange && (
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-3 pointer-events-none">
+              <button
+                onClick={() => onActivityYearChange(activityYear - 1)}
+                className="p-1 hover:bg-[var(--color-bg-menu-hover)] rounded text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors pointer-events-auto"
+                aria-label="Previous year"
+              >
+                ←
+              </button>
+              <span className="text-lg font-semibold text-[var(--color-text-primary)] min-w-[80px] text-center pointer-events-auto">
+                {activityYear}
+              </span>
+              <button
+                onClick={() => onActivityYearChange(activityYear + 1)}
+                disabled={activityYear >= new Date().getFullYear()}
+                className="p-1 hover:bg-[var(--color-bg-menu-hover)] rounded text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
+                aria-label="Next year"
+              >
+                →
+              </button>
+            </div>
+          )}
+
           <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
+            {/* View Toggle */}
+            {authentication.user && onViewChange && (
+              <div className="flex rounded-lg bg-[var(--color-bg-secondary)] p-1">
+                <button
+                  onClick={() => onViewChange("calendar")}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    currentView === "calendar"
+                      ? "bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  }`}
+                >
+                  <CalendarIcon className="size-4" />
+                  Calendar
+                </button>
+                <button
+                  onClick={() => onViewChange("activity")}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    currentView === "activity"
+                      ? "bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm"
+                      : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
+                  }`}
+                >
+                  <ChartBarIcon className="size-4" />
+                  Activity
+                </button>
+              </div>
+            )}
+
             {/* Update notification */}
             {authentication.user && <UpdateNotification />}
 
