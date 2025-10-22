@@ -13,6 +13,7 @@ import {
   ClipboardDocumentCheckIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  HashtagIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
@@ -60,6 +61,17 @@ export default function OnboardingNotification() {
             "Try adding a todo by clicking on any day.",
           actionLabel: "Add a todo",
           requiresAddTodo: true,
+        };
+      case "add-todo-with-tag":
+        return {
+          icon: (
+            <HashtagIcon aria-hidden="true" className="size-6 text-teal-500 dark:text-teal-400" />
+          ),
+          title: "Add a todo with a tag",
+          message:
+            "Tags help you organize your todos. Type #some-text and press space or enter to create a tag. Try adding a todo with a tag now!",
+          actionLabel: "Add a todo with a tag",
+          requiresAddTodoWithTag: true,
         };
       case "add-todo-with-url":
         return {

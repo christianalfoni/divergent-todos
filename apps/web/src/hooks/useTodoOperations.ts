@@ -62,6 +62,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
       // Track todo creation
       const hasUrl = todo.text.includes('data-url="');
+      const hasTag = todo.text.includes('data-tag="');
       trackTodoCreated({
         hasUrl,
         isOnboarding: onboarding.isOnboarding,
@@ -71,6 +72,8 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       if (onboarding.isOnboarding) {
         if (hasUrl) {
           onboarding.notifyTodoAddedWithUrl();
+        } else if (hasTag) {
+          onboarding.notifyTodoAddedWithTag();
         } else {
           onboarding.notifyTodoAdded();
         }
