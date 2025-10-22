@@ -55,6 +55,19 @@
   }
 }
 
+@keyframes pulsate {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.activity-button-pulsate {
+  animation: pulsate 1.5s ease-in-out infinite;
+}
+
 @layer theme {
   /* Light mode (default) colors */
   :root {
@@ -582,20 +595,7 @@
   color: var(--color-text-tertiary);
 }
 
-/* Transition between views */
-.activity-month-grid,
-.activity-ai-summary-view {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
+/* Note: fadeIn animation removed - months should appear instantly */
 
 /* Monday Motivation Dialog */
 .monday-dialog-overlay {

@@ -6,9 +6,10 @@ import { getMonthDays, getWeekDayIndex, getActivityColor } from './utils/activit
 
 interface ActivityProps {
   year: number;
+  onLoaded?: () => void;
 }
 
-export default function Activity({ year }: ActivityProps) {
+export default function Activity({ year, onLoaded }: ActivityProps) {
   const { activityWeeks, loading } = useActivity(year);
   const [selectedWeek, setSelectedWeek] = useState<{ year: number; week: number } | null>(null);
   const [selectedDay, setSelectedDay] = useState<{
@@ -58,6 +59,13 @@ export default function Activity({ year }: ActivityProps) {
     });
     return summaries;
   }, [activityWeeks]);
+
+  // Notify parent when loading is complete
+  useEffect(() => {
+    if (!loading && onLoaded) {
+      onLoaded();
+    }
+  }, [loading, onLoaded]);
 
   // TAB key listener
   useEffect(() => {

@@ -4,6 +4,9 @@ import { db } from "../firebase";
 import { activityWeekConverter, type ActivityWeek } from "../firebase/types/activity";
 import { useAuthentication } from "./useAuthentication";
 
+// Cache for activity data: userId-year -> ActivityWeek[]
+const activityCache = new Map<string, ActivityWeek[]>();
+
 export function useActivity(year: number) {
   const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
@@ -24,30 +27,60 @@ export function useActivity(year: number) {
 
     let unsubscribed = false;
     const userId = user.uid;
+    const cacheKey = `${userId}-${year}`;
 
     async function fetchActivity() {
-
       try {
-        setLoading(true);
-        setError(null);
-
-        const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
-        const q = query(
-          activityRef,
-          where("userId", "==", userId),
-          where("year", "==", year)
-        );
-
-        const querySnapshot = await getDocs(q);
-        const weeks: ActivityWeek[] = [];
-
-        querySnapshot.forEach((doc) => {
-          weeks.push(doc.data());
-        });
-
-        if (!unsubscribed) {
-          setActivityWeeks(weeks);
+        // Check cache first
+        const cachedData = activityCache.get(cacheKey);
+        if (cachedData) {
+          // Immediately show cached data
+          setActivityWeeks(cachedData);
           setLoading(false);
+
+          // Then refetch in background
+          const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+          const q = query(
+            activityRef,
+            where("userId", "==", userId),
+            where("year", "==", year)
+          );
+
+          const querySnapshot = await getDocs(q);
+          const weeks: ActivityWeek[] = [];
+
+          querySnapshot.forEach((doc) => {
+            weeks.push(doc.data());
+          });
+
+          if (!unsubscribed) {
+            setActivityWeeks(weeks);
+            activityCache.set(cacheKey, weeks);
+          }
+        } else {
+          // No cache, show loading
+          setLoading(true);
+          setError(null);
+
+          const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+          const q = query(
+            activityRef,
+            where("userId", "==", userId),
+            where("year", "==", year)
+          );
+
+          const querySnapshot = await getDocs(q);
+          const weeks: ActivityWeek[] = [];
+
+          querySnapshot.forEach((doc) => {
+            weeks.push(doc.data());
+          });
+
+          if (!unsubscribed) {
+            setActivityWeeks(weeks);
+            activityCache.set(cacheKey, weeks);
+            setLoading(false);
+          }
         }
       } catch (err) {
         if (!unsubscribed) {

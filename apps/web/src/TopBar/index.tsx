@@ -55,6 +55,8 @@ interface TopBarProps {
   activityYear?: number;
   onActivityYearChange?: (year: number) => void;
   isLoading?: boolean;
+  isLoadingActivity?: boolean;
+  shouldPulsate?: boolean;
 }
 
 export default function TopBar({
@@ -70,6 +72,8 @@ export default function TopBar({
   activityYear,
   onActivityYearChange,
   isLoading = false,
+  isLoadingActivity = false,
+  shouldPulsate = false,
 }: TopBarProps) {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
@@ -169,6 +173,8 @@ export default function TopBar({
                   onViewChange={onViewChange}
                   profile={profile}
                   onOpenSubscription={onOpenSubscription}
+                  isLoadingActivity={isLoadingActivity}
+                  shouldPulsate={shouldPulsate}
                 />
               )}
 

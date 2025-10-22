@@ -52,6 +52,9 @@ function AppContent() {
   });
   const [currentView, setCurrentView] = useState<"calendar" | "activity">("calendar");
   const [activityYear, setActivityYear] = useState(() => new Date().getFullYear());
+  const [isLoadingActivity, setIsLoadingActivity] = useState(false);
+  const [shouldPulsate, setShouldPulsate] = useState(false);
+  const [pendingView, setPendingView] = useState<"calendar" | "activity" | null>(null);
   const [mondayDialog, setMondayDialog] = useState<{
     show: boolean;
     summary: string;
@@ -352,6 +355,42 @@ function AppContent() {
     );
   }
 
+  // Effect to handle pulsating animation delay
+  useEffect(() => {
+    if (isLoadingActivity) {
+      const pulsateTimer = setTimeout(() => {
+        setShouldPulsate(true);
+      }, 1000);
+
+      return () => clearTimeout(pulsateTimer);
+    } else {
+      setShouldPulsate(false);
+    }
+  }, [isLoadingActivity]);
+
+  // Handle view changes with loading state
+  const handleViewChange = (view: "calendar" | "activity") => {
+    if (view === "activity" && currentView === "calendar") {
+      // Starting to load activity
+      setPendingView("activity");
+      setIsLoadingActivity(true);
+    } else if (view === "calendar") {
+      // User clicked calendar while loading activity
+      setPendingView(null);
+      setIsLoadingActivity(false);
+      setCurrentView("calendar");
+    }
+  };
+
+  // Activity loaded callback
+  const handleActivityLoaded = () => {
+    if (pendingView === "activity") {
+      setCurrentView("activity");
+      setPendingView(null);
+    }
+    setIsLoadingActivity(false);
+  };
+
   return (
     <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -364,10 +403,12 @@ function AppContent() {
           onOpenOnboarding={onboarding.startOnboarding}
           onOpenAuthModal={() => setAuthModalState({ open: true, autoTrigger: null })}
           currentView={currentView}
-          onViewChange={setCurrentView}
+          onViewChange={handleViewChange}
           activityYear={activityYear}
           onActivityYearChange={setActivityYear}
           isLoading={authentication.isAuthenticating || isLoading}
+          isLoadingActivity={isLoadingActivity}
+          shouldPulsate={shouldPulsate}
         />
         {authentication.user && <OnboardingNotification />}
         {currentView === "calendar" ? (
@@ -393,7 +434,13 @@ function AppContent() {
             profile={profile}
           />
         ) : (
-          <Activity year={activityYear} />
+          <Activity year={activityYear} onLoaded={handleActivityLoaded} />
+        )}
+        {/* Hidden Activity component to trigger loading */}
+        {pendingView === "activity" && currentView === "calendar" && (
+          <div style={{ display: 'none' }}>
+            <Activity year={activityYear} onLoaded={handleActivityLoaded} />
+          </div>
         )}
       </div>
       <AuthModal

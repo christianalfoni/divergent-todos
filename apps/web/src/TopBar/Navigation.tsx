@@ -6,6 +6,10 @@ interface NavigationProps {
   onViewChange: (view: "calendar" | "activity") => void;
   profile?: Profile | null;
   onOpenSubscription?: () => void;
+  CalendarIconComponent?: typeof CalendarIcon;
+  ChartBarIconComponent?: typeof ChartBarIcon;
+  isLoadingActivity?: boolean;
+  shouldPulsate?: boolean;
 }
 
 export default function Navigation({
@@ -13,6 +17,10 @@ export default function Navigation({
   onViewChange,
   profile,
   onOpenSubscription,
+  CalendarIconComponent = CalendarIcon,
+  ChartBarIconComponent = ChartBarIcon,
+  isLoadingActivity = false,
+  shouldPulsate = false,
 }: NavigationProps) {
   const hasActiveSubscription = profile?.subscription?.status === "active";
 
@@ -26,7 +34,7 @@ export default function Navigation({
             : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
         }`}
       >
-        <CalendarIcon className="size-4" />
+        <CalendarIconComponent className="size-4" />
         Calendar
       </button>
       <button
@@ -37,13 +45,14 @@ export default function Navigation({
             onViewChange("activity");
           }
         }}
+        disabled={isLoadingActivity}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
           currentView === "activity"
             ? "bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm"
             : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-        }`}
+        } ${isLoadingActivity ? "opacity-50 cursor-not-allowed" : ""} ${shouldPulsate ? "activity-button-pulsate" : ""}`}
       >
-        <ChartBarIcon className="size-4" />
+        <ChartBarIconComponent className="size-4" />
         Activity
         {!hasActiveSubscription && (
           <svg className="ml-1 size-3" viewBox="0 0 12 12" fill="currentColor">
