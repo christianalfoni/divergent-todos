@@ -1168,7 +1168,7 @@ export const generateWeekSummary = onCall(
         aiSummary: result.formalSummary,
         aiPersonalSummary: result.personalSummary,
         aiSummaryGeneratedAt: Timestamp.now(),
-        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       });
 
       logger.info("Successfully created/updated activity document");

@@ -84,21 +84,24 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       const todo = firebaseTodos.find((t) => t.id === todoId);
       if (!todo) return;
 
+      const isCompleting = !todo.completed;
+
       // Play sound when completing a todo
-      if (!todo.completed) {
+      if (isCompleting) {
         hittingWood.play();
       }
 
+      // Update Firestore - scheduled function will read these later
       editTodo({
         id: todoId,
         description: todo.description,
-        completed: !todo.completed,
+        completed: isCompleting,
         date: todo.date,
-        completedAt: !todo.completed ? new Date() : undefined,
+        completedAt: isCompleting ? new Date() : undefined,
       });
 
-      // Track todo completion/uncompletion
-      if (!todo.completed) {
+      // Track analytics
+      if (isCompleting) {
         trackTodoCompleted({ isOnboarding: onboarding.isOnboarding });
       } else {
         trackTodoUncompleted({ isOnboarding: onboarding.isOnboarding });

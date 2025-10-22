@@ -1,13 +1,15 @@
 import { useState, useMemo, useEffect } from 'react';
 import ActivityWeekDetail from './ActivityWeekDetail';
 import ActivityDayPopup from './ActivityDayPopup';
-import { generateMockActivityData, getMonthDays, getWeekDayIndex, getActivityColor } from './utils/activity';
+import { useActivity } from './hooks/useActivity';
+import { getMonthDays, getWeekDayIndex, getActivityColor } from './utils/activity';
 
 interface ActivityProps {
   year: number;
 }
 
 export default function Activity({ year }: ActivityProps) {
+  const { activityWeeks, loading } = useActivity(year);
   const [selectedWeek, setSelectedWeek] = useState<{ year: number; week: number } | null>(null);
   const [selectedDay, setSelectedDay] = useState<{
     date: Date;
@@ -46,32 +48,16 @@ export default function Activity({ year }: ActivityProps) {
     return weekMap;
   }, [year]);
 
-  // Mock AI summaries for each week
-  const mockAISummaries: Record<number, string> = useMemo(() => {
+  // Build AI summaries map from activity data
+  const aiSummaries: Record<number, string> = useMemo(() => {
     const summaries: Record<number, string> = {};
-    const sampleSummaries = [
-      'Focused on backend refactoring and API improvements. Completed authentication overhaul and migrated legacy endpoints to REST v2.',
-      'UI/UX polish week with component library updates. Implemented new design system patterns and accessibility improvements.',
-      'Deep dive into performance optimization. Reduced bundle size by 30% and improved load times across mobile devices.',
-      'Team collaboration and code reviews. Helped onboard new engineers while maintaining steady feature development pace.',
-      'Sprint planning and architectural decisions. Mapped out Q2 roadmap and evaluated new technologies for upcoming features.',
-      'Bug fixes and technical debt cleanup. Addressed critical issues in payment flow and resolved customer-reported edge cases.',
-      'Database optimization and query tuning. Implemented caching layer and reduced database load by 45% during peak hours.',
-      'Documentation sprint. Updated API docs, wrote internal guides, and created video tutorials for common workflows.',
-      'Testing improvements across the stack. Added integration tests and increased code coverage from 65% to 82%.',
-      'Feature launch week. Shipped collaborative editing feature and monitored rollout metrics for stability issues.',
-    ];
-
-    // Generate summaries for weeks 1-52
-    for (let week = 1; week <= 52; week++) {
-      // 70% chance of having activity
-      if (Math.random() > 0.3) {
-        summaries[week] = sampleSummaries[Math.floor(Math.random() * sampleSummaries.length)];
+    activityWeeks.forEach(week => {
+      if (week.aiSummary) {
+        summaries[week.week] = week.aiSummary;
       }
-    }
-
+    });
     return summaries;
-  }, [year]);
+  }, [activityWeeks]);
 
   // TAB key listener
   useEffect(() => {
@@ -86,38 +72,41 @@ export default function Activity({ year }: ActivityProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedWeek, selectedDay]);
 
-  // Generate mock data for entire year
+  // Build activity data map (date -> count) by counting completedTodos per day
   const activityData = useMemo(() => {
-    const yearData = new Map<string, number>();
-    for (let month = 0; month < 12; month++) {
-      const monthData = generateMockActivityData(year, month);
-      monthData.forEach((value, key) => {
-        yearData.set(key, value);
+    const dataMap = new Map<string, number>();
+
+    activityWeeks.forEach(week => {
+      // Count todos per date
+      week.completedTodos.forEach(todo => {
+        const count = dataMap.get(todo.date) || 0;
+        dataMap.set(todo.date, count + 1);
       });
-    }
-    return yearData;
-  }, [year]);
+    });
+
+    return dataMap;
+  }, [activityWeeks]);
 
   const handleDayClick = (date: Date, event: React.MouseEvent) => {
-    // Generate mock todos for this day
-    const dayTodos = [];
     const dateKey = date.toISOString().split('T')[0];
-    const count = activityData.get(dateKey) || 0;
 
-    const sampleTodos = [
-      'Finish feature implementation',
-      'Review pull requests',
-      'Update documentation',
-      'Deploy to staging',
-      'Run integration tests',
-      'Fix authentication bug',
-    ];
+    // Find todos from activity weeks data
+    let dayTodos: Array<{ text: string; url?: string }> = [];
 
-    for (let i = 0; i < count && i < 6; i++) {
-      dayTodos.push({
-        text: sampleTodos[i],
-        url: Math.random() > 0.7 ? 'https://github.com' : undefined,
-      });
+    for (const week of activityWeeks) {
+      const todosForDay = week.completedTodos.filter(todo => todo.date === dateKey);
+      if (todosForDay.length > 0) {
+        dayTodos = todosForDay.map(todo => ({
+          text: todo.text,
+          url: todo.hasUrl ? 'url-placeholder' : undefined,
+        }));
+        break;
+      }
+    }
+
+    // Don't open popup if there are no todos
+    if (dayTodos.length === 0) {
+      return;
     }
 
     // Calculate popup position
@@ -147,6 +136,14 @@ export default function Activity({ year }: ActivityProps) {
   }
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center bg-[var(--color-bg-secondary)]">
+        <p className="text-[var(--color-text-secondary)]">Loading activity...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -201,7 +198,7 @@ export default function Activity({ year }: ActivityProps) {
 
                       if (!weekNumber) return null;
 
-                      const summary = mockAISummaries[weekNumber];
+                      const summary = aiSummaries[weekNumber];
 
                       return (
                         <div key={weekIndex} className="activity-week-summary">

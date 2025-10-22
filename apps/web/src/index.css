@@ -565,8 +565,8 @@
   overflow-y: auto;
   font-size: 0.75rem; /* text-xs */
   line-height: 1.25rem; /* leading-5 */
-  font-weight: 600; /* font-semibold */
-  color: var(--color-accent-text);
+  font-weight: 400; /* font-normal */
+  color: white;
 }
 
 .activity-week-summary {
@@ -574,7 +574,8 @@
 }
 
 .activity-week-label {
-  color: var(--color-text-primary);
+  color: var(--color-accent-primary);
+  font-weight: 600; /* font-semibold for label */
 }
 
 .activity-no-summary {
