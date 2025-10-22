@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { signOut } from "firebase/auth";
+import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import { useAuthentication } from "../hooks/useAuthentication";
 import { auth, type Profile } from "../firebase";
 import { useTheme } from "../hooks/useTheme";
@@ -53,6 +54,7 @@ interface TopBarProps {
   onViewChange?: (view: "calendar" | "activity") => void;
   activityYear?: number;
   onActivityYearChange?: (year: number) => void;
+  isLoading?: boolean;
 }
 
 export default function TopBar({
@@ -67,6 +69,7 @@ export default function TopBar({
   onViewChange,
   activityYear,
   onActivityYearChange,
+  isLoading = false,
 }: TopBarProps) {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
@@ -130,6 +133,36 @@ export default function TopBar({
               )}
 
             <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
+              {/* Show skeleton during loading */}
+              {isLoading && !authentication.user && onViewChange && (
+                <>
+                  <div className="flex rounded-lg bg-[var(--color-bg-secondary)] p-1 opacity-50 pointer-events-none">
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm">
+                      <CalendarIcon className="size-4" />
+                      Calendar
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-[var(--color-text-secondary)]">
+                      <ChartBarIcon className="size-4" />
+                      Activity
+                    </div>
+                  </div>
+                  <div className="h-8 w-px bg-[var(--color-border-primary)]" />
+
+                  {/* Skeleton avatar */}
+                  <div className="relative flex max-w-xs items-center p-2 opacity-50 pointer-events-none">
+                    <span className="inline-block size-8 overflow-hidden rounded-full bg-[var(--color-bg-primary)] outline -outline-offset-1 outline-[var(--color-outline)]">
+                      <svg
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                        className="size-full text-[var(--color-text-tertiary)]"
+                      >
+                        <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                      </svg>
+                    </span>
+                  </div>
+                </>
+              )}
+
               {authentication.user && onViewChange && (
                 <Navigation
                   currentView={currentView}

@@ -367,6 +367,7 @@ function AppContent() {
           onViewChange={setCurrentView}
           activityYear={activityYear}
           onActivityYearChange={setActivityYear}
+          isLoading={authentication.isAuthenticating || isLoading}
         />
         {authentication.user && <OnboardingNotification />}
         {currentView === "calendar" ? (
