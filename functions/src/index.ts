@@ -874,197 +874,14 @@ export const stripeWebhook = onRequest(
 // AI Summary Generation
 // ============================================================================
 
+import {
+  getCompletedTodosForWeek,
+  getWeekDateRange,
+} from "./lib/activity-data.js";
+import { generateSummarySync } from "./lib/openai-sync.js";
+
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
-
-interface CompletedTodo {
-  date: string;
-  text: string;
-  createdAt: string;
-  completedAt: string;
-  moveCount: number;
-  completedWithTimeBox: boolean;
-  hasUrl: boolean;
-  tags: string[];
-}
-
-interface SummaryResult {
-  formalSummary: string;
-  personalSummary: string;
-}
-
-// Extract tags from HTML description
-function extractTags(html: string): string[] {
-  const tags: string[] = [];
-  const tagRegex = /<span[^>]*data-tag="([^"]+)"[^>]*>/g;
-  let match;
-
-  while ((match = tagRegex.exec(html)) !== null) {
-    tags.push(match[1]);
-  }
-
-  return tags;
-}
-
-// Check if description contains a URL
-function hasUrl(html: string): boolean {
-  return html.includes('data-url="') || html.includes('href="');
-}
-
-async function generateWeekSummaryWithOpenAI(
-  apiKey: string,
-  completedTodos: CompletedTodo[],
-  week: number,
-  year: number
-): Promise<SummaryResult> {
-  // Get unique dates with activity
-  const activeDates = new Set(completedTodos.map(todo => todo.date));
-
-  // Determine which weekdays had activity
-  const activitySummary = completedTodos.length > 0
-    ? `Active days: ${Array.from(activeDates).sort().join(", ")}`
-    : "No activity this week";
-
-  // Format todos with rich metadata for AI analysis
-  const todosText = completedTodos
-    .map((todo) => {
-      const timeToComplete = new Date(todo.completedAt).getTime() - new Date(todo.createdAt).getTime();
-      const daysToComplete = Math.round(timeToComplete / (1000 * 60 * 60 * 24));
-      const parts = [
-        `- ${todo.date}: ${todo.text}`,
-        todo.tags.length > 0 ? `[tags: ${todo.tags.join(", ")}]` : "",
-        todo.moveCount > 0 ? `[moved ${todo.moveCount} times]` : "",
-        daysToComplete > 0 ? `[${daysToComplete}d to complete]` : "[same-day]",
-        todo.completedWithTimeBox ? "[focused session]" : "",
-        todo.hasUrl ? "[has link]" : "",
-      ];
-      return parts.filter(Boolean).join(" ");
-    })
-    .join("\n");
-
-  const prompt = `Given these completed todos from Week ${week}, ${year}, analyze the underlying patterns and context:
-
-${activitySummary}
-
-${todosText}
-
-CONTEXT METADATA GUIDE:
-- Tags indicate work categories (e.g., bug, feature, docs, urgent)
-- Move count shows deprioritization/uncertainty (high moves = shifting priorities)
-- Time to completion reveals task complexity and procrastination patterns
-- "Same-day" tasks suggest quick wins or reactive work
-- "Focused session" indicates intentional time-boxing and deep work
-- Links suggest external dependencies or reference work
-- Missing dates in the week (Mon-Fri) indicate days with no activity - likely time off, meetings, or non-work focus
-
-ANALYSIS INSTRUCTIONS:
-Generate two summaries as JSON that extract insights from these patterns:
-
-1. FORMAL SUMMARY (formalSummary):
-   - Write in FIRST PERSON ("I...") as if the user wrote it themselves
-   - Abstract people/customers and focus on types of tasks completed
-   - Identify thematic patterns from tags (e.g., "I focused on bug fixes this week", "I worked on feature development")
-   - Note work style indicators (quick wins vs. long-running tasks, focused vs. reactive work)
-   - Mention priority shifts if high move counts are present
-   - If 2+ weekdays have no activity, acknowledge light week (e.g., "Lighter week with time off mid-week" or "Focused work on Monday and Friday")
-   - Use a reflective, matter-of-fact tone
-   - Keep to 2-3 sentences
-   - Example: "I tackled several urgent bugs and refactored core modules. The work was focused and methodical, with most tasks completed same-day."
-
-2. PERSONAL SUMMARY (personalSummary):
-   - Write in SECOND PERSON ("You...") with encouraging, personalized insights
-   - Cheer the user on and celebrate their work patterns
-   - Acknowledge their strengths (e.g., "decisive execution" for low move counts, "adaptability" for high moves)
-   - Recognize focused work if present
-   - Use a warm, motivational tone
-   - Keep to 2-3 sentences
-   - Example: "You demonstrated strong focus this week with decisive execution. Your ability to balance quick wins with complex refactoring shows great prioritization skills!"
-
-Return format: {"formalSummary": "...", "personalSummary": "..."}`;
-
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an assistant that generates concise, meaningful summaries of completed work. Return only valid JSON.",
-        },
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-      temperature: 0.7,
-      response_format: { type: "json_object" },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-
-  if (!content) {
-    throw new Error("No response from OpenAI");
-  }
-
-  return JSON.parse(content) as SummaryResult;
-}
-
-// Helper to get date range for a week
-function getWeekDateRange(year: number, week: number): { start: Date; end: Date } {
-  let weekNumber = 0;
-  let weekStart: Date | null = null;
-  let weekEnd: Date | null = null;
-
-  for (let m = 0; m < 12; m++) {
-    const daysInMonth = new Date(year, m + 1, 0).getDate();
-
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(year, m, day);
-      const dayOfWeek = currentDate.getDay();
-
-      // Skip weekends
-      if (dayOfWeek === 0 || dayOfWeek === 6) continue;
-
-      // Start of new week (Monday)
-      if (dayOfWeek === 1) {
-        weekNumber++;
-        if (weekNumber === week) {
-          weekStart = new Date(currentDate);
-        }
-      }
-
-      // If we're in the target week and it's Friday, this is the end
-      if (weekNumber === week && dayOfWeek === 5) {
-        weekEnd = new Date(currentDate);
-        return { start: weekStart!, end: weekEnd };
-      }
-
-      // If we've moved past the target week, return what we have
-      if (weekNumber > week && weekStart) {
-        weekEnd = new Date(year, m, day - 1); // Previous day was the end
-        return { start: weekStart, end: weekEnd };
-      }
-    }
-  }
-
-  // If we didn't find a Friday (partial week at year end), use last weekday
-  if (weekStart && !weekEnd) {
-    weekEnd = new Date(year, 11, 31); // Last day of year
-  }
-
-  return { start: weekStart!, end: weekEnd! };
-}
 
 export const generateWeekSummary = onCall(
   { secrets: [OPENAI_API_KEY] },
@@ -1097,25 +914,15 @@ export const generateWeekSummary = onCall(
         weekEnd: weekEnd.toISOString().split("T")[0],
       });
 
-      // Query todos collection for completed todos in this date range
-      // Note: We query by the todo's date field (which day it's assigned to),
-      // not by completedAt (when it was marked complete)
+      // Query completed todos using shared module
       logger.info("Querying todos collection...");
-      const todosSnapshot = await db
-        .collection("todos")
-        .where("userId", "==", userId)
-        .where("completed", "==", true)
-        .where("date", ">=", Timestamp.fromDate(weekStart))
-        .where("date", "<=", Timestamp.fromDate(new Date(weekEnd.getTime() + 86400000 - 1)))
-        .orderBy("date", "asc")
-        .orderBy("position", "asc")
-        .get();
+      const completedTodos = await getCompletedTodosForWeek(db, userId, week, targetYear);
 
       logger.info("Todos query completed", {
-        found: todosSnapshot.size,
+        found: completedTodos.length,
       });
 
-      if (todosSnapshot.empty) {
+      if (completedTodos.length === 0) {
         logger.warn("No completed todos found for this week");
         throw new HttpsError(
           "not-found",
@@ -1123,37 +930,14 @@ export const generateWeekSummary = onCall(
         );
       }
 
-      // Build activity data structure with enriched metadata
-      const completedTodos: CompletedTodo[] = [];
-
-      todosSnapshot.docs.forEach((doc) => {
-        const todo = doc.data();
-        const todoDate = todo.date.toDate();
-        const description = todo.description || "";
-
-        completedTodos.push({
-          date: todoDate.toISOString().split("T")[0],
-          text: description,
-          createdAt: todo.createdAt?.toDate().toISOString() || todoDate.toISOString(),
-          completedAt: todo.completedAt?.toDate().toISOString() || todo.updatedAt?.toDate().toISOString() || todoDate.toISOString(),
-          moveCount: todo.moveCount || 0,
-          completedWithTimeBox: todo.completedWithTimeBox || false,
-          hasUrl: hasUrl(description),
-          tags: extractTags(description),
-        });
-      });
-
-      // Todos are already sorted by date and position from the query
-      // (grouped by day, ordered by user's arrangement within each day)
-
       logger.info("Built activity data", {
         totalTodos: completedTodos.length,
         sampleTodos: completedTodos.slice(0, 3),
       });
 
-      // Generate AI summaries
+      // Generate AI summaries using shared sync module
       logger.info("Calling OpenAI API...");
-      const result = await generateWeekSummaryWithOpenAI(
+      const result = await generateSummarySync(
         OPENAI_API_KEY.value(),
         completedTodos,
         week,
@@ -1206,6 +990,15 @@ export const generateWeekSummary = onCall(
     }
   }
 );
+
+// ============================================================================
+// Scheduled AI Summary Generation
+// ============================================================================
+
+export { generateWeeklySummaries } from "./generateWeeklySummaries.js";
+export { triggerWeeklySummaries } from "./triggerWeeklySummaries.js";
+export { checkBatchStatus } from "./checkBatchStatus.js";
+export { consumeBatch } from "./consumeBatch.js";
 
 // ============================================================================
 // Feedback Function

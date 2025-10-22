@@ -1,0 +1,199 @@
+import { useState } from "react";
+import { signOut } from "firebase/auth";
+import { useAuthentication } from "../hooks/useAuthentication";
+import { auth, type Profile } from "../firebase";
+import { useTheme } from "../hooks/useTheme";
+import { useFontSize } from "../hooks/useFontSize";
+import { useOnboarding } from "../contexts/OnboardingContext";
+import { openBillingPortal } from "../firebase/subscriptions";
+import { trackMenuItemClicked } from "../firebase/analytics";
+import UpdateNotification from "../UpdateNotification";
+import DownloadAppDialog from "../DownloadAppDialog";
+import FeedbackDialog from "../FeedbackDialog";
+import Logo from "./Logo";
+import Navigation from "./Navigation";
+import YearNavigation from "./YearNavigation";
+import TutorialButton from "./TutorialButton";
+import SubscriptionNotices from "./SubscriptionNotices";
+import OldTodosButton from "./OldTodosButton";
+import UserMenu from "./UserMenu";
+
+function getDownloadUrl(): string | null {
+  if (window.navigator.userAgent.includes("Electron")) {
+    return null;
+  }
+
+  const platform = window.navigator.platform.toLowerCase();
+  const userAgent = window.navigator.userAgent.toLowerCase();
+
+  if (platform.includes("mac") || userAgent.includes("mac")) {
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-mac-arm64.dmg";
+  }
+
+  if (platform.includes("win") || userAgent.includes("windows")) {
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-Setup-x64.exe";
+  }
+
+  if (platform.includes("linux") || userAgent.includes("linux")) {
+    return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-linux-x64.AppImage";
+  }
+
+  return "https://github.com/christianalfoni/divergent-todos/releases/latest/download/Divergent-Todos-mac-arm64.dmg";
+}
+
+interface TopBarProps {
+  oldTodoCount?: number;
+  onMoveOldTodos?: () => void;
+  profile?: Profile | null;
+  onOpenSubscription?: () => void;
+  showTutorial?: boolean;
+  onOpenOnboarding?: () => void;
+  onOpenAuthModal?: () => void;
+  currentView?: "calendar" | "activity";
+  onViewChange?: (view: "calendar" | "activity") => void;
+  activityYear?: number;
+  onActivityYearChange?: (year: number) => void;
+}
+
+export default function TopBar({
+  oldTodoCount = 0,
+  onMoveOldTodos,
+  profile,
+  onOpenSubscription,
+  showTutorial,
+  onOpenOnboarding,
+  onOpenAuthModal,
+  currentView = "calendar",
+  onViewChange,
+  activityYear,
+  onActivityYearChange,
+}: TopBarProps) {
+  const [authentication] = useAuthentication();
+  const { theme, setTheme } = useTheme();
+  const { fontSize, setFontSize } = useFontSize();
+  const downloadUrl = getDownloadUrl();
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+  const { isOnboarding, currentStep } = useOnboarding();
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+
+  const handleSignOut = () => {
+    trackMenuItemClicked("sign_out");
+    signOut(auth);
+  };
+
+  const handleSubscriptionClick = () => {
+    trackMenuItemClicked("subscription");
+    onOpenSubscription?.();
+  };
+
+  const handleDownloadAppClick = () => {
+    trackMenuItemClicked("download_app");
+    setIsDownloadDialogOpen(true);
+  };
+
+  const handleFeedbackClick = () => {
+    trackMenuItemClicked("feedback");
+    setIsFeedbackDialogOpen(true);
+  };
+
+  const handleCreateAccountClick = () => {
+    trackMenuItemClicked("create_account");
+    onOpenAuthModal?.();
+  };
+
+  const handleOpenBillingPortal = async () => {
+    setIsOpeningPortal(true);
+    try {
+      await openBillingPortal({ returnUrl: window.location.origin });
+    } catch (err) {
+      console.error("Failed to open billing portal:", err);
+      setIsOpeningPortal(false);
+    }
+  };
+
+  return (
+    <>
+      <nav className="border-b bg-[var(--color-bg-nav)] border-[var(--color-border-primary)]">
+        <div className="px-4">
+          <div className="relative flex h-16 justify-between">
+            <div className="flex items-center gap-6">
+              <Logo />
+            </div>
+
+            {/* Activity Year Navigation - Centered */}
+            {authentication.user &&
+              currentView === "activity" &&
+              activityYear &&
+              onActivityYearChange && (
+                <YearNavigation year={activityYear} onYearChange={onActivityYearChange} />
+              )}
+
+            <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
+              {authentication.user && onViewChange && (
+                <Navigation
+                  currentView={currentView}
+                  onViewChange={onViewChange}
+                  profile={profile}
+                  onOpenSubscription={onOpenSubscription}
+                />
+              )}
+              {authentication.user && <UpdateNotification />}
+
+              {authentication.user && showTutorial && onOpenOnboarding && (
+                <TutorialButton
+                  isOnboarding={isOnboarding}
+                  currentStep={currentStep}
+                  onOpenOnboarding={onOpenOnboarding}
+                />
+              )}
+
+              {authentication.user && (
+                <SubscriptionNotices
+                  profile={profile}
+                  onOpenSubscription={onOpenSubscription}
+                  onOpenBillingPortal={handleOpenBillingPortal}
+                  isOpeningPortal={isOpeningPortal}
+                />
+              )}
+
+              {authentication.user && onMoveOldTodos && (
+                <OldTodosButton count={oldTodoCount} onMoveOldTodos={onMoveOldTodos} />
+              )}
+
+              {authentication.user && (
+                <UserMenu
+                  user={authentication.user}
+                  theme={theme}
+                  fontSize={fontSize}
+                  downloadUrl={downloadUrl}
+                  onSignOut={handleSignOut}
+                  onSubscriptionClick={handleSubscriptionClick}
+                  onDownloadAppClick={handleDownloadAppClick}
+                  onThemeClick={setTheme}
+                  onFontSizeClick={setFontSize}
+                  onGitHubClick={() => trackMenuItemClicked("open_source_code")}
+                  onFeedbackClick={handleFeedbackClick}
+                  onCreateAccountClick={handleCreateAccountClick}
+                  onOpenOnboarding={onOpenOnboarding}
+                  onMenuItemClick={trackMenuItemClicked}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <DownloadAppDialog
+        open={isDownloadDialogOpen}
+        onClose={() => setIsDownloadDialogOpen(false)}
+        downloadUrl={downloadUrl}
+      />
+
+      <FeedbackDialog
+        open={isFeedbackDialogOpen}
+        onClose={() => setIsFeedbackDialogOpen(false)}
+      />
+    </>
+  );
+}
