@@ -682,7 +682,6 @@
   border: none;
   font-size: 1.5rem;
   color: var(--color-text-secondary);
-  cursor: pointer;
   padding: 0;
   width: 32px;
   height: 32px;
@@ -807,7 +806,13 @@
   background-color: var(--color-bg-dialog-footer);
   border-top: 1px solid var(--color-border-primary);
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* When only one button, center it */
+.monday-dialog-actions:has(.monday-dialog-button:only-child) {
+  justify-content: center;
 }
 
 .monday-dialog-button {
@@ -818,10 +823,67 @@
   padding: 0.625rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
-  cursor: pointer;
   transition: background-color 0.15s ease-in-out;
+  min-width: 150px;
 }
 
-.monday-dialog-button:hover {
+/* Only grow buttons when there are multiple */
+.monday-dialog-actions:not(:has(.monday-dialog-button:only-child)) .monday-dialog-button {
+  flex: 1;
+}
+
+.monday-dialog-button:hover:not(:disabled) {
   background-color: var(--color-accent-hover);
+}
+
+.monday-dialog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Flat text button for destructive actions (cancel subscription) */
+.monday-dialog-button-flat {
+  background-color: transparent;
+  color: rgb(220 38 38);
+  box-shadow: none;
+  padding: 0.625rem 0.5rem;
+}
+
+.monday-dialog-button-flat:hover:not(:disabled) {
+  background-color: rgb(220 38 38 / 0.1);
+  color: rgb(185 28 28);
+}
+
+/* Primary white button style (like download app) */
+.monday-dialog-button-primary {
+  background-color: white;
+  color: rgb(17 24 39);
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  border: 1px solid rgb(209 213 219);
+}
+
+.monday-dialog-button-primary:hover:not(:disabled) {
+  background-color: rgb(249 250 251);
+}
+
+@media (prefers-color-scheme: dark) {
+  .monday-dialog-button-flat {
+    color: rgb(248 113 113);
+  }
+
+  .monday-dialog-button-flat:hover:not(:disabled) {
+    background-color: rgb(248 113 113 / 0.1);
+    color: rgb(239 68 68);
+  }
+
+  .monday-dialog-button-primary {
+    background-color: rgb(255 255 255 / 0.1);
+    color: white;
+    box-shadow: none;
+    border: 1px solid rgb(255 255 255 / 0.05);
+  }
+
+  .monday-dialog-button-primary:hover:not(:disabled) {
+    background-color: rgb(255 255 255 / 0.2);
+  }
 }

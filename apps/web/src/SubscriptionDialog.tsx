@@ -1,11 +1,4 @@
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-} from "@headlessui/react";
-import { BanknotesIcon } from "@heroicons/react/24/outline";
 import { type User } from "firebase/auth";
 import { type Profile } from "./firebase/types/profile";
 import { useLinkAnonymousAccount } from "./hooks/useLinkAnonymousAccount";
@@ -28,16 +21,38 @@ interface SubscriptionDialogProps {
   profile: Profile | null;
 }
 
-export default function SubscriptionDialog({ open, onClose, user, profile }: SubscriptionDialogProps) {
+export default function SubscriptionDialog({ open, onClose, user: _user, profile }: SubscriptionDialogProps) {
   const [{ isLinking, error: linkError }, linkAccount] = useLinkAnonymousAccount();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const isAnonymous = user?.isAnonymous ?? true;
+  const isAnonymous = _user?.isAnonymous ?? true;
   const subscriptionStatus = profile?.subscription?.status;
   const cancelAtPeriodEnd = profile?.subscription?.cancelAtPeriodEnd ?? false;
   const currentPeriodEnd = profile?.subscription?.currentPeriodEnd;
+
+  // Animation effect
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => setIsVisible(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setIsVisible(false);
+    }
+  }, [open]);
+
+  // Keyboard handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && open) {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
 
   // Listen for window close events in Electron
   useEffect(() => {
@@ -61,6 +76,11 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
       setIsWaitingForWebhook(false);
     }
   }, [isWaitingForWebhook, subscriptionStatus]);
+
+  const handleClose = () => {
+    setIsVisible(false);
+    setTimeout(onClose, 200); // Wait for fade-out animation
+  };
 
   const handleOpenBillingPortal = async () => {
     setIsProcessing(true);
@@ -138,7 +158,6 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
   let primaryButtonText: string;
   let primaryButtonAction: () => void;
   let isPrimaryButtonDisabled = false;
-  let showSecondaryButton = false;
   let secondaryButtonText = "";
   let secondaryButtonAction: () => void = () => {};
 
@@ -156,9 +175,9 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
     primaryButtonAction = () => linkAccount(undefined);
     isPrimaryButtonDisabled = isLinking;
   } else if (!subscriptionStatus || subscriptionStatus === "incomplete") {
-    title = "Subscribe for unlimited todos";
-    description = "Get unlimited todos for just $2/month. Continue adding todos without limits.";
-    primaryButtonText = isProcessing ? "Starting..." : "Subscribe - $2/month";
+    title = "Subscribe to Divergent Todos";
+    description = "The only plan for everyone, forever";
+    primaryButtonText = isProcessing ? "Starting..." : "Subscribe";
     primaryButtonAction = handleStartSubscription;
     isPrimaryButtonDisabled = isProcessing;
   } else if (subscriptionStatus === "active") {
@@ -168,7 +187,6 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
       primaryButtonText = isProcessing ? "Resuming..." : "Resume subscription";
       primaryButtonAction = handleResumeSubscription;
       isPrimaryButtonDisabled = isProcessing;
-      showSecondaryButton = true;
       secondaryButtonText = "Manage billing";
       secondaryButtonAction = handleOpenBillingPortal;
     } else {
@@ -177,7 +195,6 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
       primaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
       primaryButtonAction = handleStopSubscription;
       isPrimaryButtonDisabled = isProcessing;
-      showSecondaryButton = true;
       secondaryButtonText = "Manage billing";
       secondaryButtonAction = handleOpenBillingPortal;
     }
@@ -187,7 +204,6 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
     primaryButtonText = "Update payment";
     primaryButtonAction = handleOpenBillingPortal;
     isPrimaryButtonDisabled = isProcessing;
-    showSecondaryButton = true;
     secondaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
     secondaryButtonAction = handleStopSubscription;
   } else if (subscriptionStatus === "unpaid") {
@@ -196,7 +212,6 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
     primaryButtonText = "Update payment";
     primaryButtonAction = handleOpenBillingPortal;
     isPrimaryButtonDisabled = isProcessing;
-    showSecondaryButton = true;
     secondaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
     secondaryButtonAction = handleStopSubscription;
   } else if (subscriptionStatus === "canceled") {
@@ -214,72 +229,160 @@ export default function SubscriptionDialog({ open, onClose, user, profile }: Sub
     isPrimaryButtonDisabled = isProcessing;
   }
 
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      className="relative z-10"
-    >
-      <DialogBackdrop
-        transition
-        className="fixed inset-0 bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
-      />
+  if (!open) return null;
 
-      <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-        <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-          <DialogPanel
-            transition
-            className="relative transform overflow-hidden rounded-lg bg-[var(--color-bg-primary)] px-4 pt-5 pb-4 text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-sm sm:p-6 data-closed:sm:translate-y-0 data-closed:sm:scale-95 outline -outline-offset-1 outline-[var(--color-outline)]"
+  return (
+    <div
+      className={`monday-dialog-overlay ${isVisible ? 'visible' : ''}`}
+      onClick={handleClose}
+    >
+      <div
+        className={`monday-dialog ${isVisible ? 'visible' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="monday-dialog-header">
+          <h2>
+            <svg className="monday-dialog-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+            </svg>
+            {title}
+          </h2>
+          <button
+            className="monday-dialog-close"
+            onClick={handleClose}
+            aria-label="Close dialog"
           >
-            <div>
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-[var(--color-accent-light)]">
-                <BanknotesIcon
-                  aria-hidden="true"
-                  className="size-6 text-[var(--color-accent-text)]"
-                />
+            ×
+          </button>
+        </div>
+        <div className="monday-dialog-content">
+          <p className="text-sm text-[var(--color-text-secondary)] text-center">
+            {description}
+          </p>
+
+          {/* Show pricing and features for subscription state */}
+          {(!subscriptionStatus || subscriptionStatus === "incomplete") && (
+            <>
+              <div className="mt-8 flex items-baseline justify-center gap-x-2">
+                <span className="text-5xl font-semibold tracking-tight text-[var(--color-text-primary)]">
+                  $2
+                </span>
+                <span className="text-sm font-semibold text-[var(--color-text-secondary)]">/month</span>
               </div>
-              <div className="mt-3 text-center sm:mt-5">
-                <DialogTitle
-                  as="h3"
-                  className="text-base font-semibold text-[var(--color-text-primary)]"
-                >
-                  {title}
-                </DialogTitle>
-                <div className="mt-2">
-                  <p className="text-sm text-[var(--color-text-secondary)]">
-                    {description}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 sm:mt-6 flex flex-col gap-2">
+
+              <ul className="mt-8 space-y-3 text-sm text-[var(--color-text-primary)]">
+                <li className="flex gap-x-3">
+                  <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Unlimited todos
+                </li>
+                <li className="flex gap-x-3">
+                  <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Weekly activity tracking
+                </li>
+                <li className="flex gap-x-3">
+                  <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  AI-generated weekly summaries
+                </li>
+                <li className="flex gap-x-3">
+                  <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Hopefully, a stronger sense of owning your attention
+                </li>
+              </ul>
+            </>
+          )}
+
+          {(error || linkError) && (
+            <p className="mt-4 text-sm text-[var(--color-error-text)]">
+              {error || linkError}
+            </p>
+          )}
+        </div>
+        <div className="monday-dialog-actions">
+          {/* Show buttons in different layouts based on the state */}
+          {/* When active (not canceling): Cancel (left, flat) + Manage Billing (right, primary) */}
+          {subscriptionStatus === "active" && !cancelAtPeriodEnd && (
+            <>
               <button
                 type="button"
                 onClick={primaryButtonAction}
                 disabled={isPrimaryButtonDisabled}
-                className="inline-flex w-full justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 "
+                className="monday-dialog-button monday-dialog-button-flat"
               >
                 {primaryButtonText}
               </button>
-              {showSecondaryButton && (
-                <button
-                  type="button"
-                  onClick={secondaryButtonAction}
-                  disabled={isProcessing}
-                  className="inline-flex w-full justify-center rounded-md border border-[var(--color-border-primary)] bg-[var(--color-bg-primary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] shadow-xs hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 "
-                >
-                  {secondaryButtonText}
-                </button>
-              )}
-              {(error || linkError) && (
-                <p className="mt-2 text-sm text-[var(--color-error-text)]">
-                  {error || linkError}
-                </p>
-              )}
-            </div>
-          </DialogPanel>
+              <button
+                type="button"
+                onClick={secondaryButtonAction}
+                disabled={isProcessing}
+                className="monday-dialog-button monday-dialog-button-primary"
+              >
+                {secondaryButtonText}
+              </button>
+            </>
+          )}
+          {/* When active (canceling): Resume (left) + Manage Billing (right, primary) */}
+          {subscriptionStatus === "active" && cancelAtPeriodEnd && (
+            <>
+              <button
+                type="button"
+                onClick={primaryButtonAction}
+                disabled={isPrimaryButtonDisabled}
+                className="monday-dialog-button"
+              >
+                {primaryButtonText}
+              </button>
+              <button
+                type="button"
+                onClick={secondaryButtonAction}
+                disabled={isProcessing}
+                className="monday-dialog-button monday-dialog-button-primary"
+              >
+                {secondaryButtonText}
+              </button>
+            </>
+          )}
+          {/* When past_due or unpaid: Update Payment (left, primary) + Cancel (right, flat) */}
+          {(subscriptionStatus === "past_due" || subscriptionStatus === "unpaid") && (
+            <>
+              <button
+                type="button"
+                onClick={primaryButtonAction}
+                disabled={isPrimaryButtonDisabled}
+                className="monday-dialog-button monday-dialog-button-primary"
+              >
+                {primaryButtonText}
+              </button>
+              <button
+                type="button"
+                onClick={secondaryButtonAction}
+                disabled={isProcessing}
+                className="monday-dialog-button monday-dialog-button-flat"
+              >
+                {secondaryButtonText}
+              </button>
+            </>
+          )}
+          {/* For other states (sign in, subscribe, etc.): just primary button centered */}
+          {subscriptionStatus !== "active" && subscriptionStatus !== "past_due" && subscriptionStatus !== "unpaid" && (
+            <button
+              type="button"
+              onClick={primaryButtonAction}
+              disabled={isPrimaryButtonDisabled}
+              className="monday-dialog-button"
+            >
+              {primaryButtonText}
+            </button>
+          )}
         </div>
       </div>
-    </Dialog>
+    </div>
   );
 }
