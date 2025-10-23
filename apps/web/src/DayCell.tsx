@@ -53,7 +53,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
       editorRef.current?.clear()
       setNewTodoHtml('')
       setIsAddingTodo(false)
-    } else if (e.key === 'Enter') {
+    } else if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       // Get the current HTML directly from the editor to include any just-converted pills/chips
       const currentHtml = editorRef.current?.getHtml() || ''
