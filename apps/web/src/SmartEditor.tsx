@@ -562,6 +562,9 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           font-size: 0.75rem;
           font-weight: 500;
         }
+        .line-through .tag-pill {
+          text-decoration: line-through;
+        }
         .tag-pill-gray {
           background: rgb(243 244 246);
           color: rgb(75 85 99);
