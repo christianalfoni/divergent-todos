@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
 import TodosLoadingPlaceholder from './TodosLoadingPlaceholder'
-import SmartLinksEditor, { type SmartLinksEditorRef } from './SmartLinksEditor'
+import SmartEditor, { type SmartEditorRef } from './SmartEditor'
 import { useOnboarding } from './contexts/OnboardingContext'
 import type { Todo } from './App'
 
@@ -25,7 +25,7 @@ interface DayCellProps {
 export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
-  const editorRef = useRef<SmartLinksEditorRef>(null)
+  const editorRef = useRef<SmartEditorRef>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { isOnboarding } = useOnboarding()
   const dayId = date.toISOString().split('T')[0]
@@ -35,6 +35,14 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
 
   // During onboarding, allow adding todos on any day
   const canAddTodo = isOnboarding || !isPastDay
+
+  // Extract all tags from current todos for autocomplete
+  const availableTags = todos.flatMap(todo => {
+    const temp = document.createElement('div')
+    temp.innerHTML = todo.text
+    const tagElements = temp.querySelectorAll('[data-tag]')
+    return Array.from(tagElements).map(el => (el as HTMLElement).dataset.tag || '')
+  }).filter(Boolean)
 
   const { setNodeRef } = useDroppable({
     id: dayId,
@@ -124,6 +132,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={onOpenTimeBox}
+                availableTags={availableTags}
               />
             ))}
           </SortableContext>
@@ -207,7 +216,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
                 </div>
               </div>
               <div className="flex-1 min-w-0 text-xs/5 text-[var(--color-text-primary)] empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]">
-                <SmartLinksEditor
+                <SmartEditor
                   ref={editorRef}
                   html={newTodoHtml}
                   editing={true}
@@ -216,6 +225,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
                   autoFocus={true}
                   onKeyDown={handleKeyDown}
                   onBlur={handleBlur}
+                  availableTags={availableTags}
                 />
               </div>
             </div>

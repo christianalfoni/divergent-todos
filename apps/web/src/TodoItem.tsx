@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import SmartLinksEditor, { type SmartLinksEditorRef } from "./SmartLinksEditor";
+import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import type { Todo } from "./App";
 
 interface TodoItemProps {
@@ -10,6 +10,7 @@ interface TodoItemProps {
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenTimeBox?: (todo: Todo) => void;
+  availableTags?: string[];
 }
 
 // Helper function to check if HTML content is empty
@@ -27,13 +28,14 @@ export default function TodoItem({
   onUpdateTodo,
   onDeleteTodo,
   onOpenTimeBox,
+  availableTags = [],
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
   const [isPressed, setIsPressed] = useState(false);
   const [dragEnabled, setDragEnabled] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<SmartLinksEditorRef>(null);
+  const editorRef = useRef<SmartEditorRef>(null);
   const originalHtmlRef = useRef<string>(todo.text);
   const lastClickTimeRef = useRef<number>(0);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -84,10 +86,13 @@ export default function TodoItem({
       editorRef.current?.setHtml(originalHtmlRef.current);
       setEditingHtml(originalHtmlRef.current);
       setIsEditing(false);
-    } else if (e.key === "Enter") {
+    } else if (e.key === "Enter" && !e.shiftKey) {
+      // Only save on Enter without Shift (SHIFT + ENTER allows newlines)
       e.preventDefault();
-      if (!isHtmlEmpty(editingHtml)) {
-        onUpdateTodo?.(todo.id, editingHtml);
+      // Get the latest HTML from the editor (includes any tag conversions that just happened)
+      const currentHtml = editorRef.current?.getHtml() || editingHtml;
+      if (!isHtmlEmpty(currentHtml)) {
+        onUpdateTodo?.(todo.id, currentHtml);
         setIsEditing(false);
       } else {
         // Delete todo if content is empty
@@ -171,14 +176,15 @@ export default function TodoItem({
               </svg>
             </div>
           </div>
-          <div className="flex-1 min-w-0 text-xs/5 font-semibold text-[var(--color-text-primary)]">
-            <SmartLinksEditor
+          <div className="flex-1 min-w-0 text-xs/5 text-[var(--color-text-primary)]">
+            <SmartEditor
               ref={editorRef}
               html={editingHtml}
               editing={true}
               onChange={setEditingHtml}
               autoFocus={true}
               onKeyDown={handleKeyDown}
+              availableTags={availableTags}
             />
           </div>
         </div>
@@ -233,13 +239,13 @@ export default function TodoItem({
           </div>
         </div>
         <div
-          className={`flex-1 min-w-0 text-xs/5 font-semibold select-none ${
+          className={`flex-1 min-w-0 text-xs/5 select-none ${
             todo.completed
               ? "line-through text-[var(--color-text-secondary)]"
-              : "text-[var(--color-accent-text)]"
+              : "text-[var(--color-text-primary)]"
           }`}
         >
-          <SmartLinksEditor html={todo.text} editing={false} />
+          <SmartEditor html={todo.text} editing={false} />
         </div>
       </div>
     </div>

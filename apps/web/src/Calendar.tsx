@@ -4,6 +4,7 @@ import DayCell from "./DayCell";
 import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
 import { useAuthentication } from "./hooks/useAuthentication";
+import { useAppFocus } from "./hooks/useAppFocus";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -114,25 +115,20 @@ export default function Calendar({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [viewMode, setViewMode, onboarding]);
 
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // Force re-render when tab becomes visible
-        setVisibilityTrigger((prev) => prev + 1);
+  // Handle app focus when day changes
+  const handleDayChange = useCallback(() => {
+    // Force re-render when day changes
+    setVisibilityTrigger((prev) => prev + 1);
 
-        // Check if it's weekend, user is authenticated, and user is onboarded
-        if (isWeekend() && authentication.user && profile?.isOnboarded) {
-          setShowWeekendDialog(true);
-        } else {
-          setShowWeekendDialog(false);
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () =>
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // Check if it's weekend, user is authenticated, and user is onboarded
+    if (isWeekend() && authentication.user && profile?.isOnboarded) {
+      setShowWeekendDialog(true);
+    } else {
+      setShowWeekendDialog(false);
+    }
   }, [authentication.user, profile?.isOnboarded]);
+
+  useAppFocus(handleDayChange);
 
   // Check weekend status on mount and when authentication/onboarding changes
   useEffect(() => {

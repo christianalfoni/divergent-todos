@@ -152,6 +152,57 @@ Configuration uses public Firebase config (safe for client-side).
    - Uploads installers and update metadata files
 4. Existing desktop app users see update notification on next launch
 
+## Activity Tracking
+
+### Week Numbering System
+The app uses **sequential week numbering** that increments throughout the entire year:
+
+- **Week numbers range from 1-52** (or 53 in rare cases) for the entire year
+- **Week 1** = the first Monday-Friday in January (may be partial if Jan 1 is not Monday)
+- **Week 2** = the second Monday-Friday, etc.
+- **Weeks start on Monday** and end on Friday (weekends excluded)
+- **This is NOT ISO week numbering** - weeks align with calendar year boundaries
+- Activity data is stored per week with 5-day arrays (Mon-Fri)
+
+**Implementation**: Uses `getSequentialWeek()` utility function in `apps/web/src/utils/activity.ts`
+
+**Example**: 2025
+- Week 1 = Wed Jan 1 - Fri Jan 3, 2025 (partial week, 3 days)
+- Week 2 = Mon Jan 6 - Fri Jan 10, 2025 (full week)
+- Week 3 = Mon Jan 13 - Fri Jan 17, 2025
+- ...
+- Week 42 = Mon Oct 20 - Fri Oct 24, 2025
+- ...
+- Week 52 = Mon Dec 22 - Fri Dec 26, 2025
+- Week 53 = Mon Dec 29 - Wed Dec 31, 2025 (partial week, 3 days)
+
+**Current week** (Oct 22, 2025) = **Week 42**
+
+**Firestore Schema**:
+```typescript
+activity/{docId}
+  userId: string
+  year: number
+  week: number          // ISO week number (1-53) for the entire year
+  month: number         // Month number (0-11) for grouping
+  dailyCounts: number[] // [Mon, Tue, Wed, Thu, Fri] - completed todo counts
+  completedTodos: Array<{
+    date: string        // ISO date string
+    text: string        // Todo text
+    url?: string        // Optional URL
+  }>
+  aiSummary?: string           // Formal summary for heatmap view
+  aiPersonalSummary?: string   // Personal summary for motivation
+  aiSummaryGeneratedAt?: Timestamp
+```
+
+### AI Summaries
+Weekly activity summaries are generated using OpenAI GPT-4o-mini:
+- **Formal Summary**: Abstract, task-focused for activity heatmap tooltips
+- **Personal Summary**: Encouraging, personalized for Monday motivation popups
+- Generated via admin script: `admin.scripts.generateWeekSummary(userId, week, year)`
+- Only accessible to admin UID: `iaSsqsqb99Zemast8LN3dGCxB7o2`
+
 ## Development Notes
 
 - Use **pnpm** for all package management (enforced by packageManager field)

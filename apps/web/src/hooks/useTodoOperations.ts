@@ -62,6 +62,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
       // Track todo creation
       const hasUrl = todo.text.includes('data-url="');
+      const hasTag = todo.text.includes('data-tag="');
       trackTodoCreated({
         hasUrl,
         isOnboarding: onboarding.isOnboarding,
@@ -71,6 +72,8 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       if (onboarding.isOnboarding) {
         if (hasUrl) {
           onboarding.notifyTodoAddedWithUrl();
+        } else if (hasTag) {
+          onboarding.notifyTodoAddedWithTag();
         } else {
           onboarding.notifyTodoAdded();
         }
@@ -84,20 +87,24 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       const todo = firebaseTodos.find((t) => t.id === todoId);
       if (!todo) return;
 
+      const isCompleting = !todo.completed;
+
       // Play sound when completing a todo
-      if (!todo.completed) {
+      if (isCompleting) {
         hittingWood.play();
       }
 
+      // Update Firestore - scheduled function will read these later
       editTodo({
         id: todoId,
         description: todo.description,
-        completed: !todo.completed,
+        completed: isCompleting,
         date: todo.date,
+        completedAt: isCompleting ? new Date() : undefined,
       });
 
-      // Track todo completion/uncompletion
-      if (!todo.completed) {
+      // Track analytics
+      if (isCompleting) {
         trackTodoCompleted({ isOnboarding: onboarding.isOnboarding });
       } else {
         trackTodoUncompleted({ isOnboarding: onboarding.isOnboarding });
@@ -132,12 +139,17 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       // Convert string date to Date object
       const dateObj = new Date(newDate);
 
+      // Increment moveCount only when actually changing dates
+      const isChangingDate = todo.date.toISOString().split("T")[0] !== newDate;
+      const newMoveCount = isChangingDate ? (todo.moveCount || 0) + 1 : (todo.moveCount || 0);
+
       editTodo({
         id: todoId,
         description: todo.description,
         completed: todo.completed,
         date: dateObj,
         position: newPosition,
+        moveCount: newMoveCount,
       });
 
       // Track todo movement
@@ -214,12 +226,16 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           lastPosition = newPosition; // Update for next todo
           const dateObj = new Date(newDate);
 
+          // Increment moveCount since batch move always changes dates
+          const newMoveCount = (todo.moveCount || 0) + 1;
+
           return {
             id: todoId,
             description: todo.description,
             completed: todo.completed,
             date: dateObj,
             position: newPosition,
+            moveCount: newMoveCount,
           };
         })
         .filter((update): update is NonNullable<typeof update> => update !== null);

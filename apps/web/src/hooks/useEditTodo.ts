@@ -29,6 +29,9 @@ export function useEditTodo() {
   return pipe<
     Pick<Todo, "id" | "completed" | "date" | "description"> & {
       position?: string;
+      moveCount?: number;
+      completedAt?: Date;
+      completedWithTimeBox?: boolean;
     },
     EditTodoState
   >()
@@ -43,7 +46,7 @@ export function useEditTodo() {
       }));
       return updates;
     })
-    .async(({ id, description, completed, date, position }) => {
+    .async(({ id, description, completed, date, position, moveCount, completedAt, completedWithTimeBox }) => {
       const todoDoc = doc(todosCollection, id);
 
       if (!userRef.current) {
@@ -54,7 +57,10 @@ export function useEditTodo() {
         completed,
         description,
         date,
-        ...(position ? { position } : {}),
+        ...(position !== undefined ? { position } : {}),
+        ...(moveCount !== undefined ? { moveCount } : {}),
+        ...(completedAt !== undefined ? { completedAt } : {}),
+        ...(completedWithTimeBox !== undefined ? { completedWithTimeBox } : {}),
       });
     })
     .map(() => ({ isEditing: false, error: null }))

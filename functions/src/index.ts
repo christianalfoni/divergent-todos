@@ -871,6 +871,136 @@ export const stripeWebhook = onRequest(
 );
 
 // ============================================================================
+// AI Summary Generation
+// ============================================================================
+
+import {
+  getCompletedTodosForWeek,
+  getWeekDateRange,
+} from "./lib/activity-data.js";
+import { generateSummarySync } from "./lib/openai-sync.js";
+
+const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
+const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
+
+export const generateWeekSummary = onCall(
+  { secrets: [OPENAI_API_KEY] },
+  async (req) => {
+    const callerUid = req.auth?.uid;
+
+    // Check admin access
+    if (callerUid !== ADMIN_UID) {
+      logger.warn("Unauthorized generateWeekSummary attempt", { uid: callerUid });
+      throw new HttpsError("permission-denied", "Admin access required");
+    }
+
+    const { userId, week, year } = req.data;
+
+    if (!userId || !week) {
+      throw new HttpsError("invalid-argument", "userId and week are required");
+    }
+
+    const targetYear = year || new Date().getFullYear();
+
+    logger.info("Starting generateWeekSummary", { userId, week, year: targetYear });
+
+    try {
+      // Calculate date range for the week
+      const { start: weekStart, end: weekEnd } = getWeekDateRange(targetYear, week);
+
+      logger.info("Calculated week date range", {
+        week,
+        weekStart: weekStart.toISOString().split("T")[0],
+        weekEnd: weekEnd.toISOString().split("T")[0],
+      });
+
+      // Query completed todos using shared module
+      logger.info("Querying todos collection...");
+      const completedTodos = await getCompletedTodosForWeek(db, userId, week, targetYear);
+
+      logger.info("Todos query completed", {
+        found: completedTodos.length,
+      });
+
+      if (completedTodos.length === 0) {
+        logger.warn("No completed todos found for this week");
+        throw new HttpsError(
+          "not-found",
+          `No completed todos found for user ${userId}, week ${week}, year ${targetYear}`
+        );
+      }
+
+      logger.info("Built activity data", {
+        totalTodos: completedTodos.length,
+        sampleTodos: completedTodos.slice(0, 3),
+      });
+
+      // Generate AI summaries using shared sync module
+      logger.info("Calling OpenAI API...");
+      const result = await generateSummarySync(
+        OPENAI_API_KEY.value(),
+        completedTodos,
+        week,
+        targetYear
+      );
+
+      logger.info("AI summaries generated successfully", {
+        formalLength: result.formalSummary.length,
+        personalLength: result.personalSummary.length,
+      });
+
+      // Calculate month from week start date
+      const month = weekStart.getMonth();
+
+      // Create or update activity document
+      const activityDocId = `${userId}_${targetYear}_${week}`;
+      const activityRef = db.collection("activity").doc(activityDocId);
+
+      logger.info("Writing activity document...", { docId: activityDocId });
+
+      await activityRef.set({
+        userId,
+        year: targetYear,
+        week,
+        month,
+        completedTodos,
+        aiSummary: result.formalSummary,
+        aiPersonalSummary: result.personalSummary,
+        aiSummaryGeneratedAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      });
+
+      logger.info("Successfully created/updated activity document");
+
+      return {
+        success: true,
+        docId: activityDocId,
+        weekStart: weekStart.toISOString().split("T")[0],
+        weekEnd: weekEnd.toISOString().split("T")[0],
+        totalTodos: completedTodos.length,
+        formalSummary: result.formalSummary,
+        personalSummary: result.personalSummary,
+      };
+    } catch (error) {
+      logger.error("Error in generateWeekSummary", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", `Failed to generate summary: ${error}`);
+    }
+  }
+);
+
+// ============================================================================
+// Scheduled AI Summary Generation
+// ============================================================================
+
+export { generateWeeklySummaries } from "./generateWeeklySummaries.js";
+export { triggerWeeklySummaries } from "./triggerWeeklySummaries.js";
+export { checkBatchStatus } from "./checkBatchStatus.js";
+export { consumeBatch } from "./consumeBatch.js";
+
+// ============================================================================
 // Feedback Function
 // ============================================================================
 

@@ -10,7 +10,7 @@ import type { Todo } from "./App";
 import { useWoodDoorKnock } from "./hooks/useWoodDoorKnock";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { trackTimeboxClosed } from "./firebase/analytics";
-import SmartLinksEditor from "./SmartLinksEditor";
+import SmartEditor from "./SmartEditor";
 
 interface TimeBoxDialogProps {
   open: boolean;
@@ -119,7 +119,7 @@ export default function TimeBoxDialog({
                   </DialogTitle>
                   <div className="mt-2">
                     <div className="text-sm text-[var(--color-text-secondary)]">
-                      <SmartLinksEditor html={todo.text} editing={false} />
+                      <SmartEditor html={todo.text} editing={false} />
                     </div>
                     {todo.url && (
                       <a

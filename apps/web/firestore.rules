@@ -59,6 +59,15 @@ service cloud.firestore {
       }
     }
 
+    // Activity collection rules
+    match /activity/{activityId} {
+      // Allow read if user is authenticated and owns the activity document
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Allow write if user is authenticated and owns the activity document
+      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

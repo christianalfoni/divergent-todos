@@ -10,6 +10,7 @@ import {
 export type OnboardingStep =
   | "workdays"
   | "add-todo"
+  | "add-todo-with-tag"
   | "add-todo-with-url"
   | "edit-todo"
   | "move-todo"
@@ -34,6 +35,7 @@ interface OnboardingContextValue {
   notifyTodoDeleted: () => void;
   notifyTimeboxClosed: () => void;
   notifyTodoAdded: () => void;
+  notifyTodoAddedWithTag: () => void;
   notifyTodoAddedWithUrl: () => void;
 }
 
@@ -44,6 +46,7 @@ const OnboardingContext = createContext<OnboardingContextValue | undefined>(
 const ONBOARDING_STEPS: OnboardingStep[] = [
   "workdays",
   "add-todo",
+  "add-todo-with-tag",
   "add-todo-with-url",
   "edit-todo",
   "move-todo",
@@ -113,6 +116,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
+  const notifyTodoAddedWithTag = () => {
+    if (currentStep === "add-todo-with-tag") {
+      nextStep();
+    }
+  };
+
   const notifyTodoAddedWithUrl = () => {
     if (currentStep === "add-todo-with-url") {
       nextStep();
@@ -168,6 +177,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         notifyTodoDeleted,
         notifyTimeboxClosed,
         notifyTodoAdded,
+        notifyTodoAddedWithTag,
         notifyTodoAddedWithUrl,
       }}
     >
