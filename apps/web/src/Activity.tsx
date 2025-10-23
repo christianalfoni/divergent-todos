@@ -1,8 +1,8 @@
-import { useState, useMemo, useEffect } from 'react';
-import ActivityWeekDetail from './ActivityWeekDetail';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import ActivityDayPopup from './ActivityDayPopup';
 import { useActivity } from './hooks/useActivity';
-import { getMonthDays, getWeekDayIndex, getActivityColor } from './utils/activity';
+import { useAppFocus } from './hooks/useAppFocus';
+import { getMonthDays, getWeekDayIndex, getActivityColor, getSequentialWeek } from './utils/activity';
 
 interface ActivityProps {
   year: number;
@@ -10,14 +10,37 @@ interface ActivityProps {
 }
 
 export default function Activity({ year, onLoaded }: ActivityProps) {
-  const { activityWeeks, loading } = useActivity(year);
-  const [selectedWeek, setSelectedWeek] = useState<{ year: number; week: number } | null>(null);
+  const [refetchKey, setRefetchKey] = useState(0);
+  const { activityWeeks, loading } = useActivity(year, refetchKey);
   const [selectedDay, setSelectedDay] = useState<{
     date: Date;
     todos: Array<{ text: string; url?: string }>;
     position: { x: number; y: number };
   } | null>(null);
   const [showAISummaries, setShowAISummaries] = useState(false);
+  const [visibilityTrigger, setVisibilityTrigger] = useState(0);
+
+  // Get current week number for highlighting (recalculates when visibilityTrigger changes)
+  const today = useMemo(() => new Date(), [visibilityTrigger]);
+  const currentWeekInfo = useMemo(() => getSequentialWeek(today), [today]);
+  const currentWeekNumber = currentWeekInfo.week;
+  const currentYear = currentWeekInfo.year;
+
+  // Helper to check if a day is in the current week
+  const isCurrentWeek = (day: Date): boolean => {
+    const dayWeekInfo = getSequentialWeek(day);
+    return dayWeekInfo.week === currentWeekNumber && dayWeekInfo.year === currentYear;
+  };
+
+  // Handle app focus when day changes - refetch data and recalculate current week
+  const handleDayChange = useCallback(() => {
+    // Force re-render to recalculate current week
+    setVisibilityTrigger((prev) => prev + 1);
+    // Trigger activity data refetch in background
+    setRefetchKey((prev) => prev + 1);
+  }, []);
+
+  useAppFocus(handleDayChange);
 
   // Calculate sequential week numbers starting from first Monday in January
   const weekNumbers = useMemo(() => {
@@ -70,7 +93,7 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
   // TAB key listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Tab' && !selectedWeek && !selectedDay) {
+      if (e.key === 'Tab' && !selectedDay) {
         e.preventDefault();
         setShowAISummaries(prev => !prev);
       }
@@ -78,7 +101,7 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedWeek, selectedDay]);
+  }, [selectedDay]);
 
   // Build activity data map (date -> count) by counting completedTodos per day
   const activityData = useMemo(() => {
@@ -126,22 +149,6 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
 
     setSelectedDay({ date, todos: dayTodos, position });
   };
-
-  const handleBackToYear = () => {
-    setSelectedWeek(null);
-  };
-
-  if (selectedWeek) {
-    return (
-      <div className="flex-1 overflow-y-auto bg-[var(--color-bg-secondary)]">
-        <ActivityWeekDetail
-          year={selectedWeek.year}
-          week={selectedWeek.week}
-          onBack={handleBackToYear}
-        />
-      </div>
-    );
-  }
 
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -233,29 +240,60 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
                     </div>
 
                     {/* Weeks */}
-                    {weeks.map((week, weekIndex) => (
-                      <div key={weekIndex} className="activity-week-compact">
-                        {[0, 1, 2, 3, 4].map(dayIndex => {
-                          const day = week.find(d => getWeekDayIndex(d) === dayIndex);
-                          if (!day) {
-                            return <div key={dayIndex} className="activity-day-compact activity-empty" />;
-                          }
+                    {weeks.map((week, weekIndex) => {
+                      // Check if this week is the current week
+                      const firstDay = week.length > 0 ? week[0] : null;
+                      const isCurrentWeekRow = firstDay && isCurrentWeek(firstDay);
 
-                          const dateKey = day.toISOString().split('T')[0];
-                          const count = activityData.get(dateKey) || 0;
-                          const colorClass = getActivityColor(count);
+                      if (isCurrentWeekRow) {
+                        // Format date range for current week
+                        const lastDay = week[week.length - 1];
+                        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        const startMonth = monthNames[firstDay.getMonth()];
+                        const endMonth = monthNames[lastDay.getMonth()];
+                        const startDate = firstDay.getDate();
+                        const endDate = lastDay.getDate();
 
-                          return (
-                            <div
-                              key={dayIndex}
-                              className={`activity-day-compact ${colorClass}`}
-                              onClick={(e) => handleDayClick(day, e)}
-                              title={`${monthName} ${day.getDate()}: ${count} todos completed`}
-                            />
-                          );
-                        })}
-                      </div>
-                    ))}
+                        const dateRange = startMonth === endMonth
+                          ? `${startMonth} ${startDate} - ${endDate}`
+                          : `${startMonth} ${startDate} - ${endMonth} ${endDate}`;
+
+                        // Render as unified "In progress" container
+                        return (
+                          <div
+                            key={weekIndex}
+                            className="activity-week-in-progress"
+                          >
+                            {dateRange} - In progress
+                          </div>
+                        );
+                      }
+
+                      // Regular week rendering
+                      return (
+                        <div key={weekIndex} className="activity-week-compact">
+                          {[0, 1, 2, 3, 4].map(dayIndex => {
+                            const day = week.find(d => getWeekDayIndex(d) === dayIndex);
+                            if (!day) {
+                              return <div key={dayIndex} className="activity-day-compact activity-empty" />;
+                            }
+
+                            const dateKey = day.toISOString().split('T')[0];
+                            const count = activityData.get(dateKey) || 0;
+                            const colorClass = getActivityColor(count);
+
+                            return (
+                              <div
+                                key={dayIndex}
+                                className={`activity-day-compact ${colorClass}`}
+                                onClick={(e) => handleDayClick(day, e)}
+                                title={`${monthName} ${day.getDate()}: ${count} todos completed`}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

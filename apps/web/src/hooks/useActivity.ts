@@ -7,7 +7,7 @@ import { useAuthentication } from "./useAuthentication";
 // Cache for activity data: userId-year -> ActivityWeek[]
 const activityCache = new Map<string, ActivityWeek[]>();
 
-export function useActivity(year: number) {
+export function useActivity(year: number, refetchKey: number = 0) {
   const [authentication] = useAuthentication();
   const userRef = useRef(authentication.user);
   const [activityWeeks, setActivityWeeks] = useState<ActivityWeek[]>([]);
@@ -95,7 +95,7 @@ export function useActivity(year: number) {
     return () => {
       unsubscribed = true;
     };
-  }, [year]);
+  }, [year, refetchKey]);
 
   return { activityWeeks, loading, error };
 }

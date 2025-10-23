@@ -46,11 +46,11 @@ export default function Navigation({
           }
         }}
         disabled={isLoadingActivity}
-        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors cursor-default ${
           currentView === "activity"
             ? "bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm"
             : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]"
-        } ${isLoadingActivity ? "opacity-50 cursor-not-allowed" : ""} ${shouldPulsate ? "activity-button-pulsate" : ""}`}
+        } ${isLoadingActivity ? "opacity-50" : ""} ${shouldPulsate ? "activity-button-pulsate" : ""}`}
       >
         <ChartBarIconComponent className="size-4" />
         Activity
