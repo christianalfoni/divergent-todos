@@ -55,9 +55,15 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
       setIsAddingTodo(false)
     } else if (e.key === 'Enter') {
       e.preventDefault()
-      if (newTodoHtml.trim()) {
+      // Get the current HTML directly from the editor to include any just-converted pills/chips
+      const currentHtml = editorRef.current?.getHtml() || ''
+      // Check if there's actual text content (not just HTML tags or whitespace)
+      const tempDiv = document.createElement('div')
+      tempDiv.innerHTML = currentHtml
+      const textContent = tempDiv.textContent || tempDiv.innerText || ''
+      if (textContent.trim()) {
         onAddTodo({
-          text: newTodoHtml,
+          text: currentHtml,
           url: undefined, // URL is now embedded in HTML
           completed: false,
           date: date.toISOString().split('T')[0],
