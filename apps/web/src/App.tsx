@@ -338,23 +338,6 @@ function AppContent() {
   // but returning users who clicked past it won't see it during auth loading
   const showLandingPage = !isElectron && !authentication.user && !hasLeftLandingPage;
 
-  if (showLandingPage) {
-    return (
-      <LandingPage
-        onSignInGoogle={() => {
-          localStorage.setItem('hasLeftLandingPage', 'true');
-          setHasLeftLandingPage(true);
-          setAuthModalState({ open: true, autoTrigger: "google" });
-        }}
-        onSignInAnonymous={() => {
-          localStorage.setItem('hasLeftLandingPage', 'true');
-          setHasLeftLandingPage(true);
-          setAuthModalState({ open: true, autoTrigger: "anonymous" });
-        }}
-      />
-    );
-  }
-
   // Effect to handle pulsating animation delay
   useEffect(() => {
     if (isLoadingActivity) {
@@ -390,6 +373,23 @@ function AppContent() {
     }
     setIsLoadingActivity(false);
   };
+
+  if (showLandingPage) {
+    return (
+      <LandingPage
+        onSignInGoogle={() => {
+          localStorage.setItem('hasLeftLandingPage', 'true');
+          setHasLeftLandingPage(true);
+          setAuthModalState({ open: true, autoTrigger: "google" });
+        }}
+        onSignInAnonymous={() => {
+          localStorage.setItem('hasLeftLandingPage', 'true');
+          setHasLeftLandingPage(true);
+          setAuthModalState({ open: true, autoTrigger: "anonymous" });
+        }}
+      />
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
