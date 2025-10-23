@@ -34,6 +34,7 @@ export default function TimeBoxDialog({
 }: TimeBoxDialogProps) {
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isTimerActive, setIsTimerActive] = useState(false);
+  const [hasTimerStarted, setHasTimerStarted] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const woodDoorKnock = useWoodDoorKnock();
   const onboarding = useOnboarding();
@@ -56,13 +57,20 @@ export default function TimeBoxDialog({
   }, [isTimerActive, timeRemaining, woodDoorKnock]);
 
   const handleTimeSelect = (minutes: number) => {
-    setTimeRemaining(minutes);
+    setHasTimerStarted(true);
+    // If timer has completed (at 0), add time; otherwise set new time
+    if (timeRemaining === 0) {
+      setTimeRemaining(minutes);
+    } else {
+      setTimeRemaining(minutes);
+    }
     setIsTimerActive(true);
   };
 
   const handleClose = () => {
     setTimeRemaining(null);
     setIsTimerActive(false);
+    setHasTimerStarted(false);
     setIsCompleting(false);
 
     // Track timebox close
@@ -86,7 +94,7 @@ export default function TimeBoxDialog({
   return (
     <Dialog
       open={open}
-      onClose={isTimerActive ? () => {} : onClose}
+      onClose={hasTimerStarted ? () => {} : onClose}
       className="relative z-[60]"
     >
       <DialogBackdrop
@@ -102,41 +110,46 @@ export default function TimeBoxDialog({
             transition
             className="relative transform overflow-hidden rounded-lg bg-[var(--color-bg-dialog)] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:outline dark:-outline-offset-1 dark:outline-white/10"
           >
-            <div className="bg-[var(--color-bg-dialog)] px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mx-auto flex size-12 shrink-0 items-center justify-center rounded-full bg-[var(--color-accent-light)] sm:mx-0 sm:size-10">
-                  <ClockIcon
-                    aria-hidden="true"
-                    className="size-6 text-[var(--color-accent-text)]"
-                  />
-                </div>
-                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <DialogTitle
-                    as="h3"
-                    className="text-base font-semibold text-[var(--color-text-primary)]"
-                  >
-                    Time Box To-Do
-                  </DialogTitle>
-                  <div className="mt-2">
-                    <div className="text-sm text-[var(--color-text-secondary)]">
-                      <SmartEditor html={todo.text} editing={false} />
-                    </div>
-                    {todo.url && (
-                      <a
-                        href={todo.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-2 block text-sm text-[var(--color-accent-text)] hover:text-[var(--color-accent-text-hover)] break-all underline"
-                      >
-                        {todo.url}
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
+            {/* Header */}
+            <div className="px-6 py-6 border-b border-[var(--color-border-primary)] flex items-center justify-between">
+              <DialogTitle
+                as="h2"
+                className="text-xl font-semibold text-[var(--color-text-primary)] m-0 flex items-center gap-2"
+              >
+                <ClockIcon
+                  aria-hidden="true"
+                  className="w-6 h-6 text-[var(--color-accent-primary)]"
+                />
+                Time Box To-Do
+              </DialogTitle>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="bg-transparent border-0 text-2xl text-[var(--color-text-secondary)] p-0 w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]"
+                aria-label="Close dialog"
+              >
+                ×
+              </button>
             </div>
-            <div className="bg-[var(--color-bg-dialog-footer)] px-4 py-3 sm:flex sm:justify-between sm:items-center sm:px-6">
-              {isTimerActive && timeRemaining !== null ? (
+
+            {/* Content */}
+            <div className="px-6 py-6">
+              <div className="text-sm text-[var(--color-text-primary)] mb-3">
+                <SmartEditor html={todo.text} editing={false} />
+              </div>
+              {todo.url && (
+                <a
+                  href={todo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-sm text-[var(--color-accent-text)] hover:text-[var(--color-accent-text-hover)] break-all underline"
+                >
+                  {todo.url}
+                </a>
+              )}
+            </div>
+            <div className="bg-[var(--color-bg-dialog-footer)] px-6 py-6 sm:flex sm:justify-between sm:items-center">
+              {isTimerActive && timeRemaining !== null && timeRemaining > 0 ? (
                 <div className="flex items-baseline">
                   <span className="text-3xl font-bold text-[var(--color-accent-text)]">
                     {timeRemaining}
@@ -154,14 +167,14 @@ export default function TimeBoxDialog({
                       onClick={() => handleTimeSelect(option.minutes)}
                       className="inline-flex w-full justify-center rounded-md bg-[var(--color-bg-button-secondary)] px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-button-secondary-hover)] sm:w-auto dark:inset-ring dark:inset-ring-white/5"
                     >
-                      {option.name}
+                      {hasTimerStarted ? `+${option.name}` : option.name}
                     </button>
                   ))}
                 </div>
               )}
-              <div className="flex items-center gap-3 mt-3 sm:mt-0">
-                {isTimerActive && (
-                  <label className="flex items-center gap-2 cursor-pointer">
+              {hasTimerStarted && (
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2">
                     <div className="group/checkbox grid size-4 grid-cols-1">
                       <input
                         type="checkbox"
@@ -184,18 +197,11 @@ export default function TimeBoxDialog({
                       </svg>
                     </div>
                     <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Mark as completed
+                      Completed
                     </span>
                   </label>
-                )}
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  className="inline-flex w-full justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] sm:w-auto dark:shadow-none"
-                >
-                  {isTimerActive ? "Cancel" : "Close"}
-                </button>
-              </div>
+                </div>
+              )}
             </div>
           </DialogPanel>
         </div>

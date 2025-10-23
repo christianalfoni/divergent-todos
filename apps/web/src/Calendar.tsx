@@ -137,6 +137,22 @@ export default function Calendar({
     }
   }, [authentication.user, profile?.isOnboarded]);
 
+  // Keyboard shortcut for CMD+SHIFT+K to open weekend dialog
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for Cmd+Shift+K (case insensitive)
+      if (e.metaKey && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+        e.preventDefault();
+        if (authentication.user && profile?.isOnboarded) {
+          setShowWeekendDialog(true);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [authentication.user, profile?.isOnboarded]);
+
   return (
     <DndContext
       sensors={sensors}

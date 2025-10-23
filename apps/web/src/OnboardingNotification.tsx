@@ -196,7 +196,7 @@ export default function OnboardingNotification() {
                         type="button"
                         onClick={previousStep}
                         disabled={currentStepIndex === 0}
-                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed dark:hover:text-white dark:focus:outline-indigo-500"
+                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30  dark:hover:text-white dark:focus:outline-indigo-500"
                         title="Previous step"
                       >
                         <span className="sr-only">Previous step</span>
@@ -209,7 +209,7 @@ export default function OnboardingNotification() {
                         type="button"
                         onClick={nextStep}
                         disabled={currentStepIndex === totalSteps - 1}
-                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30 disabled:cursor-not-allowed dark:hover:text-white dark:focus:outline-indigo-500"
+                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30  dark:hover:text-white dark:focus:outline-indigo-500"
                         title="Next step"
                       >
                         <span className="sr-only">Next step</span>
@@ -224,7 +224,7 @@ export default function OnboardingNotification() {
                           type="button"
                           onClick={handleDismiss}
                           disabled={isEditing}
-                          className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 "
                         >
                           {isEditing ? "Loading..." : "Complete"}
                         </button>
@@ -233,7 +233,7 @@ export default function OnboardingNotification() {
                           type="button"
                           onClick={handleDismiss}
                           disabled={isEditing}
-                          className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 "
                         >
                           Skip tutorial
                         </button>

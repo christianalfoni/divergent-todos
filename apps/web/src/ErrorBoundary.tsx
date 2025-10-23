@@ -125,7 +125,7 @@ ${errorInfo || 'No component stack available'}
 
                   {/* Error details (collapsed) */}
                   <details className="mt-3">
-                    <summary className="cursor-pointer text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+                    <summary className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
                       Show error details
                     </summary>
                     <div className="mt-2 rounded-md bg-gray-50 p-3 dark:bg-gray-900/50">
@@ -146,7 +146,7 @@ ${errorInfo || 'No component stack available'}
                     <button
                       type="submit"
                       disabled={!userMessage.trim()}
-                      className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-indigo-500 dark:hover:bg-indigo-400"
+                      className="inline-flex justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 dark:bg-indigo-500 dark:hover:bg-indigo-400"
                     >
                       Send & Refresh
                     </button>
