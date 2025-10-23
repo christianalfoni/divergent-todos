@@ -218,8 +218,31 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     const sel = document.getSelection();
     if (!sel || !sel.anchorNode) return null;
 
-    const node = sel.anchorNode;
-    const offset = sel.anchorOffset;
+    let node = sel.anchorNode;
+    let offset = sel.anchorOffset;
+
+    // If cursor is in an element node, try to get the last text node child
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+      // If offset > 0, get the child node before the cursor
+      if (offset > 0) {
+        const childNode = element.childNodes[offset - 1];
+        if (childNode && childNode.nodeType === Node.TEXT_NODE) {
+          node = childNode;
+          offset = (node.textContent || "").length;
+        } else if (childNode && childNode.nodeType === Node.ELEMENT_NODE) {
+          // If the previous child is an element (like a pill), get its text content to find last text node
+          const lastText = getLastTextNode(childNode);
+          if (lastText) {
+            node = lastText;
+            offset = (node.textContent || "").length;
+          }
+        }
+      } else {
+        // If offset is 0, we're at the start, no word before cursor
+        return null;
+      }
+    }
 
     if (node.nodeType !== Node.TEXT_NODE) return null;
 
@@ -238,6 +261,17 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     range.setEnd(node, offset);
 
     return { word, range };
+  }
+
+  // Helper to get the last text node in a subtree
+  function getLastTextNode(node: Node): Node | null {
+    if (node.nodeType === Node.TEXT_NODE) return node;
+    const children = node.childNodes;
+    for (let i = children.length - 1; i >= 0; i--) {
+      const result = getLastTextNode(children[i]);
+      if (result) return result;
+    }
+    return null;
   }
 
   // Get best tag suggestion for partial tag input
