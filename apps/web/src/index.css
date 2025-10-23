@@ -72,7 +72,7 @@
 .activity-week-in-progress {
   background: var(--color-bg-primary);
   border-radius: 4px;
-  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  box-shadow: 0 1px 2px 0 var(--color-shadow-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -134,6 +134,11 @@
     /* Skeleton/loading colors */
     --color-skeleton: rgb(229 231 235); /* gray-200 */
 
+    /* Shadow colors */
+    --color-shadow-sm: rgb(0 0 0 / 0.05); /* Small shadows */
+    --color-shadow-md: rgb(0 0 0 / 0.1); /* Medium shadows */
+    --color-shadow-lg: rgb(0 0 0 / 0.04); /* Large shadow accent */
+
     /* Todo text font size - Small (default) */
     --todo-text-size: 0.8125rem; /* 13px */
   }
@@ -186,6 +191,11 @@
 
     /* Skeleton/loading colors */
     --color-skeleton: rgb(55 65 81); /* gray-700 */
+
+    /* Shadow colors */
+    --color-shadow-sm: rgb(0 0 0 / 0.2); /* Small shadows - darker in dark mode */
+    --color-shadow-md: rgb(0 0 0 / 0.3); /* Medium shadows - darker in dark mode */
+    --color-shadow-lg: rgb(0 0 0 / 0.15); /* Large shadow accent */
   }
 
   /* Ocean Theme - Cool blues and teals */
@@ -497,20 +507,13 @@
   position: fixed;
   background: var(--color-bg-primary);
   border-radius: 0.5rem;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  outline: 1px solid rgb(0 0 0 / 0.05);
+  box-shadow: 0 20px 25px -5px var(--color-shadow-md), 0 8px 10px -6px var(--color-shadow-md);
+  outline: 1px solid var(--color-outline);
   min-width: 280px;
   max-width: 400px;
   z-index: 1000;
   transform: translate(-50%, 0);
   animation: slideDown 0.3s ease-out;
-}
-
-@supports (color: light-dark(white, black)) {
-  .activity-day-popup {
-    outline: -1px solid rgb(255 255 255 / 0.1);
-    outline-offset: -1px;
-  }
 }
 
 @keyframes slideDown {
@@ -595,7 +598,7 @@
   font-size: 0.75rem; /* text-xs */
   line-height: 1.25rem; /* leading-5 */
   font-weight: 400; /* font-normal */
-  color: white;
+  color: var(--color-text-primary);
 }
 
 .activity-week-summary {
@@ -617,7 +620,7 @@
 .monday-dialog-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.3);
+  background-color: var(--color-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -633,7 +636,7 @@
 .monday-dialog {
   background-color: var(--color-bg-dialog);
   border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 20px 25px -5px var(--color-shadow-md), 0 10px 10px -5px var(--color-shadow-lg);
   max-width: 500px;
   width: 90%;
   max-height: 80vh;

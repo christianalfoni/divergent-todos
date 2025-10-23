@@ -113,7 +113,7 @@ export default function ActivityDayPopup({ date, todos, position, onClose }: Act
                     />
                   </svg>
                 </div>
-                <div className="flex-1 min-w-0 text-xs/5 font-normal text-white">
+                <div className="flex-1 min-w-0 text-xs/5 font-normal text-[var(--color-text-primary)]">
                   <SmartEditor html={todo.text} editing={false} />
                 </div>
               </div>
