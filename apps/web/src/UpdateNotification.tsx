@@ -88,7 +88,7 @@ export default function UpdateNotification() {
     <button
       onClick={handleClick}
       disabled={updateState.type === 'downloading' || updateState.type === 'installing'}
-      className="flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50"
     >
       {updateState.type === 'downloading' || updateState.type === 'installing' ? (
         <>

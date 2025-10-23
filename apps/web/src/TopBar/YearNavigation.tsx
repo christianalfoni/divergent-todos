@@ -21,7 +21,7 @@ export default function YearNavigation({ year, onYearChange }: YearNavigationPro
       <button
         onClick={() => onYearChange(year + 1)}
         disabled={year >= currentYear}
-        className="p-1 hover:bg-[var(--color-bg-menu-hover)] rounded text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-30 disabled:cursor-not-allowed pointer-events-auto"
+        className="p-1 hover:bg-[var(--color-bg-menu-hover)] rounded text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors disabled:opacity-30 pointer-events-auto"
         aria-label="Next year"
       >
         →

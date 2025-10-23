@@ -528,6 +528,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
           fontSize: "var(--todo-text-size)",
+          minHeight: "1.5rem",
         }}
       />
       <style>{`

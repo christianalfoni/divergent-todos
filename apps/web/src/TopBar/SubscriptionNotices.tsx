@@ -25,7 +25,7 @@ export default function SubscriptionNotices({
       <button
         onClick={onOpenBillingPortal}
         disabled={isOpeningPortal}
-        className={`flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-white hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50 ${
           subscriptionStatus === "unpaid"
             ? "bg-red-600 focus-visible:outline-red-600"
             : "bg-yellow-600 focus-visible:outline-yellow-600"
