@@ -67,6 +67,45 @@ interface ConsumeBatchResult {
   errors?: Array<{ customId: string; error: string }>;
 }
 
+interface ListBatchJobsResult {
+  success: boolean;
+  jobs: Array<{
+    id: string;
+    type: string;
+    week: number;
+    year: number;
+    status: string;
+    submittedAt: string;
+    completedAt?: string;
+    totalRequests: number;
+    successCount?: number;
+    errorCount?: number;
+  }>;
+}
+
+interface GetBatchJobDetailsParams {
+  batchId: string;
+}
+
+interface GetBatchJobDetailsResult {
+  success: boolean;
+  job: {
+    id: string;
+    type: string;
+    week: number;
+    year: number;
+    status: string;
+    submittedAt: string;
+    completedAt?: string;
+    totalRequests: number;
+    successCount?: number;
+    errorCount?: number;
+    errors?: Array<{ customId: string; error: string }>;
+    outputFileId?: string;
+    errorFileId?: string;
+  };
+}
+
 /**
  * Global admin object for running privileged scripts
  * Only accessible to admin UID: iaSsqsqb99Zemast8LN3dGCxB7o2
@@ -230,6 +269,112 @@ export const admin = {
     },
 
     /**
+     * List recent batch jobs from Firestore
+     */
+    async listBatchJobs(): Promise<void> {
+      console.group(`🔧 Admin Script: List Batch Jobs`);
+      console.log(`Fetching last 10 batch jobs...`);
+
+      try {
+        const callable = httpsCallable<void, ListBatchJobsResult>(
+          functions,
+          "listBatchJobs"
+        );
+
+        const result = await callable();
+
+        console.log(`\n📋 Found ${result.data.jobs.length} batch jobs:`);
+        console.table(
+          result.data.jobs.map((job) => ({
+            ID: job.id.substring(0, 12) + "...",
+            Week: `${job.week}/${job.year}`,
+            Status: job.status,
+            Submitted: new Date(job.submittedAt).toLocaleString(),
+            Completed: job.completedAt
+              ? new Date(job.completedAt).toLocaleString()
+              : "-",
+            Total: job.totalRequests,
+            Success: job.successCount ?? "-",
+            Errors: job.errorCount ?? "-",
+          }))
+        );
+
+        console.groupEnd();
+      } catch (error: unknown) {
+        console.error(`❌ Error:`, (error as Error).message);
+        if ((error as { code?: string }).code === "permission-denied") {
+          console.error(
+            `This script is only available to admin UID: ${ADMIN_UID}`
+          );
+        }
+        console.groupEnd();
+        throw error;
+      }
+    },
+
+    /**
+     * Get detailed information about a specific batch job
+     * @param batchId - OpenAI batch ID
+     */
+    async getBatchJobDetails(batchId: string): Promise<void> {
+      console.group(`🔧 Admin Script: Get Batch Job Details`);
+      console.log(`Batch ID: ${batchId}`);
+
+      try {
+        const callable = httpsCallable<
+          GetBatchJobDetailsParams,
+          GetBatchJobDetailsResult
+        >(functions, "getBatchJobDetails");
+
+        const result = await callable({ batchId });
+
+        const job = result.data.job;
+
+        console.log(`\n📄 Batch Job Details:`);
+        console.log(`ID: ${job.id}`);
+        console.log(`Type: ${job.type}`);
+        console.log(`Week: ${job.week}, Year: ${job.year}`);
+        console.log(`Status: ${job.status}`);
+        console.log(`Submitted: ${new Date(job.submittedAt).toLocaleString()}`);
+        if (job.completedAt) {
+          console.log(
+            `Completed: ${new Date(job.completedAt).toLocaleString()}`
+          );
+        }
+        console.log(`\nRequests: ${job.totalRequests}`);
+        if (job.successCount !== undefined) {
+          console.log(`Success: ${job.successCount}`);
+          console.log(`Errors: ${job.errorCount}`);
+        }
+
+        if (job.outputFileId) {
+          console.log(`\nOutput File ID: ${job.outputFileId}`);
+        }
+        if (job.errorFileId) {
+          console.log(`Error File ID: ${job.errorFileId}`);
+        }
+
+        if (job.errors && job.errors.length > 0) {
+          console.log(`\n⚠️ Errors:`);
+          job.errors.forEach((e) => {
+            console.log(`  - ${e.customId}: ${e.error}`);
+          });
+        }
+
+        console.groupEnd();
+      } catch (error: unknown) {
+        console.error(`❌ Error:`, (error as Error).message);
+        if ((error as { code?: string }).code === "permission-denied") {
+          console.error(
+            `This script is only available to admin UID: ${ADMIN_UID}`
+          );
+        }
+        console.groupEnd();
+        throw error;
+      }
+    },
+
+    /**
      * Generate AI summaries for a specific user's week (single user)
      * @param userId - Target user ID
      * @param week - Week number (1-53)
@@ -273,9 +418,9 @@ export const admin = {
         console.log(`\nPersonal Summary:`);
         console.log(result.data.personalSummary);
         console.groupEnd();
-      } catch (error: any) {
-        console.error(`❌ Error:`, error.message);
-        if (error.code === "permission-denied") {
+      } catch (error: unknown) {
+        console.error(`❌ Error:`, (error as Error).message);
+        if ((error as { code?: string }).code === "permission-denied") {
           console.error(
             `This script is only available to admin UID: ${ADMIN_UID}`
           );

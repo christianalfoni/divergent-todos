@@ -224,7 +224,11 @@ export default function Calendar({
                 </div>
               </div>
               <div
-                className="flex-1 min-w-0 text-xs/5 font-semibold text-[var(--color-accent-text)]"
+                className={`flex-1 min-w-0 text-xs/5 ${
+                  activeTodo.completed
+                    ? "line-through text-[var(--color-text-secondary)]"
+                    : "text-[var(--color-text-primary)]"
+                }`}
                 dangerouslySetInnerHTML={{ __html: activeTodo.text }}
               />
             </div>
