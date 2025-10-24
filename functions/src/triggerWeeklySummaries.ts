@@ -3,7 +3,7 @@ import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import {
-  getCompletedTodosForWeek,
+  getTodosForWeek,
   getUsersWithActiveSubscription,
   getWeekDateRange,
 } from "./lib/activity-data.js";
@@ -77,7 +77,7 @@ export const triggerWeeklySummaries = onCall(
 
       for (const userId of userIds) {
         try {
-          const completedTodos = await getCompletedTodosForWeek(
+          const { completedTodos, incompleteTodos } = await getTodosForWeek(
             db,
             userId,
             targetWeek,
@@ -88,6 +88,7 @@ export const triggerWeeklySummaries = onCall(
             const request = createBatchRequest(
               userId,
               completedTodos,
+              incompleteTodos,
               targetWeek,
               targetYear
             );
@@ -178,8 +179,8 @@ export const triggerWeeklySummaries = onCall(
               const { start: weekStart } = getWeekDateRange(year, week);
               const month = weekStart.getMonth();
 
-              // Get completed todos for this user/week
-              const completedTodos = await getCompletedTodosForWeek(
+              // Get todos for this user/week
+              const { completedTodos, incompleteTodos } = await getTodosForWeek(
                 db,
                 userId,
                 week,
@@ -197,6 +198,7 @@ export const triggerWeeklySummaries = onCall(
                   week,
                   month,
                   completedTodos,
+                  incompleteCount: incompleteTodos.length,
                   aiSummary: result.formalSummary,
                   aiPersonalSummary: result.personalSummary,
                   aiSummaryGeneratedAt: Timestamp.now(),

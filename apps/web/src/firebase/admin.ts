@@ -7,6 +7,7 @@ interface GenerateWeekSummaryParams {
   userId: string;
   week: number;
   year?: number;
+  customAnalysisInstructions?: string;
 }
 
 interface GenerateWeekSummaryResult {
@@ -233,16 +234,21 @@ export const admin = {
      * @param userId - Target user ID
      * @param week - Week number (1-53)
      * @param year - Optional year (defaults to current year)
+     * @param customAnalysisInstructions - Optional custom analysis instructions to override the default
      */
     async generateWeekSummary(
       userId: string,
       week: number,
-      year?: number
+      year?: number,
+      customAnalysisInstructions?: string
     ): Promise<void> {
       console.group(`🔧 Admin Script: Generate Week Summary`);
       console.log(`User ID: ${userId}`);
       console.log(`Week: ${week}`);
       console.log(`Year: ${year || "current"}`);
+      if (customAnalysisInstructions) {
+        console.log(`Custom Instructions: ${customAnalysisInstructions.substring(0, 100)}...`);
+      }
       console.log(`Starting...`);
 
       try {
@@ -255,6 +261,7 @@ export const admin = {
           userId,
           week,
           year,
+          customAnalysisInstructions,
         });
 
         console.log(`✅ Success!`);
