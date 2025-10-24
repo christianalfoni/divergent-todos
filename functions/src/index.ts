@@ -877,6 +877,7 @@ export const stripeWebhook = onRequest(
 import {
   getTodosForWeek,
   getWeekDateRange,
+  getPreviousWeekSummary,
 } from "./lib/activity-data.js";
 import { generateSummarySync } from "./lib/openai-sync.js";
 
@@ -947,6 +948,21 @@ export const generateWeekSummary = onCall(
         sampleCompletedTodos: completedTodos.slice(0, 3),
       });
 
+      // Get previous week's summary for continuity
+      logger.info("Querying previous week summary...");
+      const previousWeekSummary = await getPreviousWeekSummary(
+        db,
+        userId,
+        week,
+        targetYear
+      );
+
+      if (previousWeekSummary) {
+        logger.info("Found previous week summary for continuity context");
+      } else {
+        logger.info("No previous week summary found");
+      }
+
       // Generate AI summaries using shared sync module
       logger.info("Calling OpenAI API...");
       const result = await generateSummarySync(
@@ -955,7 +971,8 @@ export const generateWeekSummary = onCall(
         incompleteTodos,
         week,
         targetYear,
-        customAnalysisInstructions
+        customAnalysisInstructions,
+        previousWeekSummary
       );
 
       logger.info("AI summaries generated successfully", {
@@ -1011,9 +1028,11 @@ export const generateWeekSummary = onCall(
 // ============================================================================
 
 export { generateWeeklySummaries } from "./generateWeeklySummaries.js";
+export { checkAndConsumeBatch } from "./checkAndConsumeBatch.js";
 export { triggerWeeklySummaries } from "./triggerWeeklySummaries.js";
 export { checkBatchStatus } from "./checkBatchStatus.js";
 export { consumeBatch } from "./consumeBatch.js";
+export { listBatchJobs, getBatchJobDetails } from "./listBatchJobs.js";
 
 // ============================================================================
 // Feedback Function

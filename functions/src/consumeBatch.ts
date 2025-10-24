@@ -7,7 +7,12 @@ import {
   downloadBatchOutput,
   parseBatchResponse,
 } from "./lib/openai-batch.js";
-import { getCompletedTodosForWeek, getWeekDateRange } from "./lib/activity-data.js";
+import { getTodosForWeek, getWeekDateRange } from "./lib/activity-data.js";
+import {
+  getBatchJob,
+  updateBatchJobStatus,
+  completeBatchJob,
+} from "./lib/batch-jobs.js";
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
@@ -41,7 +46,15 @@ export const consumeBatch = onCall(
     logger.info("Starting batch consumption", { batchId, callerUid });
 
     try {
-      // Step 1: Check if batch is completed
+      // Step 1: Check if batch job exists in Firestore
+      const batchJob = await getBatchJob(db, batchId);
+
+      logger.info("Batch job lookup", {
+        found: !!batchJob,
+        status: batchJob?.status
+      });
+
+      // Step 2: Check if batch is completed in OpenAI
       const status = await checkBatchStatus(OPENAI_API_KEY.value(), batchId);
 
       if (status.status !== "completed") {
@@ -63,17 +76,28 @@ export const consumeBatch = onCall(
         outputFileId: status.outputFileId,
       });
 
-      // Step 2: Download results
+      // Update status in Firestore if batch job exists
+      if (batchJob) {
+        await updateBatchJobStatus(
+          db,
+          batchId,
+          "processing",
+          status.outputFileId,
+          status.errorFileId
+        );
+      }
+
+      // Step 3: Download results
       const outputContent = await downloadBatchOutput(
         OPENAI_API_KEY.value(),
         status.outputFileId
       );
 
-      // Step 3: Parse results
+      // Step 4: Parse results
       const results = parseBatchResponse(outputContent);
       logger.info(`Parsed ${results.size} results`);
 
-      // Step 4: Write to Firestore
+      // Step 5: Write to Firestore
       logger.info("Writing results to Firestore...");
       let successCount = 0;
       let errorCount = 0;
@@ -99,8 +123,8 @@ export const consumeBatch = onCall(
           const { start: weekStart } = getWeekDateRange(year, week);
           const month = weekStart.getMonth();
 
-          // Get completed todos for this user/week
-          const completedTodos = await getCompletedTodosForWeek(
+          // Get todos for this user/week
+          const { completedTodos, incompleteTodos } = await getTodosForWeek(
             db,
             userId,
             week,
@@ -118,6 +142,7 @@ export const consumeBatch = onCall(
               week,
               month,
               completedTodos,
+              incompleteCount: incompleteTodos.length,
               aiSummary: result.formalSummary,
               aiPersonalSummary: result.personalSummary,
               aiSummaryGeneratedAt: Timestamp.now(),
@@ -133,6 +158,11 @@ export const consumeBatch = onCall(
           errors.push({ customId, error: errorMsg });
           errorCount++;
         }
+      }
+
+      // Mark batch as completed in Firestore if it exists
+      if (batchJob) {
+        await completeBatchJob(db, batchId, successCount, errorCount, errors);
       }
 
       logger.info("Batch consumption completed", {
