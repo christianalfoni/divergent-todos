@@ -875,7 +875,7 @@ export const stripeWebhook = onRequest(
 // ============================================================================
 
 import {
-  getCompletedTodosForWeek,
+  getTodosForWeek,
   getWeekDateRange,
 } from "./lib/activity-data.js";
 import { generateSummarySync } from "./lib/openai-sync.js";
@@ -894,7 +894,7 @@ export const generateWeekSummary = onCall(
       throw new HttpsError("permission-denied", "Admin access required");
     }
 
-    const { userId, week, year } = req.data;
+    const { userId, week, year, customAnalysisInstructions } = req.data;
 
     if (!userId || !week) {
       throw new HttpsError("invalid-argument", "userId and week are required");
@@ -902,7 +902,12 @@ export const generateWeekSummary = onCall(
 
     const targetYear = year || new Date().getFullYear();
 
-    logger.info("Starting generateWeekSummary", { userId, week, year: targetYear });
+    logger.info("Starting generateWeekSummary", {
+      userId,
+      week,
+      year: targetYear,
+      hasCustomInstructions: !!customAnalysisInstructions
+    });
 
     try {
       // Calculate date range for the week
@@ -914,12 +919,18 @@ export const generateWeekSummary = onCall(
         weekEnd: weekEnd.toISOString().split("T")[0],
       });
 
-      // Query completed todos using shared module
+      // Query all todos (completed and incomplete) using shared module
       logger.info("Querying todos collection...");
-      const completedTodos = await getCompletedTodosForWeek(db, userId, week, targetYear);
+      const { completedTodos, incompleteTodos } = await getTodosForWeek(
+        db,
+        userId,
+        week,
+        targetYear
+      );
 
       logger.info("Todos query completed", {
-        found: completedTodos.length,
+        completedCount: completedTodos.length,
+        incompleteCount: incompleteTodos.length,
       });
 
       if (completedTodos.length === 0) {
@@ -931,8 +942,9 @@ export const generateWeekSummary = onCall(
       }
 
       logger.info("Built activity data", {
-        totalTodos: completedTodos.length,
-        sampleTodos: completedTodos.slice(0, 3),
+        totalCompleted: completedTodos.length,
+        totalIncomplete: incompleteTodos.length,
+        sampleCompletedTodos: completedTodos.slice(0, 3),
       });
 
       // Generate AI summaries using shared sync module
@@ -940,8 +952,10 @@ export const generateWeekSummary = onCall(
       const result = await generateSummarySync(
         OPENAI_API_KEY.value(),
         completedTodos,
+        incompleteTodos,
         week,
-        targetYear
+        targetYear,
+        customAnalysisInstructions
       );
 
       logger.info("AI summaries generated successfully", {
@@ -964,6 +978,7 @@ export const generateWeekSummary = onCall(
         week,
         month,
         completedTodos,
+        incompleteCount: incompleteTodos.length,
         aiSummary: result.formalSummary,
         aiPersonalSummary: result.personalSummary,
         aiSummaryGeneratedAt: Timestamp.now(),

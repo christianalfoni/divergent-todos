@@ -4,7 +4,7 @@ import { logger } from "firebase-functions";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import { Resend } from "resend";
 import {
-  getCompletedTodosForWeek,
+  getTodosForWeek,
   getUsersWithActiveSubscription,
   getWeekDateRange,
 } from "./lib/activity-data.js";
@@ -94,7 +94,7 @@ export const generateWeeklySummaries = onSchedule(
 
       for (const userId of userIds) {
         try {
-          const completedTodos = await getCompletedTodosForWeek(
+          const { completedTodos, incompleteTodos } = await getTodosForWeek(
             db,
             userId,
             targetWeek,
@@ -105,6 +105,7 @@ export const generateWeeklySummaries = onSchedule(
             const request = createBatchRequest(
               userId,
               completedTodos,
+              incompleteTodos,
               targetWeek,
               targetYear
             );
@@ -187,8 +188,8 @@ export const generateWeeklySummaries = onSchedule(
               const { start: weekStart } = getWeekDateRange(year, week);
               const month = weekStart.getMonth();
 
-              // Get completed todos for this user/week
-              const completedTodos = await getCompletedTodosForWeek(
+              // Get todos for this user/week
+              const { completedTodos, incompleteTodos } = await getTodosForWeek(
                 db,
                 userId,
                 week,
@@ -206,6 +207,7 @@ export const generateWeeklySummaries = onSchedule(
                   week,
                   month,
                   completedTodos,
+                  incompleteCount: incompleteTodos.length,
                   aiSummary: result.formalSummary,
                   aiPersonalSummary: result.personalSummary,
                   aiSummaryGeneratedAt: Timestamp.now(),

@@ -72,13 +72,13 @@ export default function SubscriptionNotices({
         {onOpenSubscription && (
           <button
             onClick={onOpenSubscription}
-            className="group flex items-center gap-x-3 rounded-md p-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
+            className="group flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] hover:text-[var(--color-accent-text-hover)]"
           >
             <BanknotesIcon
               aria-hidden="true"
-              className="size-6 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
+              className="size-5 shrink-0 text-[var(--color-text-tertiary)] group-hover:text-[var(--color-accent-text-hover)]"
             />
-            Subscribe
+            <span>Subscribe - $2/month</span>
           </button>
         )}
       </>

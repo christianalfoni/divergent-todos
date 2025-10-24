@@ -183,24 +183,32 @@ The app uses **sequential week numbering** that increments throughout the entire
 activity/{docId}
   userId: string
   year: number
-  week: number          // ISO week number (1-53) for the entire year
+  week: number          // Sequential week number (1-53) for the entire year
   month: number         // Month number (0-11) for grouping
-  dailyCounts: number[] // [Mon, Tue, Wed, Thu, Fri] - completed todo counts
   completedTodos: Array<{
     date: string        // ISO date string
-    text: string        // Todo text
-    url?: string        // Optional URL
+    text: string        // Todo text (HTML with tags)
+    createdAt: string   // ISO date string
+    completedAt: string // ISO date string
+    moveCount: number
+    completedWithTimeBox: boolean
+    hasUrl: boolean
+    tags: string[]
   }>
+  incompleteCount: number      // Number of incomplete todos from the week
   aiSummary?: string           // Formal summary for heatmap view
   aiPersonalSummary?: string   // Personal summary for motivation
   aiSummaryGeneratedAt?: Timestamp
 ```
 
+**Note**: When generating AI summaries, the system queries all todos (completed and incomplete) from the Monday of the target week onwards. Only completed todos are stored in the activity document, but incomplete todos are included in the AI analysis to provide context about remaining work and upcoming priorities.
+
 ### AI Summaries
 Weekly activity summaries are generated using OpenAI GPT-4o-mini:
-- **Formal Summary**: Abstract, task-focused for activity heatmap tooltips
-- **Personal Summary**: Encouraging, personalized for Monday motivation popups
-- Generated via admin script: `admin.scripts.generateWeekSummary(userId, week, year)`
+- **Formal Summary**: Professional overview identifying main focus areas and work momentum (3-4 sentences)
+- **Personal Summary**: Supportive coaching highlighting achievements and upcoming work (3-4 sentences)
+- Generated via admin script: `admin.scripts.generateWeekSummary(userId, week, year, customAnalysisInstructions?)`
+- Custom analysis instructions can be passed to experiment with different prompt styles
 - Only accessible to admin UID: `iaSsqsqb99Zemast8LN3dGCxB7o2`
 
 ## Development Notes
