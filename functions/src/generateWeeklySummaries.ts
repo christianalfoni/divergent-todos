@@ -7,6 +7,7 @@ import {
   getTodosForWeek,
   getUsersWithActiveSubscription,
   getPreviousWeekSummary,
+  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
 import {
   createBatchRequest,
@@ -116,13 +117,17 @@ export const generateWeeklySummaries = onSchedule(
               targetYear
             );
 
+            // Get user's account creation date
+            const accountCreationDate = await getUserAccountCreationDate(userId);
+
             const request = createBatchRequest(
               userId,
               completedTodos,
               incompleteTodos,
               targetWeek,
               targetYear,
-              previousWeekSummary
+              previousWeekSummary,
+              accountCreationDate
             );
             batchRequests.push(request);
           }

@@ -878,11 +878,101 @@ import {
   getTodosForWeek,
   getWeekDateRange,
   getPreviousWeekSummary,
+  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
 import { generateSummarySync } from "./lib/openai-sync.js";
+import { buildSummaryPrompt } from "./lib/openai-prompt.js";
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
+
+export const getSummaryData = onCall(
+  {},
+  async (req) => {
+    const callerUid = req.auth?.uid;
+
+    // Check admin access
+    if (callerUid !== ADMIN_UID) {
+      logger.warn("Unauthorized getSummaryData attempt", { uid: callerUid });
+      throw new HttpsError("permission-denied", "Admin access required");
+    }
+
+    const { userId, week, year } = req.data;
+
+    if (!userId || !week) {
+      throw new HttpsError("invalid-argument", "userId and week are required");
+    }
+
+    const targetYear = year || new Date().getFullYear();
+
+    logger.info("Getting summary data", {
+      userId,
+      week,
+      year: targetYear,
+    });
+
+    try {
+      // Calculate date range for the week
+      const { start: weekStart, end: weekEnd } = getWeekDateRange(targetYear, week);
+
+      // Query all todos (completed and incomplete)
+      const { completedTodos, incompleteTodos } = await getTodosForWeek(
+        db,
+        userId,
+        week,
+        targetYear
+      );
+
+      // Get previous week's summary for continuity
+      const previousWeekSummary = await getPreviousWeekSummary(
+        db,
+        userId,
+        week,
+        targetYear
+      );
+
+      // Get user's account creation date
+      const accountCreationDate = await getUserAccountCreationDate(userId);
+
+      // Build the prompt to show the formatted data that would be sent to OpenAI
+      const fullPrompt = buildSummaryPrompt(
+        completedTodos,
+        incompleteTodos,
+        week,
+        targetYear,
+        undefined, // No custom instructions - just show the default
+        previousWeekSummary,
+        accountCreationDate
+      );
+
+      logger.info("Summary data retrieved successfully", {
+        completedCount: completedTodos.length,
+        incompleteCount: incompleteTodos.length,
+        hasPreviousSummary: !!previousWeekSummary,
+        hasAccountCreationDate: !!accountCreationDate,
+      });
+
+      return {
+        success: true,
+        week,
+        year: targetYear,
+        weekStart: weekStart.toISOString().split("T")[0],
+        weekEnd: weekEnd.toISOString().split("T")[0],
+        completedTodos,
+        incompleteTodos,
+        previousWeekSummary,
+        accountCreationDate,
+        fullPrompt, // The complete formatted prompt with data and instructions
+      };
+    } catch (error) {
+      logger.error("Error in getSummaryData", error);
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+      throw new HttpsError("internal", `Failed to get summary data: ${error}`);
+    }
+  }
+);
 
 export const generateWeekSummary = onCall(
   { secrets: [OPENAI_API_KEY] },
@@ -963,6 +1053,16 @@ export const generateWeekSummary = onCall(
         logger.info("No previous week summary found");
       }
 
+      // Get user's account creation date
+      logger.info("Fetching user account creation date...");
+      const accountCreationDate = await getUserAccountCreationDate(userId);
+
+      if (accountCreationDate) {
+        logger.info("User account created on:", accountCreationDate);
+      } else {
+        logger.info("Could not determine account creation date");
+      }
+
       // Generate AI summaries using shared sync module
       logger.info("Calling OpenAI API...");
       const result = await generateSummarySync(
@@ -972,12 +1072,12 @@ export const generateWeekSummary = onCall(
         week,
         targetYear,
         customAnalysisInstructions,
-        previousWeekSummary
+        previousWeekSummary,
+        accountCreationDate
       );
 
-      logger.info("AI summaries generated successfully", {
+      logger.info("AI summary generated successfully", {
         formalLength: result.formalSummary.length,
-        personalLength: result.personalSummary.length,
       });
 
       // Calculate month from week start date
@@ -997,7 +1097,6 @@ export const generateWeekSummary = onCall(
         completedTodos,
         incompleteCount: incompleteTodos.length,
         aiSummary: result.formalSummary,
-        aiPersonalSummary: result.personalSummary,
         aiSummaryGeneratedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
@@ -1011,7 +1110,6 @@ export const generateWeekSummary = onCall(
         weekEnd: weekEnd.toISOString().split("T")[0],
         totalTodos: completedTodos.length,
         formalSummary: result.formalSummary,
-        personalSummary: result.personalSummary,
       };
     } catch (error) {
       logger.error("Error in generateWeekSummary", error);
