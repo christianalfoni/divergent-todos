@@ -64,8 +64,15 @@ service cloud.firestore {
       // Allow read if user is authenticated and owns the activity document
       allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
 
-      // Allow write if user is authenticated and owns the activity document
-      allow write: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      // Allow update only of aiSummary field (for editing in Monday dialog)
+      // Other fields can only be modified by Cloud Functions
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['aiSummary']);
+
+      // Cloud Functions only (no create/delete access for clients)
+      allow create, delete: if false;
     }
 
     // Deny all other access

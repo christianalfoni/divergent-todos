@@ -217,7 +217,6 @@ export const checkAndConsumeBatch = onSchedule(
                     completedTodos,
                     incompleteCount: incompleteTodos.length,
                     aiSummary: result.formalSummary,
-                    aiPersonalSummary: result.personalSummary,
                     aiSummaryGeneratedAt: Timestamp.now(),
                     updatedAt: Timestamp.now(),
                   });

@@ -24,7 +24,7 @@ import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import { trackAppOpened, trackBulkTodoMove, trackDayTodosMoved } from "./firebase/analytics";
 import { isMobileDevice } from "./utils/device";
 import { getSequentialWeek } from "./utils/activity";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
 import { db } from "./firebase";
 import { activityWeekConverter } from "./firebase/types/activity";
 
@@ -63,6 +63,7 @@ function AppContent() {
     todoCount: number;
     tags: string[];
     dailyCounts: [number, number, number, number, number];
+    userId: string;
   } | null>(null);
   const onboarding = useOnboarding();
   const profile = authentication.profile;
@@ -171,8 +172,8 @@ function AppContent() {
         if (!querySnapshot.empty) {
           const activityDoc = querySnapshot.docs[0].data();
 
-          // Only show if there's a personal summary
-          if (activityDoc.aiPersonalSummary) {
+          // Only show if there's an AI summary
+          if (activityDoc.aiSummary) {
             // Extract unique tags from completed todos
             const uniqueTags = new Set<string>();
             activityDoc.completedTodos.forEach(todo => {
@@ -191,12 +192,13 @@ function AppContent() {
 
             setMondayDialog({
               show: true,
-              summary: activityDoc.aiPersonalSummary,
+              summary: activityDoc.aiSummary,
               week: previousWeekNumber,
               year: previousYear,
               todoCount: activityDoc.completedTodos.length,
               tags: Array.from(uniqueTags).sort(),
               dailyCounts,
+              userId: authentication.user.uid,
             });
 
             // Mark as seen for this week
@@ -246,7 +248,7 @@ function AppContent() {
           if (!querySnapshot.empty) {
             const activityDoc = querySnapshot.docs[0].data();
 
-            if (activityDoc.aiPersonalSummary) {
+            if (activityDoc.aiSummary) {
               // Extract unique tags from completed todos
               const uniqueTags = new Set<string>();
               activityDoc.completedTodos.forEach(todo => {
@@ -265,15 +267,16 @@ function AppContent() {
 
               setMondayDialog({
                 show: true,
-                summary: activityDoc.aiPersonalSummary,
+                summary: activityDoc.aiSummary,
                 week: previousWeekNumber,
                 year: previousYear,
                 todoCount: activityDoc.completedTodos.length,
                 tags: Array.from(uniqueTags).sort(),
                 dailyCounts,
+                userId: authentication.user.uid,
               });
             } else {
-              console.log("No AI personal summary found for previous week");
+              console.log("No AI summary found for previous week");
             }
           } else {
             console.log("No activity data found for previous week");
@@ -328,6 +331,37 @@ function AppContent() {
 
     // Track day todos move
     trackDayTodosMoved(uncompletedTodos.length);
+  };
+
+  // Handle Monday dialog "Start week" - moves all uncompleted todos to today and saves edited summary
+  const handleStartWeek = (editedSummary: string) => {
+    if (!mondayDialog) return;
+
+    const today = new Date();
+    const todayString = today.toISOString().split("T")[0];
+
+    // Get all uncompleted todos from previous weeks/days
+    const uncompletedTodos = todos.filter(
+      (todo) => todo.date < todayString && !todo.completed
+    );
+
+    if (uncompletedTodos.length > 0) {
+      const todoIds = uncompletedTodos.map((todo) => todo.id);
+      todoOperations.moveTodosInBatch(todoIds, todayString);
+      trackBulkTodoMove(uncompletedTodos.length);
+    }
+
+    // Close dialog immediately
+    setMondayDialog(null);
+
+    // Update the activity document with edited summary in the background
+    const activityDocId = `${mondayDialog.userId}_${mondayDialog.year}_${mondayDialog.week}`;
+    const activityDocRef = doc(db, "activity", activityDocId);
+    updateDoc(activityDocRef, {
+      aiSummary: editedSummary,
+    }).catch((error) => {
+      console.error("Failed to update activity summary:", error);
+    });
   };
 
   // Show landing page if:
@@ -466,7 +500,7 @@ function AppContent() {
           todoCount={mondayDialog.todoCount}
           tags={mondayDialog.tags}
           dailyCounts={mondayDialog.dailyCounts}
-          onClose={() => setMondayDialog(null)}
+          onStartWeek={handleStartWeek}
         />
       )}
     </div>

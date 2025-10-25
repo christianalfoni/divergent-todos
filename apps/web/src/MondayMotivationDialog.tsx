@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { getActivityColor } from './utils/activity';
+import { getTagColor } from './SmartEditor';
 
 interface MondayMotivationDialogProps {
   summary: string;
@@ -8,7 +9,7 @@ interface MondayMotivationDialogProps {
   todoCount: number;
   tags: string[];
   dailyCounts: [number, number, number, number, number]; // [Mon, Tue, Wed, Thu, Fri]
-  onClose: () => void;
+  onStartWeek: (editedSummary: string) => void;
 }
 
 export default function MondayMotivationDialog({
@@ -17,9 +18,12 @@ export default function MondayMotivationDialog({
   todoCount,
   tags,
   dailyCounts,
-  onClose,
+  onStartWeek,
 }: MondayMotivationDialogProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const [editedSummary, setEditedSummary] = useState(summary);
+  const [isEditing, setIsEditing] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Trigger animation on mount
@@ -27,31 +31,45 @@ export default function MondayMotivationDialog({
     return () => clearTimeout(timer);
   }, []);
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(onClose, 200); // Wait for fade-out animation
-  };
+  // Initialize content on mount
+  useEffect(() => {
+    if (contentRef.current && contentRef.current.textContent === '') {
+      contentRef.current.textContent = editedSummary;
+    }
+  }, [editedSummary]);
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      handleClose();
+  const handleContentClick = () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      // Focus and move cursor to end
+      setTimeout(() => {
+        if (contentRef.current) {
+          contentRef.current.focus();
+          // Move cursor to end only when entering edit mode
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.selectNodeContents(contentRef.current);
+          range.collapse(false);
+          selection?.removeAllRanges();
+          selection?.addRange(range);
+        }
+      }, 0);
     }
   };
 
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  const handleContentChange = () => {
+    if (contentRef.current) {
+      setEditedSummary(contentRef.current.textContent || '');
+    }
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+  };
 
   return (
-    <div
-      className={`monday-dialog-overlay ${isVisible ? 'visible' : ''}`}
-      onClick={handleClose}
-    >
-      <div
-        className={`monday-dialog ${isVisible ? 'visible' : ''}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className={`monday-dialog-overlay ${isVisible ? 'visible' : ''}`}>
+      <div className={`monday-dialog ${isVisible ? 'visible' : ''}`}>
         <div className="monday-dialog-header">
           <h2>
             <svg className="monday-dialog-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -59,13 +77,6 @@ export default function MondayMotivationDialog({
             </svg>
             Your Week {week} Recap
           </h2>
-          <button
-            className="monday-dialog-close"
-            onClick={handleClose}
-            aria-label="Close dialog"
-          >
-            ×
-          </button>
         </div>
         <div className="monday-dialog-content">
           {/* Stats section */}
@@ -97,23 +108,65 @@ export default function MondayMotivationDialog({
             </div>
           </div>
 
-          {/* Tags list */}
-          {tags.length > 0 && (
-            <div className="monday-dialog-tags">
-              {tags.map((tag) => (
-                <span key={tag} className="monday-dialog-tag">
-                  #{tag}
+          {/* Week Summary Section */}
+          <div className="px-4">
+            {/* Divider with "Week Summary" label */}
+            <div className="flex items-center mb-4">
+              <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
+              <div className="relative flex justify-center">
+                <span className="bg-white px-4 text-sm font-semibold text-[var(--color-text-secondary)] whitespace-nowrap dark:bg-[var(--color-bg-primary)]">
+                  Week Summary
                 </span>
-              ))}
+              </div>
+              <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
             </div>
-          )}
 
-          {/* AI Summary as testimonial */}
-          <figure className="monday-dialog-testimonial">
-            <blockquote className="monday-dialog-blockquote">
-              <p>"{summary}"</p>
-            </blockquote>
-          </figure>
+            {/* Tags list with colors */}
+            {tags.length > 0 && (
+              <div className="monday-dialog-tags">
+                {tags.map((tag) => {
+                  const color = getTagColor(tag);
+                  return (
+                    <span key={tag} className={`tag-pill tag-pill-${color}`}>
+                      {tag}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Editable AI Summary - Click to edit */}
+            <div
+              ref={contentRef}
+              contentEditable={isEditing}
+              suppressContentEditableWarning
+              onClick={handleContentClick}
+              onInput={handleContentChange}
+              onBlur={handleBlur}
+              className={`py-3 text-base text-[var(--color-text-primary)] leading-relaxed rounded-lg transition-all ${
+                isEditing
+                  ? 'cursor-text'
+                  : 'cursor-default'
+              }`}
+              style={{
+                whiteSpace: 'pre-wrap',
+                wordBreak: 'break-word',
+                outline: isEditing ? '2px solid var(--color-accent-primary)' : 'none',
+                outlineOffset: '-2px'
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-[var(--color-bg-dialog-footer)] px-6 py-6 flex justify-end">
+          <button
+            type="button"
+            onClick={() => onStartWeek(editedSummary)}
+            className="inline-flex justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
+          >
+            Save week summary
+          </button>
         </div>
       </div>
     </div>

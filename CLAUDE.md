@@ -17,13 +17,18 @@ divergent-todos/
 ├── apps/
 │   ├── web/                    # Vite + React renderer (runs in Electron window)
 │   │   ├── src/
-│   │   │   ├── firebase.ts     # Firebase Web SDK initialization & config
+│   │   │   ├── firebase/       # Firebase integration
+│   │   │   │   └── index.ts    # Firebase Web SDK initialization & config
 │   │   │   ├── App.tsx         # Main React component
 │   │   │   ├── main.tsx        # React entry point
 │   │   │   ├── App.css         # Component styles
 │   │   │   ├── index.css       # Global styles (Tailwind)
 │   │   │   └── vite-env.d.ts   # Vite type declarations
 │   │   ├── public/             # Static assets
+│   │   ├── .firebaserc         # Firebase project configuration
+│   │   ├── firebase.json       # Firebase deployment configuration
+│   │   ├── firestore.indexes.json  # Firestore composite indexes
+│   │   ├── firestore.rules     # Firestore security rules
 │   │   ├── index.html          # HTML entry point
 │   │   ├── vite.config.ts      # Vite configuration
 │   │   ├── tsconfig.json       # TypeScript config
@@ -87,8 +92,14 @@ This project implements a secure Electron architecture:
 - `/apps/web/vite.config.ts` - Vite configuration for renderer
 - `/apps/desktop/electron.vite.config.ts` - Electron-specific Vite config
 
+### Firebase Configuration
+- `/apps/web/.firebaserc` - Firebase project ID and aliases
+- `/apps/web/firebase.json` - Firebase deployment settings (Functions, Firestore)
+- `/apps/web/firestore.indexes.json` - Composite indexes for Firestore queries
+- `/apps/web/firestore.rules` - Firestore security rules
+- `/apps/web/src/firebase/index.ts` - Firebase Web SDK initialization (auth, db, functions)
+
 ### Application Code
-- `/apps/web/src/firebase.ts` - Firebase initialization (auth, db, functions)
 - `/apps/desktop/src/main/main.ts` - Electron main process entry point
 - `/apps/desktop/src/preload/preload.ts` - Secure IPC bridge
 - `/apps/desktop/src/types/ipc.d.ts` - TypeScript types for window.native API
@@ -108,13 +119,32 @@ When making changes to the codebase, always run `pnpm typecheck` to check for Ty
 
 ## Firebase Integration
 
-Firebase services initialized in `/apps/web/src/firebase.ts`:
+### Firebase Services
+Firebase services initialized in `/apps/web/src/firebase/index.ts`:
 - **Authentication** (`auth`) - User authentication
 - **Firestore** (`db`) - NoSQL database
 - **Functions** (`functions`) - Cloud functions for privileged operations
 - **App Check** - (Commented out, optional for production)
 
 Configuration uses public Firebase config (safe for client-side).
+
+### Firebase Configuration Files
+All Firebase configuration files are located in `/apps/web/`:
+- `.firebaserc` - Project configuration (project ID: `divergent-todos`)
+- `firebase.json` - Deployment configuration
+- `firestore.indexes.json` - Composite indexes (synced with Firebase console)
+- `firestore.rules` - Security rules
+
+**Important**: Firebase CLI commands must be run from the `/apps/web/` directory or use `--config apps/web/firebase.json` flag.
+
+**Common Firebase Commands**:
+```bash
+cd apps/web
+firebase firestore:indexes              # View current indexes
+firebase deploy --only firestore:rules  # Deploy security rules
+firebase deploy --only firestore:indexes # Deploy indexes
+firebase deploy --only functions        # Deploy cloud functions
+```
 
 ## Security Considerations
 

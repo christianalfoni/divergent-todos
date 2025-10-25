@@ -6,6 +6,7 @@ import {
   getTodosForWeek,
   getUsersWithActiveSubscription,
   getWeekDateRange,
+  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
 import {
   createBatchRequest,
@@ -85,12 +86,17 @@ export const triggerWeeklySummaries = onCall(
           );
 
           if (completedTodos.length > 0) {
+            // Get user's account creation date
+            const accountCreationDate = await getUserAccountCreationDate(userId);
+
             const request = createBatchRequest(
               userId,
               completedTodos,
               incompleteTodos,
               targetWeek,
-              targetYear
+              targetYear,
+              null, // previousWeekSummary - not used in batch processing
+              accountCreationDate
             );
             batchRequests.push(request);
           } else {
@@ -200,7 +206,6 @@ export const triggerWeeklySummaries = onCall(
                   completedTodos,
                   incompleteCount: incompleteTodos.length,
                   aiSummary: result.formalSummary,
-                  aiPersonalSummary: result.personalSummary,
                   aiSummaryGeneratedAt: Timestamp.now(),
                   updatedAt: Timestamp.now(),
                 });

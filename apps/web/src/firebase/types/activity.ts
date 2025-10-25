@@ -25,8 +25,9 @@ export interface ActivityWeek {
   week: number; // Sequential week number (1-52)
   month: number; // Month number (0-11) for grouping
   completedTodos: CompletedTodo[];
-  aiSummary?: string; // Formal summary
-  aiPersonalSummary?: string; // Personal/motivational summary
+  aiSummary?: string; // Attention reflection summary
+  /** @deprecated No longer generated - use aiSummary instead */
+  aiPersonalSummary?: string;
   aiSummaryGeneratedAt?: Date;
   updatedAt: Date;
 }
@@ -39,6 +40,7 @@ interface ActivityWeekFirestore {
   month: number;
   completedTodos: CompletedTodo[];
   aiSummary?: string;
+  /** @deprecated No longer generated - use aiSummary instead */
   aiPersonalSummary?: string;
   aiSummaryGeneratedAt?: Timestamp;
   updatedAt: Timestamp;

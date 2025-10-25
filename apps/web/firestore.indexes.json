@@ -1,6 +1,20 @@
 {
   "indexes": [
     {
+      "collectionGroup": "batch_jobs",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "submittedAt",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "todos",
       "queryScope": "COLLECTION",
       "fields": [

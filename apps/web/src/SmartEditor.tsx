@@ -171,16 +171,6 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     return chip;
   }
 
-  // Hash function to deterministically assign color to tag
-  function getTagColor(tag: string): string {
-    let hash = 0;
-    for (let i = 0; i < tag.length; i++) {
-      hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const colors = ['gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'];
-    return colors[Math.abs(hash) % colors.length];
-  }
-
   // Create the non-editable pill node for tags
   function makeTagPill(tag: string) {
     const pill = document.createElement("span");
@@ -646,5 +636,15 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     </>
   );
 });
+
+// Hash function to deterministically assign color to tag
+export function getTagColor(tag: string): string {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const colors = ['gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'];
+  return colors[Math.abs(hash) % colors.length];
+}
 
 export default SmartEditor;
