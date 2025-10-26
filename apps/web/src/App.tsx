@@ -7,7 +7,7 @@ import LandingPage from "./LandingPage";
 import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
-import MondayMotivationDialog from "./MondayMotivationDialog";
+import PreviousWeekDialog from "./PreviousWeekDialog";
 import TopBar from "./TopBar";
 import MobileBlocker from "./MobileBlocker";
 import Terms from "./Terms";
@@ -55,7 +55,7 @@ function AppContent() {
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [shouldPulsate, setShouldPulsate] = useState(false);
   const [pendingView, setPendingView] = useState<"calendar" | "activity" | null>(null);
-  const [mondayDialog, setMondayDialog] = useState<{
+  const [previousWeekDialog, setPreviousWeekDialog] = useState<{
     show: boolean;
     summary: string;
     week: number;
@@ -133,24 +133,24 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Monday motivation dialog detection
+  // Previous week dialog detection
   useEffect(() => {
-    const checkMondayDialog = async () => {
+    const checkPreviousWeekDialog = async () => {
       // Only run if user is authenticated and has a profile
       if (!authentication.user || !profile) return;
 
       const now = new Date();
       const dayOfWeek = now.getDay();
 
-      // Only show on Mondays (1 = Monday)
-      if (dayOfWeek !== 1) return;
+      // Don't show on weekends (0 = Sunday, 6 = Saturday)
+      if (dayOfWeek === 0 || dayOfWeek === 6) return;
 
       // Get current week info
       const { year, week } = getSequentialWeek(now);
       const currentWeekKey = `${year}-${week}`;
 
       // Check if user has already seen the dialog for this week
-      if (profile.lastMondayDialogWeek === currentWeekKey) return;
+      if (profile.lastPreviousWeekDialogWeek === currentWeekKey) return;
 
       // Get previous week
       const previousWeek = week - 1;
@@ -190,7 +190,7 @@ function AppContent() {
               }
             });
 
-            setMondayDialog({
+            setPreviousWeekDialog({
               show: true,
               summary: activityDoc.aiSummary,
               week: previousWeekNumber,
@@ -202,24 +202,24 @@ function AppContent() {
             });
 
             // Mark as seen for this week
-            editProfile({ lastMondayDialogWeek: currentWeekKey });
+            editProfile({ lastPreviousWeekDialogWeek: currentWeekKey });
           }
         }
       } catch (error) {
-        console.error("Failed to fetch Monday motivation:", error);
+        console.error("Failed to fetch previous week summary:", error);
       }
     };
 
-    checkMondayDialog();
+    checkPreviousWeekDialog();
   }, [authentication.user, profile]);
 
-  // TEST: Keyboard shortcut to manually trigger Monday dialog (Cmd+Shift+M)
+  // TEST: Keyboard shortcut to manually trigger previous week dialog (Cmd+Shift+M)
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       // Check for Cmd+Shift+M (case insensitive)
       if (e.metaKey && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
         e.preventDefault();
-        console.log('Monday dialog shortcut triggered!');
+        console.log('Previous week dialog shortcut triggered!');
 
         if (!authentication.user) {
           console.log('No authenticated user');
@@ -265,7 +265,7 @@ function AppContent() {
                 }
               });
 
-              setMondayDialog({
+              setPreviousWeekDialog({
                 show: true,
                 summary: activityDoc.aiSummary,
                 week: previousWeekNumber,
@@ -282,7 +282,7 @@ function AppContent() {
             console.log("No activity data found for previous week");
           }
         } catch (error) {
-          console.error("Failed to fetch Monday motivation:", error);
+          console.error("Failed to fetch previous week summary:", error);
         }
       }
     };
@@ -333,9 +333,9 @@ function AppContent() {
     trackDayTodosMoved(uncompletedTodos.length);
   };
 
-  // Handle Monday dialog "Start week" - moves all uncompleted todos to today and saves edited summary
+  // Handle previous week dialog "Start week" - moves all uncompleted todos to today and saves edited summary
   const handleStartWeek = (editedSummary: string) => {
-    if (!mondayDialog) return;
+    if (!previousWeekDialog) return;
 
     const today = new Date();
     const todayString = today.toISOString().split("T")[0];
@@ -352,10 +352,10 @@ function AppContent() {
     }
 
     // Close dialog immediately
-    setMondayDialog(null);
+    setPreviousWeekDialog(null);
 
     // Update the activity document with edited summary in the background
-    const activityDocId = `${mondayDialog.userId}_${mondayDialog.year}_${mondayDialog.week}`;
+    const activityDocId = `${previousWeekDialog.userId}_${previousWeekDialog.year}_${previousWeekDialog.week}`;
     const activityDocRef = doc(db, "activity", activityDocId);
     updateDoc(activityDocRef, {
       aiSummary: editedSummary,
@@ -492,14 +492,14 @@ function AppContent() {
           profile={profile}
         />
       )}
-      {mondayDialog?.show && (
-        <MondayMotivationDialog
-          summary={mondayDialog.summary}
-          week={mondayDialog.week}
-          year={mondayDialog.year}
-          todoCount={mondayDialog.todoCount}
-          tags={mondayDialog.tags}
-          dailyCounts={mondayDialog.dailyCounts}
+      {previousWeekDialog?.show && (
+        <PreviousWeekDialog
+          summary={previousWeekDialog.summary}
+          week={previousWeekDialog.week}
+          year={previousWeekDialog.year}
+          todoCount={previousWeekDialog.todoCount}
+          tags={previousWeekDialog.tags}
+          dailyCounts={previousWeekDialog.dailyCounts}
           onStartWeek={handleStartWeek}
         />
       )}
