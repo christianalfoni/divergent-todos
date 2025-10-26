@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { getActivityColor } from './utils/activity';
 import { getTagColor } from './SmartEditor';
 
-interface MondayMotivationDialogProps {
+interface PreviousWeekDialogProps {
   summary: string;
   week: number;
   year: number;
@@ -12,14 +12,14 @@ interface MondayMotivationDialogProps {
   onStartWeek: (editedSummary: string) => void;
 }
 
-export default function MondayMotivationDialog({
+export default function PreviousWeekDialog({
   summary,
   week,
   todoCount,
   tags,
   dailyCounts,
   onStartWeek,
-}: MondayMotivationDialogProps) {
+}: PreviousWeekDialogProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [editedSummary, setEditedSummary] = useState(summary);
   const [isEditing, setIsEditing] = useState(false);
@@ -68,40 +68,40 @@ export default function MondayMotivationDialog({
   };
 
   return (
-    <div className={`monday-dialog-overlay ${isVisible ? 'visible' : ''}`}>
-      <div className={`monday-dialog ${isVisible ? 'visible' : ''}`}>
-        <div className="monday-dialog-header">
+    <div className={`previous-week-dialog-overlay ${isVisible ? 'visible' : ''}`}>
+      <div className={`previous-week-dialog ${isVisible ? 'visible' : ''}`}>
+        <div className="previous-week-dialog-header">
           <h2>
-            <svg className="monday-dialog-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className="previous-week-dialog-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z" />
             </svg>
             Your Week {week} Recap
           </h2>
         </div>
-        <div className="monday-dialog-content">
+        <div className="previous-week-dialog-content">
           {/* Stats section */}
-          <div className="monday-dialog-stats">
-            <div className="monday-dialog-stat">
-              <span className="monday-dialog-stat-value">{todoCount}</span>
-              <span className="monday-dialog-stat-label">
+          <div className="previous-week-dialog-stats">
+            <div className="previous-week-dialog-stat">
+              <span className="previous-week-dialog-stat-value">{todoCount}</span>
+              <span className="previous-week-dialog-stat-label">
                 {todoCount === 1 ? 'todo completed' : 'todos completed'}
               </span>
             </div>
 
             {/* Daily activity heatmap */}
-            <div className="monday-dialog-daily-activity">
-              <div className="monday-dialog-day-labels">
+            <div className="previous-week-dialog-daily-activity">
+              <div className="previous-week-dialog-day-labels">
                 {['M', 'T', 'W', 'T', 'F'].map((label, index) => (
-                  <div key={index} className="monday-dialog-day-label">
+                  <div key={index} className="previous-week-dialog-day-label">
                     {label}
                   </div>
                 ))}
               </div>
-              <div className="monday-dialog-day-squares">
+              <div className="previous-week-dialog-day-squares">
                 {dailyCounts.map((count, index) => (
                   <div
                     key={index}
-                    className={`monday-dialog-day-square ${getActivityColor(count)}`}
+                    className={`previous-week-dialog-day-square ${getActivityColor(count)}`}
                   />
                 ))}
               </div>
@@ -123,7 +123,7 @@ export default function MondayMotivationDialog({
 
             {/* Tags list with colors */}
             {tags.length > 0 && (
-              <div className="monday-dialog-tags">
+              <div className="previous-week-dialog-tags">
                 {tags.map((tag) => {
                   const color = getTagColor(tag);
                   return (

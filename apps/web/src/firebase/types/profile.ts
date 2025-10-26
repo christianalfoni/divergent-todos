@@ -13,7 +13,7 @@ export interface Profile {
   isOnboarded?: boolean;
   hasInstalledApp?: boolean;
   fontSize?: "small" | "medium" | "large";
-  lastMondayDialogWeek?: string; // Format: "YYYY-WW" (e.g., "2025-42")
+  lastPreviousWeekDialogWeek?: string; // Format: "YYYY-WW" (e.g., "2025-42")
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -37,7 +37,7 @@ interface ProfileFirestore {
   isOnboarded?: boolean;
   hasInstalledApp?: boolean;
   fontSize?: "small" | "medium" | "large";
-  lastMondayDialogWeek?: string; // Format: "YYYY-WW" (e.g., "2025-42")
+  lastPreviousWeekDialogWeek?: string; // Format: "YYYY-WW" (e.g., "2025-42")
   subscription?: {
     customerId: string;
     subscriptionId: string | null;
@@ -82,8 +82,8 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
       result.fontSize = profile.fontSize;
     }
 
-    if (profile.lastMondayDialogWeek !== undefined) {
-      result.lastMondayDialogWeek = profile.lastMondayDialogWeek;
+    if (profile.lastPreviousWeekDialogWeek !== undefined) {
+      result.lastPreviousWeekDialogWeek = profile.lastPreviousWeekDialogWeek;
     }
 
     if (profile.subscription !== undefined) {
@@ -132,8 +132,8 @@ export const profileConverter: FirestoreDataConverter<Profile> = {
       profile.fontSize = data.fontSize;
     }
 
-    if (data.lastMondayDialogWeek !== undefined) {
-      profile.lastMondayDialogWeek = data.lastMondayDialogWeek;
+    if (data.lastPreviousWeekDialogWeek !== undefined) {
+      profile.lastPreviousWeekDialogWeek = data.lastPreviousWeekDialogWeek;
     }
 
     if (data.subscription !== undefined) {

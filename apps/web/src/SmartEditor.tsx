@@ -544,7 +544,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
         .tag-pill {
           display: inline-flex;
           align-items: center;
-          padding: 2px 8px;
+          padding: 0px 6px;
           border-radius: 6px;
           line-height: 1.4;
           margin: 0 1px;
