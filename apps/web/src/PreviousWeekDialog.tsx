@@ -106,6 +106,20 @@ export default function PreviousWeekDialog({
                 ))}
               </div>
             </div>
+
+            {/* Tags list with colors */}
+            {tags.length > 0 && (
+              <div className="previous-week-dialog-tags">
+                {tags.map((tag) => {
+                  const color = getTagColor(tag);
+                  return (
+                    <span key={tag} className={`tag-pill tag-pill-${color}`}>
+                      {tag}
+                    </span>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {/* Week Summary Section */}
@@ -121,20 +135,6 @@ export default function PreviousWeekDialog({
               <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
             </div>
 
-            {/* Tags list with colors */}
-            {tags.length > 0 && (
-              <div className="previous-week-dialog-tags">
-                {tags.map((tag) => {
-                  const color = getTagColor(tag);
-                  return (
-                    <span key={tag} className={`tag-pill tag-pill-${color}`}>
-                      {tag}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
             {/* Editable AI Summary - Click to edit */}
             <div
               ref={contentRef}
@@ -143,7 +143,7 @@ export default function PreviousWeekDialog({
               onClick={handleContentClick}
               onInput={handleContentChange}
               onBlur={handleBlur}
-              className={`py-3 text-base text-[var(--color-text-primary)] leading-relaxed rounded-lg transition-all ${
+              className={`px-4 py-4 text-base text-[var(--color-text-primary)] leading-relaxed rounded-lg transition-all ${
                 isEditing
                   ? 'cursor-text'
                   : 'cursor-default'
