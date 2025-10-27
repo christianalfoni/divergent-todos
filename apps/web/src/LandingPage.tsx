@@ -1,14 +1,28 @@
+import { useEffect } from "react";
 import { ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { ARTICLE_URL } from "./constants/links";
+import { useSignIn } from "./hooks/useSignIn";
+import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
+import { useAuthentication } from "./hooks/useAuthentication";
 
 interface LandingPageProps {
-  onSignInGoogle: () => void;
-  onSignInAnonymous: () => void;
+  onAuthenticated: () => void;
 }
 
-export default function LandingPage({ onSignInGoogle, onSignInAnonymous }: LandingPageProps) {
+export default function LandingPage({ onAuthenticated }: LandingPageProps) {
+  const [authentication] = useAuthentication();
+  const [{ isSigningIn }, signIn] = useSignIn();
+  const [{ isSigningIn: isSigningInAnonymously }, signInAnonymously] = useSignInAnonymously();
+
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
+
+  // When we have a user, flip to app
+  useEffect(() => {
+    if (authentication.user) {
+      onAuthenticated();
+    }
+  }, [authentication.user, onAuthenticated]);
 
   return (
     <div className="bg-[var(--color-bg-primary)] min-h-screen overflow-y-auto">
@@ -52,8 +66,9 @@ export default function LandingPage({ onSignInGoogle, onSignInAnonymous }: Landi
           <div className="flex flex-col items-center gap-4 mb-8">
             <button
               type="button"
-              onClick={onSignInGoogle}
-              className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20"
+              onClick={() => signIn({})}
+              disabled={isSigningIn || isSigningInAnonymously}
+              className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20 disabled:opacity-50"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
                 <path
@@ -73,28 +88,26 @@ export default function LandingPage({ onSignInGoogle, onSignInAnonymous }: Landi
                   fill="#34A853"
                 />
               </svg>
-              <span className="text-sm/6 font-semibold">Sign in with Google</span>
+              <span className="text-sm/6 font-semibold">
+                {isSigningIn ? (isElectron ? "Signing in with browser..." : "Signing in...") : "Sign in with Google"}
+              </span>
             </button>
 
             <button
               type="button"
-              onClick={onSignInAnonymous}
-              className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20"
+              onClick={() => signInAnonymously({})}
+              disabled={isSigningIn || isSigningInAnonymously}
+              className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20 disabled:opacity-50"
             >
-              Let me try it first
+              {isSigningInAnonymously ? "Starting..." : "Let me try it first"}
             </button>
 
             {!isElectron && (
               <>
-                <div className="relative w-full max-w-md">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-200 dark:border-white/10"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="bg-[var(--color-bg-primary)] px-2 text-gray-500 dark:text-gray-400">
-                      Or
-                    </span>
-                  </div>
+                <div className="flex items-center w-full max-w-md">
+                  <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
+                  <span className="px-2 text-xs text-gray-500 dark:text-gray-400">Or</span>
+                  <div className="flex-1 border-t border-gray-200 dark:border-white/10"></div>
                 </div>
                 <a
                   href="https://github.com/ChristianAlfoni/divergent-todos/releases/latest"

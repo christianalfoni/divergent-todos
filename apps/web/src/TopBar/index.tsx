@@ -86,6 +86,8 @@ export default function TopBar({
 
   const handleSignOut = () => {
     trackMenuItemClicked("sign_out");
+    // Clear landing page flag so user sees it again after sign out
+    localStorage.removeItem("hasLeftLandingPage");
     signOut(auth);
   };
 
