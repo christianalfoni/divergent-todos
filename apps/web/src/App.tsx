@@ -21,10 +21,21 @@ import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
 import { useEditProfile } from "./hooks/useEditProfile";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
-import { trackAppOpened, trackBulkTodoMove, trackDayTodosMoved } from "./firebase/analytics";
+import {
+  trackAppOpened,
+  trackBulkTodoMove,
+  trackDayTodosMoved,
+} from "./firebase/analytics";
 import { isMobileDevice } from "./utils/device";
 import { getSequentialWeek } from "./utils/activity";
-import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { db } from "./firebase";
 import { activityWeekConverter } from "./firebase/types/activity";
 
@@ -45,16 +56,22 @@ function AppContent() {
   const [authentication] = useAuthentication();
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
-  const [authModalState, setAuthModalState] = useState<{ open: boolean; autoTrigger?: "google" | "anonymous" | null }>({ open: false, autoTrigger: null });
+  const [authModalState, setAuthModalState] = useState(false);
   const [hasLeftLandingPage, setHasLeftLandingPage] = useState(() => {
     // Check if user has already left the landing page
-    return localStorage.getItem('hasLeftLandingPage') === 'true';
+    return localStorage.getItem("hasLeftLandingPage") === "true";
   });
-  const [currentView, setCurrentView] = useState<"calendar" | "activity">("calendar");
-  const [activityYear, setActivityYear] = useState(() => new Date().getFullYear());
+  const [currentView, setCurrentView] = useState<"calendar" | "activity">(
+    "calendar"
+  );
+  const [activityYear, setActivityYear] = useState(() =>
+    new Date().getFullYear()
+  );
   const [isLoadingActivity, setIsLoadingActivity] = useState(false);
   const [shouldPulsate, setShouldPulsate] = useState(false);
-  const [pendingView, setPendingView] = useState<"calendar" | "activity" | null>(null);
+  const [pendingView, setPendingView] = useState<
+    "calendar" | "activity" | null
+  >(null);
   const [previousWeekDialog, setPreviousWeekDialog] = useState<{
     show: boolean;
     summary: string;
@@ -75,23 +92,42 @@ function AppContent() {
   useEffect(() => {
     if (authentication.user) {
       setHadAuthenticatedUser(true);
-    }
-  }, [authentication.user]);
 
-  // Clear the localStorage flag when user signs out (only if they were previously authenticated)
-  // This allows them to see the landing page again after sign out
-  useEffect(() => {
-    if (!authentication.user && !authentication.isAuthenticating && hadAuthenticatedUser && hasLeftLandingPage) {
-      // User was authenticated but now is signed out
-      localStorage.removeItem('hasLeftLandingPage');
-      setHasLeftLandingPage(false);
+      // If user signed in while hasLeftLandingPage is false, set it to true
+      // This handles the case where LandingPage unmounts before its useEffect runs
+      if (!hasLeftLandingPage) {
+        localStorage.setItem("hasLeftLandingPage", "true");
+        setHasLeftLandingPage(true);
+      }
     }
-  }, [authentication.user, authentication.isAuthenticating, hadAuthenticatedUser, hasLeftLandingPage]);
+  }, [authentication.user, hasLeftLandingPage]);
+
+
+  // Sync state with localStorage when user signs out
+  // (localStorage is cleared by the sign out button handler)
+  useEffect(() => {
+    if (
+      !authentication.user &&
+      !authentication.isAuthenticating &&
+      hadAuthenticatedUser
+    ) {
+      // User signed out - check if localStorage was cleared
+      const hasLeftLandingPageInStorage = localStorage.getItem("hasLeftLandingPage") === "true";
+      if (hasLeftLandingPage && !hasLeftLandingPageInStorage) {
+        setHasLeftLandingPage(false);
+      }
+    }
+  }, [
+    authentication.user,
+    authentication.isAuthenticating,
+    hadAuthenticatedUser,
+    hasLeftLandingPage,
+  ]);
 
   // Debug: Check for duplicate positions
   useEffect(() => {
     const positionMap = new Map<string, string[]>();
-    todos.forEach(todo => {
+    todos.forEach((todo) => {
       const date = todo.date;
       if (!positionMap.has(date)) {
         positionMap.set(date, []);
@@ -100,11 +136,23 @@ function AppContent() {
     });
 
     positionMap.forEach((positions, date) => {
-      const duplicates = positions.filter((pos, index) => positions.indexOf(pos) !== index);
+      const duplicates = positions.filter(
+        (pos, index) => positions.indexOf(pos) !== index
+      );
       if (duplicates.length > 0) {
-        console.error(`🔴 Duplicate positions found for date ${date}:`, duplicates);
-        const todosForDate = todos.filter(t => t.date === date);
-        console.error('All todos for this date:', todosForDate.map(t => ({ id: t.id, position: t.position, text: t.text })));
+        console.error(
+          `🔴 Duplicate positions found for date ${date}:`,
+          duplicates
+        );
+        const todosForDate = todos.filter((t) => t.date === date);
+        console.error(
+          "All todos for this date:",
+          todosForDate.map((t) => ({
+            id: t.id,
+            position: t.position,
+            text: t.text,
+          }))
+        );
       }
     });
   }, [todos]);
@@ -159,7 +207,9 @@ function AppContent() {
 
       try {
         // Query previous week's activity
-        const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+        const activityRef = collection(db, "activity").withConverter(
+          activityWeekConverter
+        );
         const q = query(
           activityRef,
           where("userId", "==", authentication.user.uid),
@@ -176,13 +226,15 @@ function AppContent() {
           if (activityDoc.aiSummary) {
             // Extract unique tags from completed todos
             const uniqueTags = new Set<string>();
-            activityDoc.completedTodos.forEach(todo => {
-              todo.tags.forEach(tag => uniqueTags.add(tag));
+            activityDoc.completedTodos.forEach((todo) => {
+              todo.tags.forEach((tag) => uniqueTags.add(tag));
             });
 
             // Calculate daily counts (Mon-Fri)
-            const dailyCounts: [number, number, number, number, number] = [0, 0, 0, 0, 0];
-            activityDoc.completedTodos.forEach(todo => {
+            const dailyCounts: [number, number, number, number, number] = [
+              0, 0, 0, 0, 0,
+            ];
+            activityDoc.completedTodos.forEach((todo) => {
               const todoDate = new Date(todo.date);
               const dayOfWeek = todoDate.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
               if (dayOfWeek >= 1 && dayOfWeek <= 5) {
@@ -217,12 +269,12 @@ function AppContent() {
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
       // Check for Cmd+Shift+M (case insensitive)
-      if (e.metaKey && e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+      if (e.metaKey && e.shiftKey && (e.key === "M" || e.key === "m")) {
         e.preventDefault();
-        console.log('Previous week dialog shortcut triggered!');
+        console.log("Previous week dialog shortcut triggered!");
 
         if (!authentication.user) {
-          console.log('No authenticated user');
+          console.log("No authenticated user");
           return;
         }
 
@@ -235,7 +287,9 @@ function AppContent() {
 
         try {
           // Query previous week's activity
-          const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+          const activityRef = collection(db, "activity").withConverter(
+            activityWeekConverter
+          );
           const q = query(
             activityRef,
             where("userId", "==", authentication.user.uid),
@@ -251,13 +305,15 @@ function AppContent() {
             if (activityDoc.aiSummary) {
               // Extract unique tags from completed todos
               const uniqueTags = new Set<string>();
-              activityDoc.completedTodos.forEach(todo => {
-                todo.tags.forEach(tag => uniqueTags.add(tag));
+              activityDoc.completedTodos.forEach((todo) => {
+                todo.tags.forEach((tag) => uniqueTags.add(tag));
               });
 
               // Calculate daily counts (Mon-Fri)
-              const dailyCounts: [number, number, number, number, number] = [0, 0, 0, 0, 0];
-              activityDoc.completedTodos.forEach(todo => {
+              const dailyCounts: [number, number, number, number, number] = [
+                0, 0, 0, 0, 0,
+              ];
+              activityDoc.completedTodos.forEach((todo) => {
                 const todoDate = new Date(todo.date);
                 const dayOfWeek = todoDate.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
@@ -287,8 +343,8 @@ function AppContent() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [authentication.user]);
 
   // Check if user needs to see "Tutorial" button
@@ -370,7 +426,8 @@ function AppContent() {
   // - User hasn't left the landing page yet (no localStorage flag)
   // This way, first-time users see landing page immediately,
   // but returning users who clicked past it won't see it during auth loading
-  const showLandingPage = !isElectron && !authentication.user && !hasLeftLandingPage;
+  const showLandingPage =
+    !isElectron && !authentication.user && !hasLeftLandingPage;
 
   // Effect to handle pulsating animation delay
   useEffect(() => {
@@ -411,15 +468,9 @@ function AppContent() {
   if (showLandingPage) {
     return (
       <LandingPage
-        onSignInGoogle={() => {
-          localStorage.setItem('hasLeftLandingPage', 'true');
+        onAuthenticated={() => {
+          localStorage.setItem("hasLeftLandingPage", "true");
           setHasLeftLandingPage(true);
-          setAuthModalState({ open: true, autoTrigger: "google" });
-        }}
-        onSignInAnonymous={() => {
-          localStorage.setItem('hasLeftLandingPage', 'true');
-          setHasLeftLandingPage(true);
-          setAuthModalState({ open: true, autoTrigger: "anonymous" });
         }}
       />
     );
@@ -435,7 +486,7 @@ function AppContent() {
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           showTutorial={showTutorial}
           onOpenOnboarding={onboarding.startOnboarding}
-          onOpenAuthModal={() => setAuthModalState({ open: true, autoTrigger: null })}
+          onOpenAuthModal={() => setAuthModalState(true)}
           currentView={currentView}
           onViewChange={handleViewChange}
           activityYear={activityYear}
@@ -455,7 +506,9 @@ function AppContent() {
             onToggleTodoComplete={
               authentication.user ? todoOperations.toggleTodoComplete : () => {}
             }
-            onMoveTodo={authentication.user ? todoOperations.moveTodo : () => {}}
+            onMoveTodo={
+              authentication.user ? todoOperations.moveTodo : () => {}
+            }
             onUpdateTodo={
               authentication.user ? todoOperations.updateTodo : () => {}
             }
@@ -472,17 +525,19 @@ function AppContent() {
         )}
         {/* Hidden Activity component to trigger loading */}
         {pendingView === "activity" && currentView === "calendar" && (
-          <div style={{ display: 'none' }}>
+          <div style={{ display: "none" }}>
             <Activity year={activityYear} onLoaded={handleActivityLoaded} />
           </div>
         )}
       </div>
       <AuthModal
-        open={(!authentication.isAuthenticating && !authentication.user) || authModalState.open}
+        open={
+          (!authentication.isAuthenticating && !authentication.user) ||
+          authModalState
+        }
         onSignIn={() => {
-          setAuthModalState({ open: false, autoTrigger: null });
+          setAuthModalState(false);
         }}
-        autoTrigger={authModalState.autoTrigger}
       />
       {authentication.user && (
         <SubscriptionDialog

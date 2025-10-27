@@ -4,7 +4,6 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
-import { useEffect } from "react";
 import { UserCircleIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
@@ -14,37 +13,23 @@ import { useAuthentication } from "./hooks/useAuthentication";
 interface AuthModalProps {
   open: boolean;
   onSignIn: () => void;
-  autoTrigger?: "google" | "anonymous" | null;
 }
 
-export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProps) {
+export default function AuthModal({ open, onSignIn }: AuthModalProps) {
   const [authentication] = useAuthentication();
   const [{ isSigningIn, error }, signIn] = useSignIn();
-  const [{ isSigningIn: isSigningInAnonymously, error: anonymousError }, signInAnonymously] = useSignInAnonymously();
-  const [{ isLinking, error: linkError }, linkAccount] = useLinkAnonymousAccount();
+  const [
+    { isSigningIn: isSigningInAnonymously, error: anonymousError },
+    signInAnonymously,
+  ] = useSignInAnonymously();
+  const [{ isLinking, error: linkError }, linkAccount] =
+    useLinkAnonymousAccount();
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
 
   // Check if the user is anonymous (for account linking)
   const isAnonymous = authentication.user?.isAnonymous ?? false;
-
-  // Auto-trigger sign in when modal opens with autoTrigger prop
-  useEffect(() => {
-    if (!open || !autoTrigger) return;
-
-    if (autoTrigger === "google") {
-      if (isAnonymous) {
-        linkAccount({});
-      } else {
-        signIn({});
-      }
-      onSignIn();
-    } else if (autoTrigger === "anonymous") {
-      signInAnonymously({});
-      onSignIn();
-    }
-  }, [open, autoTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Dialog open={open} onClose={() => {}} className="relative z-10">
@@ -71,14 +56,15 @@ export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProp
                   as="h3"
                   className="text-base font-semibold text-[var(--color-text-primary)]"
                 >
-                  {isAnonymous ? "Create Your Account" : "Welcome to Divergent Todos"}
+                  {isAnonymous
+                    ? "Create Your Account"
+                    : "Welcome to Divergent Todos"}
                 </DialogTitle>
                 <div className="mt-2">
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     {isAnonymous
                       ? "Link your Google account to save your todos permanently"
-                      : "Sign in or download the app to start directing your attention"
-                    }
+                      : "Sign in or download the app to start directing your attention"}
                   </p>
                 </div>
               </div>
@@ -98,7 +84,11 @@ export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProp
                 className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 focus-visible:inset-ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:inset-ring-white/5 dark:hover:bg-white/20 disabled:opacity-50"
               >
                 {!(isSigningIn || isLinking) && (
-                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    className="h-5 w-5"
+                  >
                     <path
                       d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
                       fill="#EA4335"
@@ -120,12 +110,15 @@ export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProp
                 <span className="text-sm/6 font-semibold">
                   {isAnonymous
                     ? isLinking
-                      ? (isElectron ? "Linking with browser..." : "Linking...")
+                      ? isElectron
+                        ? "Linking with browser..."
+                        : "Linking..."
                       : "Link Google Account"
                     : isSigningIn
-                    ? (isElectron ? "Signing in with browser..." : "Signing in...")
-                    : "Sign in with Google"
-                  }
+                    ? isElectron
+                      ? "Signing in with browser..."
+                      : "Signing in..."
+                    : "Sign in with Google"}
                 </span>
               </button>
               {!isAnonymous && (
@@ -138,7 +131,9 @@ export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProp
                   disabled={isSigningIn || isSigningInAnonymously}
                   className="flex w-full items-center justify-center gap-3 rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-xs inset-ring inset-ring-gray-300 hover:bg-gray-50 focus-visible:inset-ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:inset-ring-white/5 dark:hover:bg-white/20 disabled:opacity-50"
                 >
-                  {isSigningInAnonymously ? "Starting..." : "Let me try it first"}
+                  {isSigningInAnonymously
+                    ? "Starting..."
+                    : "Let me try it first"}
                 </button>
               )}
               {!isElectron && !isAnonymous && (
@@ -182,7 +177,9 @@ export default function AuthModal({ open, onSignIn, autoTrigger }: AuthModalProp
               <p className="text-xs text-[var(--color-text-secondary)] text-center mt-4">
                 By signing in, you agree to our{" "}
                 <a
-                  href={isElectron ? "https://divergent-todos.com/terms" : "/terms"}
+                  href={
+                    isElectron ? "https://divergent-todos.com/terms" : "/terms"
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] underline"
