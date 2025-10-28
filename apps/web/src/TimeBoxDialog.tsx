@@ -134,7 +134,10 @@ export default function TimeBoxDialog({
 
             {/* Content */}
             <div className="px-6 py-6">
-              <div className="text-sm text-[var(--color-text-primary)] mb-3">
+              <div
+                className="text-[var(--color-text-primary)] mb-3"
+                style={{ ['--todo-text-size' as string]: '1.125rem' }}
+              >
                 <SmartEditor html={todo.text} editing={false} />
               </div>
               {todo.url && (

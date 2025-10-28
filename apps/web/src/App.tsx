@@ -35,6 +35,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  onSnapshot,
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { activityWeekConverter } from "./firebase/types/activity";
@@ -265,6 +266,40 @@ function AppContent() {
     checkPreviousWeekDialog();
   }, [authentication.user, profile]);
 
+  // Real-time sync: Close dialog if summary is saved on another device
+  useEffect(() => {
+    if (!previousWeekDialog) return;
+
+    const activityDocId = `${previousWeekDialog.userId}_${previousWeekDialog.year}_${previousWeekDialog.week}`;
+    const activityDocRef = doc(db, "activity", activityDocId).withConverter(
+      activityWeekConverter
+    );
+
+    // Track the initial timestamp to detect changes
+    let initialTimestamp: Date | null = null;
+
+    const unsubscribe = onSnapshot(activityDocRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+
+        if (initialTimestamp === null) {
+          // First snapshot - store the initial timestamp
+          initialTimestamp = data.updatedAt;
+        } else {
+          // Check if updatedAt has changed (meaning someone else saved)
+          if (data.updatedAt.getTime() !== initialTimestamp.getTime()) {
+            console.log("Week summary was saved on another device - closing dialog");
+            setPreviousWeekDialog(null);
+          }
+        }
+      }
+    }, (error) => {
+      console.error("Error listening to activity document:", error);
+    });
+
+    return () => unsubscribe();
+  }, [previousWeekDialog]);
+
   // TEST: Keyboard shortcut to manually trigger previous week dialog (Cmd+Shift+M)
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
@@ -415,6 +450,7 @@ function AppContent() {
     const activityDocRef = doc(db, "activity", activityDocId);
     updateDoc(activityDocRef, {
       aiSummary: editedSummary,
+      updatedAt: new Date(),
     }).catch((error) => {
       console.error("Failed to update activity summary:", error);
     });
