@@ -184,6 +184,7 @@ export default function Calendar({
                 isAuthenticated={!!authentication.user}
                 isLoading={isLoading}
                 todos={getTodosForDate(date)}
+                allTodos={todos}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}

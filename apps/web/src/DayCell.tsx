@@ -14,6 +14,7 @@ interface DayCellProps {
   isAuthenticated: boolean
   isLoading: boolean
   todos: Todo[]
+  allTodos: Todo[] // All todos across all days for tag autocomplete
   onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
   onToggleTodoComplete: (todoId: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
@@ -22,7 +23,7 @@ interface DayCellProps {
   onMoveTodosFromDay: (date: Date) => void
 }
 
-export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
+export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -36,8 +37,8 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
   // During onboarding, allow adding todos on any day
   const canAddTodo = isOnboarding || !isPastDay
 
-  // Extract all tags from current todos for autocomplete
-  const availableTags = todos.flatMap(todo => {
+  // Extract all tags from all todos (across all days) for autocomplete
+  const availableTags = allTodos.flatMap(todo => {
     const temp = document.createElement('div')
     temp.innerHTML = todo.text
     const tagElements = temp.querySelectorAll('[data-tag]')
