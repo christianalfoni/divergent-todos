@@ -67,7 +67,7 @@ export default function UserMenu({
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="relative flex max-w-xs items-center p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] rounded-md">
+      <MenuButton className="relative flex max-w-xs items-center p-2 rounded-md focus:outline-none">
         <span className="absolute -inset-1.5" />
         <span className="sr-only">Open user menu</span>
         {photoURL ? (
