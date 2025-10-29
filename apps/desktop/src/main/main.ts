@@ -80,7 +80,7 @@ function handleAuthCallback(url: string) {
 }
 
 // Configure auto-updater
-autoUpdater.autoDownload = false // Don't auto-download, let user decide
+autoUpdater.autoDownload = true // Auto-download updates in background
 autoUpdater.autoInstallOnAppQuit = true
 
 // Log configuration for debugging

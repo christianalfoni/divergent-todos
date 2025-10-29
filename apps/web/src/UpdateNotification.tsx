@@ -4,19 +4,11 @@ interface UpdateInfo {
   version: string;
 }
 
-interface DownloadProgress {
-  percent: number;
-  bytesPerSecond: number;
-  total: number;
-  transferred: number;
-}
-
 type UpdateState =
   | { type: 'idle' }
   | { type: 'checking' }
-  | { type: 'available', info: UpdateInfo }
-  | { type: 'downloading', progress: DownloadProgress }
-  | { type: 'downloaded', info: UpdateInfo }
+  | { type: 'downloading' } // Auto-downloading in background
+  | { type: 'downloaded', info: UpdateInfo } // Ready to install
   | { type: 'installing', info: UpdateInfo }
   | { type: 'error', message: string };
 
@@ -36,8 +28,9 @@ export default function UpdateNotification() {
       setUpdateState({ type: 'checking' });
     });
 
-    const unsubscribeAvailable = window.native.updater.onAvailable((info) => {
-      setUpdateState({ type: 'available', info });
+    const unsubscribeAvailable = window.native.updater.onAvailable(() => {
+      // Auto-download is enabled, so download starts automatically in background
+      setUpdateState({ type: 'downloading' });
     });
 
     const unsubscribeNotAvailable = window.native.updater.onNotAvailable(() => {
@@ -50,14 +43,14 @@ export default function UpdateNotification() {
       setTimeout(() => setUpdateState({ type: 'idle' }), 5000);
     });
 
-    const unsubscribeProgress = window.native.updater.onDownloadProgress((progress) => {
-      setUpdateState({ type: 'downloading', progress });
+    const unsubscribeProgress = window.native.updater.onDownloadProgress(() => {
+      // Keep state as 'downloading', don't show progress in UI
+      setUpdateState({ type: 'downloading' });
     });
 
     const unsubscribeDownloaded = window.native.updater.onDownloaded((info) => {
-      setUpdateState({ type: 'installing', info });
-      // Automatically install when download completes
-      window.native!.updater.install();
+      // Show the update button when download is complete
+      setUpdateState({ type: 'downloaded', info });
     });
 
     // Cleanup all listeners on unmount
@@ -72,25 +65,26 @@ export default function UpdateNotification() {
     };
   }, [isDesktop]);
 
-  if (!isDesktop || updateState.type === 'idle' || updateState.type === 'checking') {
+  // Only show UI when update is ready to install or currently installing
+  if (!isDesktop || updateState.type === 'idle' || updateState.type === 'checking' || updateState.type === 'downloading') {
     return null;
   }
 
   const handleClick = () => {
-    if (updateState.type === 'available') {
-      // Immediately set to downloading state
-      setUpdateState({ type: 'downloading', progress: { percent: 0, bytesPerSecond: 0, total: 0, transferred: 0 } });
-      window.native!.updater.download();
+    if (updateState.type === 'downloaded') {
+      // Install the downloaded update
+      setUpdateState({ type: 'installing', info: updateState.info });
+      window.native!.updater.install();
     }
   };
 
   return (
     <button
       onClick={handleClick}
-      disabled={updateState.type === 'downloading' || updateState.type === 'installing'}
+      disabled={updateState.type === 'installing'}
       className="flex items-center gap-x-2 rounded-md px-3 py-2 text-sm font-semibold text-[var(--color-text-primary)] hover:bg-[var(--color-bg-menu-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:opacity-50"
     >
-      {updateState.type === 'downloading' || updateState.type === 'installing' ? (
+      {updateState.type === 'installing' ? (
         <>
           {/* Spinner icon */}
           <svg
@@ -113,7 +107,7 @@ export default function UpdateNotification() {
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          <span>{updateState.type === 'installing' ? 'Installing...' : 'Downloading...'}</span>
+          <span>Installing...</span>
         </>
       ) : (
         <>

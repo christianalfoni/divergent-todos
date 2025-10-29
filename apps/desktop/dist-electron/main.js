@@ -14811,7 +14811,7 @@ function handleAuthCallback(url) {
   session.resolver(sid);
   authSessions.delete(sid);
 }
-mainExports.autoUpdater.autoDownload = false;
+mainExports.autoUpdater.autoDownload = true;
 mainExports.autoUpdater.autoInstallOnAppQuit = true;
 console.log("Auto-updater configuration:", {
   autoDownload: mainExports.autoUpdater.autoDownload,
