@@ -73,6 +73,17 @@ export function useAuthentication() {
             isElectron: window.navigator.userAgent.includes("Electron") ? "true" : "false",
           });
 
+          // Debug: Log user data to check photoURL
+          console.log("User authenticated:", {
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            isAnonymous: user.isAnonymous,
+            providerId: user.providerId,
+            providerData: user.providerData,
+          });
+
           // Set up profile listener
           const profileDoc = doc(profilesCollection, user.uid);
           unsubscribeProfile = onSnapshot(

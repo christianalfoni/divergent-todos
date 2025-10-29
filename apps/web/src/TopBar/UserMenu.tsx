@@ -62,15 +62,18 @@ export default function UserMenu({
   onOpenOnboarding,
   onMenuItemClick,
 }: UserMenuProps) {
+  // Get photoURL from user object or fall back to providerData
+  const photoURL = user.photoURL || user.providerData.find(p => p.providerId === 'google.com')?.photoURL;
+
   return (
     <Menu as="div" className="relative">
       <MenuButton className="relative flex max-w-xs items-center p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] rounded-md">
         <span className="absolute -inset-1.5" />
         <span className="sr-only">Open user menu</span>
-        {user.photoURL ? (
+        {photoURL ? (
           <img
             alt=""
-            src={user.photoURL}
+            src={photoURL}
             className="size-8 rounded-full outline -outline-offset-1 outline-[var(--color-outline)]"
           />
         ) : (
