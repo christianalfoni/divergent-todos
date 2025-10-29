@@ -14,14 +14,14 @@ test.describe("Basic Authentication and Todo Flow", () => {
     // Sign in with test user
     await signInTestUser(page, testUser.customToken);
 
-    // Verify we're signed in by checking for the test mode indicator
-    await expect(page.getByText("🧪 Test User Mode")).toBeVisible();
+    // Verify we're signed in by checking for the test mode badge
+    await expect(page.getByText("Test Mode")).toBeVisible();
 
     // Verify the calendar view is visible
     await expect(page.getByRole("navigation")).toBeVisible();
 
-    // Wait for the page to fully load
-    await page.waitForLoadState("networkidle");
+    // Verify tutorial is showing (auto-starts for new users)
+    await expect(page.getByText("Toggle between view modes")).toBeVisible();
 
     console.log("Test user signed in successfully");
   });

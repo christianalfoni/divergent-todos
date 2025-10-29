@@ -266,12 +266,12 @@ const handleSignOut = async () => {
 };
 ```
 
-#### Test Mode Indicator
-**Location**: `apps/web/src/TestModeIndicator.tsx`
+#### Test Mode Badge
+**Location**: `apps/web/src/TopBar/index.tsx` (uses `useIsTestUser` hook)
 
-**Purpose**: Yellow banner that shows when signed in as test user.
+**Purpose**: Yellow badge that shows next to the logo when signed in as test user.
 
-**Display**: `🧪 Test User Mode - This account will be deleted on sign out`
+**Display**: `Test Mode` (small badge with yellow background)
 
 ---
 
@@ -333,7 +333,7 @@ test("test name", async ({ page }) => {
   await signInTestUser(page, testUser.customToken);
 
   // 3. Verify signed in
-  await expect(page.getByText("🧪 Test User Mode")).toBeVisible();
+  await expect(page.getByText("Test Mode")).toBeVisible();
 
   // 4. Run test scenarios
   // ... test code here ...
@@ -484,7 +484,7 @@ onAuthStateChanged fires
     ↓
 App loads user data
     ↓
-TestModeIndicator shows yellow banner
+Test Mode badge appears in TopBar (yellow badge next to logo)
 
 
 USAGE PHASE
@@ -563,7 +563,7 @@ test.describe("Feature Name", () => {
     await signInTestUser(page, testUser.customToken);
 
     // Test
-    await expect(page.getByText("🧪 Test User Mode")).toBeVisible();
+    await expect(page.getByText("Test Mode")).toBeVisible();
     // ... your test code ...
   });
 
