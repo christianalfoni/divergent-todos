@@ -18,18 +18,14 @@ export async function createTestUser(page: Page): Promise<TestUserData> {
   // Navigate to the app to get access to Firebase
   await page.goto("/");
 
-  // Call the createTestUser cloud function
+  // Wait for app to load and test helpers to be available
+  await page.waitForFunction(() => (window as any).__testHelpers !== undefined);
+
+  // Call the createTestUser cloud function via window.__testHelpers
   const result = await page.evaluate(
     async ({ secret }: { secret: string }) => {
-      const { httpsCallable } = await import("firebase/functions");
-      const { functions } = await import("./firebase");
-      const createTestUserFn = httpsCallable(functions, "createTestUser");
-      const response = await createTestUserFn({ devSecret: secret });
-      return response.data as {
-        uid: string;
-        customToken: string;
-        email: string;
-      };
+      const helpers = (window as any).__testHelpers;
+      return await helpers.createTestUser(secret);
     },
     { secret: devSecret }
   );
@@ -45,10 +41,8 @@ export async function deleteTestUser(
   uid: string
 ): Promise<void> {
   await page.evaluate(async (userId: string) => {
-    const { httpsCallable } = await import("firebase/functions");
-    const { functions } = await import("./firebase");
-    const deleteTestUserFn = httpsCallable(functions, "deleteTestUser");
-    await deleteTestUserFn({ uid: userId });
+    const helpers = (window as any).__testHelpers;
+    await helpers.deleteTestUser(userId);
   }, uid);
 }
 
@@ -59,11 +53,10 @@ export async function signInTestUser(
   page: Page,
   customToken: string
 ): Promise<void> {
-  // Execute sign-in in the page context
+  // Execute sign-in in the page context via window.__testHelpers
   await page.evaluate(async (token: string) => {
-    const { signInWithCustomToken } = await import("firebase/auth");
-    const { auth } = await import("./firebase");
-    await signInWithCustomToken(auth, token);
+    const helpers = (window as any).__testHelpers;
+    await helpers.signInTestUser(token);
   }, customToken);
 
   // Wait for auth state to settle
