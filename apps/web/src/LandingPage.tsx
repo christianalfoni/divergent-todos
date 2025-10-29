@@ -4,6 +4,7 @@ import { ARTICLE_URL } from "./constants/links";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 import { useAuthentication } from "./hooks/useAuthentication";
+import { useTestSignin } from "./hooks/useTestSignin";
 
 interface LandingPageProps {
   onAuthenticated: () => void;
@@ -13,6 +14,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
   const [authentication] = useAuthentication();
   const [{ isSigningIn }, signIn] = useSignIn();
   const [{ isSigningIn: isSigningInAnonymously }, signInAnonymously] = useSignInAnonymously();
+  const { signInAsTestUser, loading: isTestSigningIn, error: testSignInError } = useTestSignin();
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
@@ -67,7 +69,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
             <button
               type="button"
               onClick={() => signIn({})}
-              disabled={isSigningIn || isSigningInAnonymously}
+              disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
               className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20 disabled:opacity-50"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
@@ -96,11 +98,29 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
             <button
               type="button"
               onClick={() => signInAnonymously({})}
-              disabled={isSigningIn || isSigningInAnonymously}
+              disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
               className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-white px-4 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus-visible:ring-transparent dark:bg-white/10 dark:text-white dark:shadow-none dark:ring-white/5 dark:hover:bg-white/20 disabled:opacity-50"
             >
               {isSigningInAnonymously ? "Starting..." : "Let me try it first"}
             </button>
+
+            {import.meta.env.DEV && (
+              <button
+                type="button"
+                onClick={signInAsTestUser}
+                disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
+                className="flex w-full max-w-md items-center justify-center gap-3 rounded-md bg-yellow-50 px-4 py-3 text-sm font-semibold text-yellow-900 shadow-sm ring-1 ring-inset ring-yellow-300 hover:bg-yellow-100 focus-visible:ring-transparent dark:bg-yellow-900/20 dark:text-yellow-400 dark:shadow-none dark:ring-yellow-800/50 dark:hover:bg-yellow-900/30 disabled:opacity-50"
+              >
+                <span className="text-sm/6 font-semibold">
+                  {isTestSigningIn ? "Creating test user..." : "Sign in as Test User"}
+                </span>
+              </button>
+            )}
+            {testSignInError && import.meta.env.DEV && (
+              <p className="text-sm text-red-600 dark:text-red-400 text-center max-w-md">
+                {testSignInError}
+              </p>
+            )}
 
             {!isElectron && (
               <>

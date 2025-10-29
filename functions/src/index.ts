@@ -26,6 +26,10 @@ const STRIPE_API_KEY = defineSecret("STRIPE_API_KEY");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 const STRIPE_PRICE_ID = defineSecret("STRIPE_PRICE_ID");
 const RESEND_API_KEY = defineSecret("RESEND_API_KEY");
+const DEV_MODE_SECRET = defineSecret("DEV_MODE_SECRET");
+const STRIPE_TEST_API_KEY = defineSecret("STRIPE_TEST_API_KEY");
+const STRIPE_TEST_PRICE_ID = defineSecret("STRIPE_TEST_PRICE_ID");
+const STRIPE_TEST_WEBHOOK_SECRET = defineSecret("STRIPE_TEST_WEBHOOK_SECRET");
 
 interface AuthSession {
   sid: string;
@@ -549,6 +553,150 @@ export const authExchange = onRequest(
 );
 
 // ============================================================================
+// Test User Management (for E2E Testing)
+// ============================================================================
+
+/**
+ * createTestUser
+ * Creates a test user for E2E testing and returns a custom token for sign-in.
+ * Requires DEV_MODE_SECRET for security.
+ */
+export const createTestUser = onCall(
+  {
+    region: "us-central1",
+    cors: ["*"],
+    maxInstances: 10,
+    secrets: [DEV_MODE_SECRET],
+  },
+  async (req) => {
+    try {
+      // Security: Require dev-mode secret
+      const devSecret = req.data?.devSecret;
+      if (devSecret !== DEV_MODE_SECRET.value()) {
+        throw new HttpsError(
+          "permission-denied",
+          "Invalid dev secret"
+        );
+      }
+
+      const testUserId = `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const email = `${testUserId}@divergent-todos-test.com`;
+
+      // Create in Firebase Auth
+      const userRecord = await auth.createUser({
+        email,
+        emailVerified: true,
+        displayName: "Test User",
+      });
+
+      // Set custom claim for test user flag
+      await auth.setCustomUserClaims(userRecord.uid, {
+        isTestUser: true,
+      });
+
+      // Create profile document (following app's schema)
+      await db.collection("profiles").doc(userRecord.uid).set({
+        createdAt: Timestamp.now(),
+        // Don't set isTestUser here - it's in custom claims only
+      });
+
+      // Generate custom token for sign-in
+      const customToken = await auth.createCustomToken(userRecord.uid, {
+        isTestUser: true,
+      });
+
+      logger.info("Test user created successfully", {
+        uid: userRecord.uid,
+        email,
+      });
+
+      return {
+        uid: userRecord.uid,
+        customToken,
+        email,
+      };
+    } catch (error) {
+      logger.error("Failed to create test user", error);
+      throw new HttpsError(
+        "internal",
+        `Failed to create test user: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  }
+);
+
+/**
+ * deleteTestUser
+ * Deletes a test user and all associated data.
+ * Safety check: Only deletes users marked with isTestUser flag.
+ */
+export const deleteTestUser = onCall(
+  {
+    region: "us-central1",
+    cors: ["*"],
+    maxInstances: 10,
+  },
+  async (req) => {
+    try {
+      const { uid } = req.data;
+
+      if (!uid) {
+        throw new HttpsError("invalid-argument", "uid is required");
+      }
+
+      // Safety check: verify it's actually a test user by checking custom claims
+      const userRecord = await auth.getUser(uid);
+      const customClaims = userRecord.customClaims || {};
+
+      if (!customClaims.isTestUser) {
+        throw new HttpsError(
+          "permission-denied",
+          "Cannot delete non-test user"
+        );
+      }
+
+      // Delete user data from Firestore
+      const batch = db.batch();
+
+      // Delete todos
+      const todos = await db.collection("todos")
+        .where("userId", "==", uid)
+        .get();
+      todos.docs.forEach((doc) => batch.delete(doc.ref));
+
+      // Delete activity
+      const activity = await db.collection("activity")
+        .where("userId", "==", uid)
+        .get();
+      activity.docs.forEach((doc) => batch.delete(doc.ref));
+
+      // Delete profile
+      const profileDoc = db.collection("profiles").doc(uid);
+      batch.delete(profileDoc);
+
+      // Delete payments subcollection
+      const payments = await db.collection(`profiles/${uid}/payments`).get();
+      payments.docs.forEach((doc) => batch.delete(doc.ref));
+
+      await batch.commit();
+
+      // Delete from Firebase Auth
+      await auth.deleteUser(uid);
+
+      logger.info("Test user deleted successfully", { uid });
+
+      return { success: true };
+    } catch (error) {
+      logger.error("Failed to delete test user", error);
+      throw new HttpsError(
+        "internal",
+        `Failed to delete test user: ${error instanceof Error ? error.message : "Unknown error"}`
+      );
+    }
+  }
+);
+
+// ============================================================================
 // Stripe Subscription Functions
 // ============================================================================
 
@@ -637,13 +785,23 @@ async function writePayment(uid: string, invoice: Stripe.Invoice) {
 /** === Callable Functions === */
 
 export const createSubscription = onCall(
-  { secrets: [STRIPE_API_KEY, STRIPE_PRICE_ID] },
+  { secrets: [STRIPE_API_KEY, STRIPE_TEST_API_KEY, STRIPE_PRICE_ID, STRIPE_TEST_PRICE_ID] },
   async (req) => {
     const uid = req.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Login required.");
 
-    const stripe = stripeFrom(STRIPE_API_KEY.value());
-    const priceId = STRIPE_PRICE_ID.value();
+    // Check if test user via auth token custom claims
+    const isTestUser = req.auth?.token?.isTestUser === true;
+
+    // Use appropriate Stripe key and price ID
+    const stripeApiKey = isTestUser
+      ? STRIPE_TEST_API_KEY.value()
+      : STRIPE_API_KEY.value();
+    const priceId = isTestUser
+      ? STRIPE_TEST_PRICE_ID.value()
+      : STRIPE_PRICE_ID.value();
+
+    const stripe = stripeFrom(stripeApiKey);
     if (!priceId) throw new HttpsError("failed-precondition", "Missing price.");
 
     const email = req.auth?.token?.email ?? null;
@@ -682,12 +840,20 @@ export const createSubscription = onCall(
 );
 
 export const createBillingPortal = onCall(
-  { secrets: [STRIPE_API_KEY] },
+  { secrets: [STRIPE_API_KEY, STRIPE_TEST_API_KEY] },
   async (req) => {
     const uid = req.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Login required.");
 
-    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    // Check if test user via auth token custom claims
+    const isTestUser = req.auth?.token?.isTestUser === true;
+
+    // Use appropriate Stripe key
+    const stripeApiKey = isTestUser
+      ? STRIPE_TEST_API_KEY.value()
+      : STRIPE_API_KEY.value();
+
+    const stripe = stripeFrom(stripeApiKey);
     const snap = await db.doc(`profiles/${uid}`).get();
     const customerId = snap.data()?.subscription?.customerId as string | undefined;
     if (!customerId) throw new HttpsError("failed-precondition", "No customer.");
@@ -716,12 +882,20 @@ export const createBillingPortal = onCall(
 );
 
 export const stopSubscription = onCall(
-  { secrets: [STRIPE_API_KEY] },
+  { secrets: [STRIPE_API_KEY, STRIPE_TEST_API_KEY] },
   async (req) => {
     const uid = req.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Login required.");
 
-    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    // Check if test user via auth token custom claims
+    const isTestUser = req.auth?.token?.isTestUser === true;
+
+    // Use appropriate Stripe key
+    const stripeApiKey = isTestUser
+      ? STRIPE_TEST_API_KEY.value()
+      : STRIPE_API_KEY.value();
+
+    const stripe = stripeFrom(stripeApiKey);
     const snap = await db.doc(`profiles/${uid}`).get();
     const subId = snap.data()?.subscription?.subscriptionId as string | undefined;
     if (!subId) throw new HttpsError("failed-precondition", "No subscription.");
@@ -736,12 +910,20 @@ export const stopSubscription = onCall(
 );
 
 export const resumeSubscription = onCall(
-  { secrets: [STRIPE_API_KEY] },
+  { secrets: [STRIPE_API_KEY, STRIPE_TEST_API_KEY] },
   async (req) => {
     const uid = req.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "Login required.");
 
-    const stripe = stripeFrom(STRIPE_API_KEY.value());
+    // Check if test user via auth token custom claims
+    const isTestUser = req.auth?.token?.isTestUser === true;
+
+    // Use appropriate Stripe key
+    const stripeApiKey = isTestUser
+      ? STRIPE_TEST_API_KEY.value()
+      : STRIPE_API_KEY.value();
+
+    const stripe = stripeFrom(stripeApiKey);
     const snap = await db.doc(`profiles/${uid}`).get();
     const subId = snap.data()?.subscription?.subscriptionId as string | undefined;
     if (!subId) throw new HttpsError("failed-precondition", "No subscription.");
@@ -798,29 +980,73 @@ async function uidFromCheckoutSession(
 
 /** === Webhook === */
 export const stripeWebhook = onRequest(
-  { secrets: [STRIPE_API_KEY, STRIPE_WEBHOOK_SECRET] },
+  {
+    secrets: [
+      STRIPE_API_KEY,
+      STRIPE_WEBHOOK_SECRET,
+      STRIPE_TEST_API_KEY,
+      STRIPE_TEST_WEBHOOK_SECRET
+    ]
+  },
   async (req, res) => {
-    const stripe = stripeFrom(STRIPE_API_KEY.value());
     const sig = req.headers["stripe-signature"];
     if (!sig) {
       res.status(400).send("Missing stripe-signature");
       return;
     }
 
-    let event: Stripe.Event;
+    // Try to verify signature with both test and live secrets
+    let event: Stripe.Event | null = null;
+    let isTestMode = false;
+
+    // Try live mode first
     try {
-      event = stripe.webhooks.constructEvent(
+      const liveStripe = stripeFrom(STRIPE_API_KEY.value());
+      event = liveStripe.webhooks.constructEvent(
         req.rawBody,
         sig as string,
         STRIPE_WEBHOOK_SECRET.value()
       );
-    } catch (err: any) {
-      logger.error("Invalid signature", err?.message);
-      res.status(400).send(`Webhook Error: ${err.message}`);
+      isTestMode = false;
+      logger.info("Webhook verified with live mode secret");
+    } catch (liveErr: any) {
+      // Try test mode
+      try {
+        const testStripe = stripeFrom(STRIPE_TEST_API_KEY.value());
+        event = testStripe.webhooks.constructEvent(
+          req.rawBody,
+          sig as string,
+          STRIPE_TEST_WEBHOOK_SECRET.value()
+        );
+        isTestMode = true;
+        logger.info("Webhook verified with test mode secret");
+      } catch (testErr: any) {
+        logger.error("Invalid signature for both test and live modes", {
+          liveError: liveErr?.message,
+          testError: testErr?.message,
+        });
+        res.status(400).send(`Webhook Error: Invalid signature`);
+        return;
+      }
+    }
+
+    if (!event) {
+      res.status(400).send("Failed to construct event");
       return;
     }
 
+    // Use appropriate Stripe instance based on detected mode
+    const stripe = stripeFrom(
+      isTestMode ? STRIPE_TEST_API_KEY.value() : STRIPE_API_KEY.value()
+    );
+
     try {
+      logger.info("Processing webhook event", {
+        type: event.type,
+        mode: isTestMode ? "test" : "live",
+        eventId: event.id,
+      });
+
       switch (event.type) {
         case "checkout.session.completed": {
           const session = event.data.object as Stripe.Checkout.Session;
@@ -1172,6 +1398,112 @@ export const submitFeedback = onCall(
     } catch (error) {
       logger.error("Failed to send feedback email", error);
       throw new HttpsError("internal", "Failed to send feedback. Please try again later.");
+    }
+  }
+);
+
+// ============================================================================
+// Scheduled Test User Cleanup (Safety Net)
+// ============================================================================
+
+import { onSchedule } from "firebase-functions/v2/scheduler";
+
+/**
+ * cleanupOldTestUsers
+ * Runs daily at 2 AM to clean up test users older than 24 hours.
+ * This is a safety net to prevent test user leaks from failed tests.
+ */
+export const cleanupOldTestUsers = onSchedule(
+  {
+    schedule: "0 2 * * *", // Daily at 2 AM
+    timeZone: "America/New_York",
+    region: "us-central1",
+  },
+  async () => {
+    try {
+      const now = Timestamp.now();
+      const oneDayAgo = new Timestamp(
+        now.seconds - 86400, // 24 hours
+        now.nanoseconds
+      );
+
+      logger.info("Starting cleanup of old test users", {
+        cutoffTime: oneDayAgo.toDate().toISOString(),
+      });
+
+      // List all users and check custom claims (since we can't query custom claims directly)
+      const listUsersResult = await auth.listUsers();
+      const testUsers = listUsersResult.users.filter(user => {
+        const claims = user.customClaims || {};
+        return claims.isTestUser === true;
+      });
+
+      logger.info(`Found ${testUsers.length} test users, checking age...`);
+
+      let cleanedCount = 0;
+      for (const user of testUsers) {
+        try {
+          const uid = user.uid;
+
+          // Check age by looking at profile creation date
+          const profileDoc = await db.collection("profiles").doc(uid).get();
+          if (!profileDoc.exists) {
+            logger.warn(`Profile not found for test user ${uid}, skipping`);
+            continue;
+          }
+
+          const createdAt = profileDoc.data()?.createdAt;
+          if (!createdAt) {
+            logger.warn(`No createdAt for test user ${uid}, skipping`);
+            continue;
+          }
+
+          // Skip if less than 24 hours old
+          const createdTimestamp = createdAt.toMillis ? createdAt.toMillis() : createdAt.seconds * 1000;
+          if (createdTimestamp >= oneDayAgo.seconds * 1000) {
+            continue;
+          }
+
+          logger.info(`Cleaning up old test user ${uid}`);
+
+          // Delete user data
+          const batch = db.batch();
+
+          const todos = await db
+            .collection("todos")
+            .where("userId", "==", uid)
+            .get();
+          todos.docs.forEach((d) => batch.delete(d.ref));
+
+          const activity = await db
+            .collection("activity")
+            .where("userId", "==", uid)
+            .get();
+          activity.docs.forEach((d) => batch.delete(d.ref));
+
+          // Delete profile
+          const profileRef = db.collection("profiles").doc(uid);
+          batch.delete(profileRef);
+
+          // Delete payments subcollection
+          const payments = await db.collection(`profiles/${uid}/payments`).get();
+          payments.docs.forEach((d) => batch.delete(d.ref));
+
+          await batch.commit();
+
+          // Delete from Auth
+          await auth.deleteUser(uid);
+
+          cleanedCount++;
+          logger.info(`Successfully deleted test user: ${uid}`);
+        } catch (error) {
+          logger.error(`Failed to delete test user ${user.uid}`, error);
+        }
+      }
+
+      logger.info(`Test user cleanup completed - cleaned ${cleanedCount} users`);
+    } catch (error) {
+      logger.error("Error in cleanupOldTestUsers", error);
     }
   }
 );

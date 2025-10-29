@@ -103,6 +103,18 @@ function AppContent() {
     }
   }, [authentication.user, hasLeftLandingPage]);
 
+  // Auto-start tutorial for authenticated users who haven't completed onboarding
+  useEffect(() => {
+    if (
+      authentication.user &&
+      profile !== null &&
+      profile.isOnboarded !== true &&
+      !onboarding.isOnboarding
+    ) {
+      onboarding.startOnboarding();
+    }
+  }, [authentication.user, profile, onboarding]);
+
 
   // Sync state with localStorage when user signs out
   // (localStorage is cleared by the sign out button handler)
@@ -382,9 +394,6 @@ function AppContent() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [authentication.user]);
 
-  // Check if user needs to see "Tutorial" button
-  const showTutorial = profile !== null && profile.isOnboarded !== true;
-
   // Get old uncompleted todos
   const oldUncompletedTodos = useMemo(
     () => getOldUncompletedTodos(todos),
@@ -520,7 +529,6 @@ function AppContent() {
           onMoveOldTodos={moveOldTodosToNextWorkday}
           profile={profile}
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
-          showTutorial={showTutorial}
           onOpenOnboarding={onboarding.startOnboarding}
           onOpenAuthModal={() => setAuthModalState(true)}
           currentView={currentView}

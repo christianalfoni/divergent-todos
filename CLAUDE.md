@@ -248,3 +248,4 @@ Weekly activity summaries are generated using OpenAI GPT-4o-mini:
 - Electron loads from `http://localhost:5173` in dev mode
 - TypeScript strict mode enabled across all packages
 - ESLint configured for React best practices
+- **DO NOT run the dev server** - the user will always test changes themselves

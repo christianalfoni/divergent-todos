@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { signOut } from "firebase/auth";
+import { httpsCallable } from "firebase/functions";
 import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import { useAuthentication } from "../hooks/useAuthentication";
-import { auth, type Profile } from "../firebase";
+import { auth, functions, type Profile } from "../firebase";
 import { useTheme } from "../hooks/useTheme";
 import { useFontSize } from "../hooks/useFontSize";
-import { useOnboarding } from "../contexts/OnboardingContext";
+import { useIsTestUser } from "../hooks/useIsTestUser";
 import { openBillingPortal } from "../firebase/subscriptions";
 import { trackMenuItemClicked } from "../firebase/analytics";
 import UpdateNotification from "../UpdateNotification";
@@ -14,7 +15,6 @@ import FeedbackDialog from "../FeedbackDialog";
 import Logo from "./Logo";
 import Navigation from "./Navigation";
 import YearNavigation from "./YearNavigation";
-import TutorialButton from "./TutorialButton";
 import SubscriptionNotices from "./SubscriptionNotices";
 import OldTodosButton from "./OldTodosButton";
 import UserMenu from "./UserMenu";
@@ -47,7 +47,6 @@ interface TopBarProps {
   onMoveOldTodos?: () => void;
   profile?: Profile | null;
   onOpenSubscription?: () => void;
-  showTutorial?: boolean;
   onOpenOnboarding?: () => void;
   onOpenAuthModal?: () => void;
   currentView?: "calendar" | "activity";
@@ -64,7 +63,6 @@ export default function TopBar({
   onMoveOldTodos,
   profile,
   onOpenSubscription,
-  showTutorial,
   onOpenOnboarding,
   onOpenAuthModal,
   currentView = "calendar",
@@ -80,15 +78,36 @@ export default function TopBar({
   const { fontSize, setFontSize } = useFontSize();
   const downloadUrl = getDownloadUrl();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
-  const { isOnboarding, currentStep } = useOnboarding();
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const isTestUser = useIsTestUser();
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     trackMenuItemClicked("sign_out");
-    // Clear landing page flag so user sees it again after sign out
-    localStorage.removeItem("hasLeftLandingPage");
-    signOut(auth);
+    const currentUser = auth.currentUser;
+
+    try {
+      // If test user, delete them on sign out
+      if (currentUser) {
+        // Check custom claims from the auth token
+        const idTokenResult = await currentUser.getIdTokenResult();
+        const isTestUser = idTokenResult.claims.isTestUser === true;
+
+        if (isTestUser) {
+          const deleteTestUser = httpsCallable(functions, "deleteTestUser");
+          await deleteTestUser({ uid: currentUser.uid });
+        }
+      }
+
+      // Clear landing page flag so user sees it again after sign out
+      localStorage.removeItem("hasLeftLandingPage");
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error during sign out:", error);
+      // Still sign out even if deletion fails
+      localStorage.removeItem("hasLeftLandingPage");
+      await signOut(auth);
+    }
   };
 
   const handleSubscriptionClick = () => {
@@ -127,7 +146,14 @@ export default function TopBar({
         <div className="px-4">
           <div className="relative flex h-16 justify-between">
             <div className="flex items-center gap-6">
-              <Logo />
+              <div className="flex items-center gap-2">
+                <Logo />
+                {isTestUser && (
+                  <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 inset-ring inset-ring-yellow-600/20 dark:bg-yellow-400/10 dark:text-yellow-500 dark:inset-ring-yellow-400/20">
+                    Test Mode
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Activity Year Navigation - Centered */}
@@ -186,14 +212,6 @@ export default function TopBar({
               )}
 
               {authentication.user && <UpdateNotification />}
-
-              {authentication.user && showTutorial && onOpenOnboarding && (
-                <TutorialButton
-                  isOnboarding={isOnboarding}
-                  currentStep={currentStep}
-                  onOpenOnboarding={onOpenOnboarding}
-                />
-              )}
 
               {authentication.user && (
                 <SubscriptionNotices
