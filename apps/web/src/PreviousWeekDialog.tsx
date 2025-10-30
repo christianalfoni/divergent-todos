@@ -84,7 +84,7 @@ export default function PreviousWeekDialog({
             <div className="previous-week-dialog-stat">
               <span className="previous-week-dialog-stat-value">{todoCount}</span>
               <span className="previous-week-dialog-stat-label">
-                {todoCount === 1 ? 'todo completed' : 'todos completed'}
+                {todoCount === 1 ? 'focus completed' : 'focus completed'}
               </span>
             </div>
 
@@ -122,14 +122,14 @@ export default function PreviousWeekDialog({
             )}
           </div>
 
-          {/* Week Summary Section */}
+          {/* Week Reflection Section */}
           <div className="px-4">
-            {/* Divider with "Week Summary" label */}
+            {/* Divider with "Week Reflection" label */}
             <div className="flex items-center mb-4">
               <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
               <div className="relative flex justify-center">
                 <span className="bg-white px-4 text-sm font-semibold text-[var(--color-text-secondary)] whitespace-nowrap dark:bg-[var(--color-bg-primary)]">
-                  Week Summary
+                  Week Reflection
                 </span>
               </div>
               <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
@@ -165,7 +165,7 @@ export default function PreviousWeekDialog({
             onClick={() => onStartWeek(editedSummary)}
             className="inline-flex justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
           >
-            Save week summary
+            Save week reflection
           </button>
         </div>
       </div>

@@ -149,7 +149,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     isPrimaryButtonDisabled = true;
   } else if (isAnonymous) {
     title = "Sign in required";
-    description = "Please sign in with your Google account to subscribe and unlock unlimited todos. Your existing todos will be preserved.";
+    description = "Please sign in with your Google account to subscribe and unlock unlimited focus. Your existing focus will be preserved.";
     primaryButtonText = isLinking ? "Signing in..." : "Sign in with Google";
     primaryButtonAction = () => linkAccount(undefined);
     isPrimaryButtonDisabled = isLinking;
@@ -162,7 +162,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
   } else if (subscriptionStatus === "active") {
     if (cancelAtPeriodEnd && currentPeriodEnd) {
       title = "Subscription canceling";
-      description = `Your subscription is set to cancel on ${currentPeriodEnd.toLocaleDateString()}. You can continue using unlimited todos until then. Resume your subscription to continue beyond this date.`;
+      description = `Your subscription is set to cancel on ${currentPeriodEnd.toLocaleDateString()}. You can continue using unlimited focus until then. Resume your subscription to continue beyond this date.`;
       primaryButtonText = isProcessing ? "Resuming..." : "Resume subscription";
       primaryButtonAction = handleResumeSubscription;
       isPrimaryButtonDisabled = isProcessing;
@@ -170,7 +170,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
       secondaryButtonAction = handleOpenBillingPortal;
     } else {
       title = "Active subscription";
-      description = "You have an active subscription with unlimited todos. You can cancel at any time and continue using your subscription until the end of the billing period.";
+      description = "You have an active subscription with unlimited focus. You can cancel at any time and continue using your subscription until the end of the billing period.";
       primaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
       primaryButtonAction = handleStopSubscription;
       isPrimaryButtonDisabled = isProcessing;
@@ -179,7 +179,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     }
   } else if (subscriptionStatus === "past_due") {
     title = "Payment past due";
-    description = "Your payment is past due. Please update your payment method to continue using unlimited todos.";
+    description = "Your payment is past due. Please update your payment method to continue using unlimited focus.";
     primaryButtonText = "Update payment";
     primaryButtonAction = handleOpenBillingPortal;
     isPrimaryButtonDisabled = isProcessing;
@@ -195,7 +195,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     secondaryButtonAction = handleStopSubscription;
   } else if (subscriptionStatus === "canceled") {
     title = "Subscription canceled";
-    description = "Your subscription has been canceled. Resubscribe to get unlimited todos again.";
+    description = "Your subscription has been canceled. Resubscribe to get unlimited focus again.";
     primaryButtonText = isProcessing ? "Starting..." : "Resubscribe - $2/month";
     primaryButtonAction = handleStartSubscription;
     isPrimaryButtonDisabled = isProcessing;
@@ -263,7 +263,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
                       <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
-                      Unlimited todos
+                      Unlimited focus
                     </li>
                     <li className="flex gap-x-3">
                       <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">

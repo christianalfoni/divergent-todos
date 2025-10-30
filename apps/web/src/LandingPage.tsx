@@ -44,7 +44,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
         <div className="mx-auto max-w-4xl py-16 sm:py-24 lg:py-32">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-semibold tracking-tight text-balance text-[var(--color-text-primary)] sm:text-6xl">
-              Direct Your Attention with Divergent Todos
+              Own Your Attention with Divergent Todos
             </h1>
             <p className="mt-6 text-lg font-medium text-pretty text-[var(--color-text-secondary)] sm:text-xl/8">
               Stop letting your tools compete for your attention. Plan where your focus goes, one day at a time.

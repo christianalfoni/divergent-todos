@@ -56,10 +56,10 @@ export default function OnboardingNotification() {
           icon: (
             <PlusCircleIcon aria-hidden="true" className="size-6 text-green-500 dark:text-green-400" />
           ),
-          title: "Let's add your first todo",
+          title: "Let's add your first focus",
           message:
-            "Try adding a todo by clicking on any day.",
-          actionLabel: "Add a todo",
+            "Try adding a focus by clicking on any day.",
+          actionLabel: "Add a focus",
           requiresAddTodo: true,
         };
       case "add-todo-with-tag":
@@ -67,10 +67,10 @@ export default function OnboardingNotification() {
           icon: (
             <HashtagIcon aria-hidden="true" className="size-6 text-teal-500 dark:text-teal-400" />
           ),
-          title: "Add a todo with a tag",
+          title: "Add a focus with a tag",
           message:
-            "Tags help you organize your todos. Type #some-text and press space or enter to create a tag. Try adding a todo with a tag now!",
-          actionLabel: "Add a todo with a tag",
+            "Tags help you organize your focus. Type #some-text and press space or enter to create a tag. Try adding a focus with a tag now!",
+          actionLabel: "Add a focus with a tag",
           requiresAddTodoWithTag: true,
         };
       case "add-todo-with-url":
@@ -78,10 +78,10 @@ export default function OnboardingNotification() {
           icon: (
             <LinkIcon aria-hidden="true" className="size-6 text-purple-500 dark:text-purple-400" />
           ),
-          title: "Add a todo with a URL",
+          title: "Add a focus with a URL",
           message:
-            "Todos can include URLs. Copy a sample URL, then paste it into a new todo description.",
-          actionLabel: "Add a todo with URL",
+            "Focus can include URLs. Copy a sample URL, then paste it into a new focus description.",
+          actionLabel: "Add a focus with URL",
           requiresAddTodoWithUrl: true,
           showCopyButton: true,
         };
@@ -90,10 +90,10 @@ export default function OnboardingNotification() {
           icon: (
             <PencilSquareIcon aria-hidden="true" className="size-6 text-orange-500 dark:text-orange-400" />
           ),
-          title: "Edit your todos anytime",
+          title: "Edit your focus anytime",
           message:
-            "Click on any todo to edit its text. Links don't activate edit mode, so click next to them. During edit mode, use backspace to remove links. Click outside the todo to save your changes.",
-          actionLabel: "Edit and save a todo",
+            "Click on any focus to edit its text. Links don't activate edit mode, so click next to them. During edit mode, use backspace to remove links. Click outside the focus to save your changes.",
+          actionLabel: "Edit and save a focus",
           requiresEditTodo: true,
         };
       case "move-todo":
@@ -101,10 +101,10 @@ export default function OnboardingNotification() {
           icon: (
             <ArrowsRightLeftIcon aria-hidden="true" className="size-6 text-indigo-500 dark:text-indigo-400" />
           ),
-          title: "Move todos around",
+          title: "Move focus around",
           message:
-            "Drag and drop todos to reorder them within a day or move them to different days.",
-          actionLabel: "Move a todo",
+            "Drag and drop focus to reorder them within a day or move them to different days.",
+          actionLabel: "Move a focus",
           requiresMoveTodo: true,
         };
       case "delete-todo":
@@ -112,10 +112,10 @@ export default function OnboardingNotification() {
           icon: (
             <TrashIcon aria-hidden="true" className="size-6 text-red-500 dark:text-red-400" />
           ),
-          title: "Delete todos",
+          title: "Delete focus",
           message:
-            "To delete a todo, click on it to edit, then remove all the text content and press Enter.",
-          actionLabel: "Delete a todo",
+            "To delete a focus, click on it to edit, then remove all the text content and press Enter.",
+          actionLabel: "Delete a focus",
           requiresDeleteTodo: true,
         };
       case "timebox":
@@ -123,10 +123,10 @@ export default function OnboardingNotification() {
           icon: (
             <ClockIcon aria-hidden="true" className="size-6 text-pink-500 dark:text-pink-400" />
           ),
-          title: "Use the timebox feature",
+          title: "Use the hold focus feature",
           message:
-            "Double-click on any todo to open the timebox. This helps you focus on one task at a time with a timer.",
-          actionLabel: "Open and close timebox",
+            "Double-click a focus to hold it for a dedicated amount of time.",
+          actionLabel: "Open and close hold focus",
           requiresTimebox: true,
         };
       case "congratulations":
@@ -136,7 +136,7 @@ export default function OnboardingNotification() {
           ),
           title: "Congratulations!",
           message:
-            "You've completed the onboarding. You now know all the core features of Divergent Todos. Start managing your tasks and stay focused!",
+            "You've completed the onboarding. You now know all the core features of Divergent Todos. Take back your attention by planning it!",
           actionLabel: "",
           hideActionLabel: true,
         };

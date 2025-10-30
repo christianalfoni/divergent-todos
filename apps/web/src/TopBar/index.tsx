@@ -171,11 +171,11 @@ export default function TopBar({
                   <div className="flex rounded-lg bg-[var(--color-bg-secondary)] p-1 opacity-50 pointer-events-none">
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] shadow-sm">
                       <CalendarIcon className="size-4" />
-                      Calendar
+                      Attention
                     </div>
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-[var(--color-text-secondary)]">
                       <ChartBarIcon className="size-4" />
-                      Activity
+                      Reflection
                     </div>
                   </div>
                   <div className="h-8 w-px bg-[var(--color-border-primary)]" />

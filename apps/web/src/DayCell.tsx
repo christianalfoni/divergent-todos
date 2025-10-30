@@ -167,7 +167,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
                     />
                   </svg>
                 </div>
-                <span>Add to-do</span>
+                <span>Add focus</span>
               </button>
             ) : hasUncompletedTodos ? (
               <button
@@ -190,7 +190,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
                     />
                   </svg>
                 </div>
-                <span>Move uncompleted to-dos</span>
+                <span>Move focus</span>
               </button>
             ) : null}
           </>
