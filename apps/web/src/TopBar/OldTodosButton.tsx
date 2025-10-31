@@ -28,7 +28,7 @@ export default function OldTodosButton({ count, onMoveOldTodos }: OldTodosButton
           strokeLinejoin="round"
         />
       </svg>
-      Move {count} uncompleted todo{count === 1 ? "" : "s"}
+      Move {count} focus
     </button>
   );
 }

@@ -7,7 +7,7 @@ export default function TodosLoadingPlaceholder() {
         {/* Todo text placeholder - double height */}
         <div className="h-10 bg-[var(--color-skeleton)] rounded flex-1"></div>
       </div>
-      <span className="sr-only">Loading todos...</span>
+      <span className="sr-only">Loading focus...</span>
     </div>
   );
 }

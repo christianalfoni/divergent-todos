@@ -63,7 +63,7 @@ export default function AuthModal({ open, onSignIn }: AuthModalProps) {
                 <div className="mt-2">
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     {isAnonymous
-                      ? "Link your Google account to save your todos permanently"
+                      ? "Link your Google account to save your focus permanently"
                       : "Sign in or download the app to start directing your attention"}
                   </p>
                 </div>

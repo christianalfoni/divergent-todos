@@ -1,4 +1,4 @@
-import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import { CalendarIcon, ChartBarIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../firebase";
 
 interface NavigationProps {
@@ -35,7 +35,7 @@ export default function Navigation({
         }`}
       >
         <CalendarIconComponent className="size-4" />
-        Calendar
+        Attention
       </button>
       <button
         onClick={() => {
@@ -53,12 +53,8 @@ export default function Navigation({
         } ${isLoadingActivity ? "opacity-50" : ""} ${shouldPulsate ? "activity-button-pulsate" : ""}`}
       >
         <ChartBarIconComponent className="size-4" />
-        Activity
-        {!hasActiveSubscription && (
-          <svg className="ml-1 size-3" viewBox="0 0 12 12" fill="currentColor">
-            <path d="M4 0h4v1H4V0zM2 2h1V1h1v1h4V1h1v1h1v1h1v8H1V3h1V2zm1 1v1h1V3H3zm5 0v1h1V3H8zM2 5h8v5H2V5z" />
-          </svg>
-        )}
+        Reflection
+        {!hasActiveSubscription && <LockClosedIcon className="ml-1 size-3" />}
       </button>
     </div>
   );

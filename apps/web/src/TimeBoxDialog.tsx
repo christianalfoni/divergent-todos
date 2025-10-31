@@ -120,7 +120,7 @@ export default function TimeBoxDialog({
                   aria-hidden="true"
                   className="w-6 h-6 text-[var(--color-accent-primary)]"
                 />
-                Time Box To-Do
+                Hold Focus
               </DialogTitle>
               <button
                 type="button"
@@ -200,7 +200,7 @@ export default function TimeBoxDialog({
                       </svg>
                     </div>
                     <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                      Completed
+                      Mark done
                     </span>
                   </label>
                 </div>

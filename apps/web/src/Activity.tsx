@@ -155,7 +155,7 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-[var(--color-bg-secondary)]">
-        <p className="text-[var(--color-text-secondary)]">Loading activity...</p>
+        <p className="text-[var(--color-text-secondary)]">Loading reflection...</p>
       </div>
     );
   }
@@ -221,7 +221,7 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
                           {summary ? (
                             summary
                           ) : (
-                            <span className="activity-no-summary">no activity</span>
+                            <span className="activity-no-summary">no reflection</span>
                           )}
                         </div>
                       );
@@ -258,13 +258,13 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
                           ? `${startMonth} ${startDate} - ${endDate}`
                           : `${startMonth} ${startDate} - ${endMonth} ${endDate}`;
 
-                        // Render as unified "In progress" container
+                        // Render as unified "Ongoing" container
                         return (
                           <div
                             key={weekIndex}
                             className="activity-week-in-progress"
                           >
-                            {dateRange} - In progress
+                            {dateRange} - Ongoing
                           </div>
                         );
                       }
@@ -287,7 +287,7 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
                                 key={dayIndex}
                                 className={`activity-day-compact ${colorClass}`}
                                 onClick={(e) => handleDayClick(day, e)}
-                                title={`${monthName} ${day.getDate()}: ${count} todos completed`}
+                                title={`${monthName} ${day.getDate()}: ${count} focus completed`}
                               />
                             );
                           })}
