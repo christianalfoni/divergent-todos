@@ -309,7 +309,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     Video Introduction
                   </span>
                   <span className="inline-flex items-center space-x-2 text-sm/6 font-medium text-gray-600 dark:text-gray-300">
-                    <span>Watch a 2 min pep talk</span>
+                    <span>Watch a 1,5 minute pep talk</span>
                     <ChevronRightIcon aria-hidden="true" className="size-5 text-gray-400 dark:text-gray-500" />
                   </span>
                 </a>

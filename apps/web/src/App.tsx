@@ -538,7 +538,6 @@ function AppContent() {
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           onOpenOnboarding={onboarding.startOnboarding}
           onOpenAuthModal={() => setAuthModalState(true)}
-          onSignOut={undefined}
           currentView={currentView}
           onViewChange={handleViewChange}
           activityYear={activityYear}

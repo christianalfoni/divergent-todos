@@ -49,7 +49,6 @@ interface TopBarProps {
   onOpenSubscription?: () => void;
   onOpenOnboarding?: () => void;
   onOpenAuthModal?: () => void;
-  onSignOut?: () => void;
   currentView?: "calendar" | "activity";
   onViewChange?: (view: "calendar" | "activity") => void;
   activityYear?: number;
@@ -66,7 +65,6 @@ export default function TopBar({
   onOpenSubscription,
   onOpenOnboarding,
   onOpenAuthModal,
-  onSignOut: _onSignOutCallback,
   currentView = "calendar",
   onViewChange,
   activityYear,
