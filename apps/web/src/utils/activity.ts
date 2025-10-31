@@ -8,6 +8,9 @@ export function getSequentialWeek(date: Date): { year: number; week: number } {
   const year = date.getFullYear();
   let weekNumber = 0;
 
+  // Normalize target date to midnight for comparison
+  const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
   // Iterate through all days from Jan 1 to the target date
   for (let month = 0; month < 12; month++) {
     const days = getMonthDays(year, month);
@@ -22,7 +25,7 @@ export function getSequentialWeek(date: Date): { year: number; week: number } {
       }
 
       // If we've reached or passed the target date, return the current week
-      if (day >= date) {
+      if (day >= targetDate) {
         return { year, week: weekNumber };
       }
     }

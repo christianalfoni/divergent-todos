@@ -4,20 +4,16 @@ import { db } from "../firebase";
 import { activityWeekConverter, type ActivityWeek } from "../firebase/types/activity";
 import { useAuthentication } from "./useAuthentication";
 
-// Cache for activity data: userId-year -> ActivityWeek[]
-const activityCache = new Map<string, ActivityWeek[]>();
-
-export function useActivity(year: number, refetchKey: number = 0) {
+export function useActivity(year: number) {
   const [authentication] = useAuthentication();
-  const userRef = useRef(authentication.user);
+  // Keep track of the last fetched data to avoid unnecessary re-renders
+  const lastFetchRef = useRef<{ year: number; userId: string; data: ActivityWeek[] } | null>(null);
   const [activityWeeks, setActivityWeeks] = useState<ActivityWeek[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  userRef.current = authentication.user;
-
   useEffect(() => {
-    const user = userRef.current;
+    const user = authentication.user;
 
     if (!user) {
       setActivityWeeks([]);
@@ -27,60 +23,38 @@ export function useActivity(year: number, refetchKey: number = 0) {
 
     let unsubscribed = false;
     const userId = user.uid;
-    const cacheKey = `${userId}-${year}`;
 
     async function fetchActivity() {
       try {
-        // Check cache first
-        const cachedData = activityCache.get(cacheKey);
-        if (cachedData) {
-          // Immediately show cached data
-          setActivityWeeks(cachedData);
+        // Check if we already have this data in ref (same user, same year)
+        if (lastFetchRef.current?.userId === userId &&
+            lastFetchRef.current?.year === year) {
+          setActivityWeeks(lastFetchRef.current.data);
           setLoading(false);
+          return;
+        }
 
-          // Then refetch in background
-          const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
-          const q = query(
-            activityRef,
-            where("userId", "==", userId),
-            where("year", "==", year)
-          );
+        setLoading(true);
+        setError(null);
 
-          const querySnapshot = await getDocs(q);
-          const weeks: ActivityWeek[] = [];
+        const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+        const q = query(
+          activityRef,
+          where("userId", "==", userId),
+          where("year", "==", year)
+        );
 
-          querySnapshot.forEach((doc) => {
-            weeks.push(doc.data());
-          });
+        const querySnapshot = await getDocs(q);
+        const weeks: ActivityWeek[] = [];
 
-          if (!unsubscribed) {
-            setActivityWeeks(weeks);
-            activityCache.set(cacheKey, weeks);
-          }
-        } else {
-          // No cache, show loading
-          setLoading(true);
-          setError(null);
+        querySnapshot.forEach((doc) => {
+          weeks.push(doc.data());
+        });
 
-          const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
-          const q = query(
-            activityRef,
-            where("userId", "==", userId),
-            where("year", "==", year)
-          );
-
-          const querySnapshot = await getDocs(q);
-          const weeks: ActivityWeek[] = [];
-
-          querySnapshot.forEach((doc) => {
-            weeks.push(doc.data());
-          });
-
-          if (!unsubscribed) {
-            setActivityWeeks(weeks);
-            activityCache.set(cacheKey, weeks);
-            setLoading(false);
-          }
+        if (!unsubscribed) {
+          setActivityWeeks(weeks);
+          lastFetchRef.current = { year, userId, data: weeks };
+          setLoading(false);
         }
       } catch (err) {
         if (!unsubscribed) {
@@ -95,7 +69,7 @@ export function useActivity(year: number, refetchKey: number = 0) {
     return () => {
       unsubscribed = true;
     };
-  }, [year, refetchKey]);
+  }, [authentication.user, year]);
 
   return { activityWeeks, loading, error };
 }

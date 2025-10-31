@@ -20,6 +20,7 @@ import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
 import { useEditProfile } from "./hooks/useEditProfile";
+import { useActivity } from "./hooks/useActivity";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import {
   trackAppOpened,
@@ -86,6 +87,9 @@ function AppContent() {
   const onboarding = useOnboarding();
   const profile = authentication.profile;
   const [, editProfile] = useEditProfile();
+
+  // Fetch activity data at App level so it persists across view changes
+  const { activityWeeks, loading: activityLoading } = useActivity(activityYear);
 
   // Track if we've seen an authenticated user in this session
   const [hadAuthenticatedUser, setHadAuthenticatedUser] = useState(false);
@@ -572,12 +576,22 @@ function AppContent() {
             profile={profile}
           />
         ) : (
-          <Activity year={activityYear} onLoaded={handleActivityLoaded} />
+          <Activity
+            year={activityYear}
+            activityWeeks={activityWeeks}
+            loading={activityLoading}
+            onLoaded={handleActivityLoaded}
+          />
         )}
         {/* Hidden Activity component to trigger loading */}
         {pendingView === "activity" && currentView === "calendar" && (
           <div style={{ display: "none" }}>
-            <Activity year={activityYear} onLoaded={handleActivityLoaded} />
+            <Activity
+              year={activityYear}
+              activityWeeks={activityWeeks}
+              loading={activityLoading}
+              onLoaded={handleActivityLoaded}
+            />
           </div>
         )}
       </div>
