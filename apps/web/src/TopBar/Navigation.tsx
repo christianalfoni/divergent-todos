@@ -1,4 +1,4 @@
-import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
+import { CalendarIcon, ChartBarIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../firebase";
 
 interface NavigationProps {
@@ -54,11 +54,7 @@ export default function Navigation({
       >
         <ChartBarIconComponent className="size-4" />
         Reflection
-        {!hasActiveSubscription && (
-          <svg className="ml-1 size-3" viewBox="0 0 12 12" fill="currentColor">
-            <path d="M4 0h4v1H4V0zM2 2h1V1h1v1h4V1h1v1h1v1h1v8H1V3h1V2zm1 1v1h1V3H3zm5 0v1h1V3H8zM2 5h8v5H2V5z" />
-          </svg>
-        )}
+        {!hasActiveSubscription && <LockClosedIcon className="ml-1 size-3" />}
       </button>
     </div>
   );
