@@ -1,17 +1,17 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import ActivityDayPopup from './ActivityDayPopup';
-import { useActivity } from './hooks/useActivity';
 import { useAppFocus } from './hooks/useAppFocus';
 import { getMonthDays, getWeekDayIndex, getActivityColor, getSequentialWeek } from './utils/activity';
+import type { ActivityWeek } from './firebase/types/activity';
 
 interface ActivityProps {
   year: number;
+  activityWeeks: ActivityWeek[];
+  loading: boolean;
   onLoaded?: () => void;
 }
 
-export default function Activity({ year, onLoaded }: ActivityProps) {
-  const [refetchKey, setRefetchKey] = useState(0);
-  const { activityWeeks, loading } = useActivity(year, refetchKey);
+export default function Activity({ year, activityWeeks, loading, onLoaded }: ActivityProps) {
   const [selectedDay, setSelectedDay] = useState<{
     date: Date;
     todos: Array<{ text: string; url?: string }>;
@@ -32,12 +32,10 @@ export default function Activity({ year, onLoaded }: ActivityProps) {
     return dayWeekInfo.week === currentWeekNumber && dayWeekInfo.year === currentYear;
   };
 
-  // Handle app focus when day changes - refetch data and recalculate current week
+  // Handle app focus when day changes - recalculate current week
   const handleDayChange = useCallback(() => {
     // Force re-render to recalculate current week
     setVisibilityTrigger((prev) => prev + 1);
-    // Trigger activity data refetch in background
-    setRefetchKey((prev) => prev + 1);
   }, []);
 
   useAppFocus(handleDayChange);
