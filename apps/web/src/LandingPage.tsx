@@ -346,7 +346,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                       type="button"
                       onClick={() => signIn({})}
                       disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
-                      className="flex items-center justify-center gap-2 text-sm/6 font-semibold text-gray-900 dark:text-white disabled:opacity-50"
+                      className="rounded-md bg-white dark:bg-gray-800 px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white shadow-xs ring-1 ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
                         <path
@@ -393,7 +393,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     href={isElectron ? "https://divergent-todos.com/terms" : "/terms"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-indigo-600 hover:text-indigo-500 underline dark:text-indigo-400 dark:hover:text-indigo-300"
+                    className="text-indigo-600 hover:text-indigo-500 underline dark:text-indigo-400 dark:hover:text-indigo-300 cursor-default"
                   >
                     Terms of Service
                   </a>
