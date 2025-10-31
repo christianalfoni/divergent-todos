@@ -305,7 +305,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                 </span>
               </div>
               <div className="mt-10 sm:mt-12 lg:mt-8">
-                <a href="https://www.youtube.com/watch?v=PUSC0V2IEvc" target="_blank" rel="noopener noreferrer" className="inline-flex space-x-6">
+                <a href="https://www.youtube.com/watch?v=qBoONStM63Y" target="_blank" rel="noopener noreferrer" className="inline-flex space-x-6">
                   <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm/6 font-semibold text-indigo-600 ring-1 ring-indigo-600/20 ring-inset dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/25">
                     Video Introduction
                   </span>
