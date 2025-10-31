@@ -66,7 +66,7 @@ export default function TopBar({
   onOpenSubscription,
   onOpenOnboarding,
   onOpenAuthModal,
-  onSignOut: onSignOutCallback,
+  onSignOut: _onSignOutCallback,
   currentView = "calendar",
   onViewChange,
   activityYear,

@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
 import { ChevronRightIcon, ArrowDownTrayIcon } from "@heroicons/react/20/solid";
-import { ARTICLE_URL } from "./constants/links";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 import { useAuthentication } from "./hooks/useAuthentication";
