@@ -29,16 +29,18 @@ export function useEditProfile() {
     .map((updates) => {
       // Optimistic update
       setAuthentication((currentAuth) => {
-        if (!currentAuth.profile) return currentAuth;
+        if (!currentAuth.user) return currentAuth;
         return {
           ...currentAuth,
-          profile: { ...currentAuth.profile, ...updates },
+          profile: currentAuth.profile
+            ? { ...currentAuth.profile, ...updates }
+            : (updates as Profile),
         };
       });
 
       return updates;
     })
-    .async((updates) => {
+    .async(async (updates) => {
       if (!userRef.current) {
         throw new Error("can not edit profile without a user");
       }
@@ -46,7 +48,7 @@ export function useEditProfile() {
       const profileDoc = doc(profilesCollection, userRef.current.uid);
 
       // Use setDoc with merge to update only the fields provided
-      return setDoc(profileDoc, updates, { merge: true });
+      await setDoc(profileDoc, updates, { merge: true });
     })
     .map(() => ({ isEditing: false, error: null }))
     .catch((err) => ({ isEditing: false, error: String(err) }))

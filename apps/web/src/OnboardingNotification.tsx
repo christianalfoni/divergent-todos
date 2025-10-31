@@ -25,8 +25,8 @@ export default function OnboardingNotification() {
   const [{ isEditing }, editProfile] = useEditProfile();
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  const handleDismiss = async () => {
-    await editProfile({ isOnboarded: true });
+  const handleDismiss = () => {
+    editProfile({ isOnboarded: true });
     completeOnboarding();
   };
 

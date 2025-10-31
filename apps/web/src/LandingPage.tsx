@@ -1,14 +1,202 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ChevronRightIcon, ArrowDownTrayIcon } from "@heroicons/react/20/solid";
 import { ARTICLE_URL } from "./constants/links";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 import { useAuthentication } from "./hooks/useAuthentication";
 import { useTestSignin } from "./hooks/useTestSignin";
+import Calendar from "./Calendar";
+import type { Todo } from "./App";
+import type { Profile } from "./firebase";
 
 interface LandingPageProps {
   onAuthenticated: () => void;
 }
+
+// Mock data for preview
+const createMockTodos = (): Todo[] => {
+  const today = new Date();
+
+  // Start from Monday of current week or next Monday if it's weekend
+  const dayOfWeek = today.getDay();
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  const startDate = new Date(today);
+
+  if (isWeekend) {
+    // Go to next Monday
+    const daysUntilMonday = dayOfWeek === 0 ? 1 : 2;
+    startDate.setDate(today.getDate() + daysUntilMonday);
+  } else {
+    // Go to Monday of current week
+    const daysFromMonday = dayOfWeek - 1;
+    startDate.setDate(today.getDate() - daysFromMonday);
+  }
+
+  // Get 15 workdays (3 weeks)
+  const workdays: string[] = [];
+  let currentDate = new Date(startDate);
+  while (workdays.length < 15) {
+    const day = currentDate.getDay();
+    if (day !== 0 && day !== 6) { // Not weekend
+      workdays.push(currentDate.toISOString().split("T")[0]);
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  return [
+    // Week 1 - Monday
+    {
+      id: "1",
+      text: 'Review team PRs <span class="smartlink-chip" data-url="https://github.com" contenteditable="false">github.com</span> <span class="tag-pill tag-pill-blue" data-tag="#code" contenteditable="false">code</span>',
+      completed: true,
+      date: workdays[0],
+      position: "a0",
+      createdAt: new Date(),
+      url: "https://github.com"
+    },
+    {
+      id: "2",
+      text: 'Design API endpoints <span class="smartlink-chip" data-url="https://docs.example.com" contenteditable="false">docs.example.com</span> <span class="tag-pill tag-pill-indigo" data-tag="#backend" contenteditable="false">backend</span>',
+      completed: true,
+      date: workdays[0],
+      position: "a1",
+      createdAt: new Date(),
+      url: "https://docs.example.com"
+    },
+    {
+      id: "3",
+      text: 'Write onboarding guide for new devs <span class="tag-pill tag-pill-yellow" data-tag="#docs" contenteditable="false">docs</span>',
+      completed: false,
+      date: workdays[0],
+      position: "a2",
+      createdAt: new Date()
+    },
+    {
+      id: "4",
+      text: 'Reply to Sarah\'s email about Q2 budget',
+      completed: false,
+      date: workdays[0],
+      position: "a3",
+      createdAt: new Date()
+    },
+
+    // Tuesday
+    {
+      id: "5",
+      text: 'Explore component library options <span class="smartlink-chip" data-url="https://figma.com" contenteditable="false">figma.com</span> <span class="tag-pill tag-pill-pink" data-tag="#design" contenteditable="false">design</span>',
+      completed: false,
+      date: workdays[1],
+      position: "a0",
+      createdAt: new Date(),
+      url: "https://figma.com"
+    },
+    {
+      id: "6",
+      text: 'Learn Rust async patterns <span class="tag-pill tag-pill-yellow" data-tag="#learning" contenteditable="false">learning</span>',
+      completed: false,
+      date: workdays[1],
+      position: "a1",
+      createdAt: new Date()
+    },
+    {
+      id: "7",
+      text: 'Refactor authentication module <span class="tag-pill tag-pill-purple" data-tag="#refactor" contenteditable="false">refactor</span>',
+      completed: false,
+      date: workdays[1],
+      position: "a2",
+      createdAt: new Date()
+    },
+
+    // Wednesday
+    {
+      id: "8",
+      text: 'Plan Q2 product roadmap <span class="tag-pill tag-pill-indigo" data-tag="#strategy" contenteditable="false">strategy</span>',
+      completed: false,
+      date: workdays[2],
+      position: "a0",
+      createdAt: new Date()
+    },
+    {
+      id: "9",
+      text: 'Fix critical payment bug <span class="smartlink-chip" data-url="https://linear.app/issue/PAY-123" contenteditable="false">linear.app</span> <span class="tag-pill tag-pill-red" data-tag="#urgent" contenteditable="false">urgent</span>',
+      completed: true,
+      date: workdays[2],
+      position: "a1",
+      createdAt: new Date(),
+      url: "https://linear.app/issue/PAY-123"
+    },
+    {
+      id: "10",
+      text: 'Respond to infrastructure thread on Slack <span class="smartlink-chip" data-url="https://slack.com" contenteditable="false">slack.com</span>',
+      completed: false,
+      date: workdays[2],
+      position: "a2",
+      createdAt: new Date(),
+      url: "https://slack.com"
+    },
+
+    // Thursday
+    {
+      id: "11",
+      text: 'Build dashboard analytics view <span class="tag-pill tag-pill-green" data-tag="#feature" contenteditable="false">feature</span>',
+      completed: false,
+      date: workdays[3],
+      position: "a0",
+      createdAt: new Date()
+    },
+    {
+      id: "12",
+      text: 'Prepare demo for stakeholders <span class="smartlink-chip" data-url="https://slides.example.com" contenteditable="false">slides.example.com</span>',
+      completed: false,
+      date: workdays[3],
+      position: "a1",
+      createdAt: new Date(),
+      url: "https://slides.example.com"
+    },
+    {
+      id: "13",
+      text: 'Set up CI/CD pipeline <span class="tag-pill tag-pill-gray" data-tag="#infra" contenteditable="false">infra</span>',
+      completed: false,
+      date: workdays[3],
+      position: "a2",
+      createdAt: new Date()
+    },
+
+    // Friday
+    {
+      id: "14",
+      text: 'Research performance bottlenecks <span class="tag-pill tag-pill-purple" data-tag="#perf" contenteditable="false">perf</span>',
+      completed: false,
+      date: workdays[4],
+      position: "a0",
+      createdAt: new Date()
+    },
+    {
+      id: "15",
+      text: 'Update deployment docs <span class="smartlink-chip" data-url="https://staging.example.com" contenteditable="false">staging.example.com</span>',
+      completed: false,
+      date: workdays[4],
+      position: "a1",
+      createdAt: new Date(),
+      url: "https://staging.example.com"
+    },
+    {
+      id: "16",
+      text: 'Draft proposal email for client onboarding',
+      completed: false,
+      date: workdays[4],
+      position: "a2",
+      createdAt: new Date()
+    },
+  ];
+};
+
+const mockProfile: Profile = {
+  theme: "system",
+  fontSize: "medium",
+  isOnboarded: true,
+  viewMode: "one-week",
+};
 
 export default function LandingPage({ onAuthenticated }: LandingPageProps) {
   const [authentication] = useAuthentication();
@@ -18,6 +206,9 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
+
+  // Mock todos for preview
+  const mockTodos = useMemo(() => createMockTodos(), []);
 
   // When we have a user, flip to app
   useEffect(() => {
@@ -69,52 +260,57 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
           </div>
           <div className="mx-auto max-w-7xl px-6 h-full flex items-center lg:px-8">
             <div className="mx-auto max-w-2xl shrink-0 lg:mx-0">
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 32 32"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-11 w-auto"
-                aria-label="Divergent Todos"
-              >
-                {/* Upper left corner */}
-                <path
-                  d="M 8 4 L 4 4 L 4 8"
-                  stroke="rgb(79 70 229)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+              <div className="flex items-center gap-3">
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 32 32"
                   fill="none"
-                  className="dark:stroke-indigo-400"
-                />
-                {/* Lower right corner */}
-                <path
-                  d="M 24 28 L 28 28 L 28 24"
-                  stroke="rgb(79 70 229)"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                  className="dark:stroke-indigo-400"
-                />
-                {/* Checkmark - extended to edges */}
-                <path
-                  d="M6 16L12 22L26 8"
-                  stroke="rgb(79 70 229)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="dark:stroke-indigo-400"
-                />
-              </svg>
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-11 w-auto"
+                  aria-label="Divergent Todos"
+                >
+                  {/* Upper left corner */}
+                  <path
+                    d="M 8 4 L 4 4 L 4 8"
+                    stroke="rgb(79 70 229)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    className="dark:stroke-indigo-400"
+                  />
+                  {/* Lower right corner */}
+                  <path
+                    d="M 24 28 L 28 28 L 28 24"
+                    stroke="rgb(79 70 229)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                    className="dark:stroke-indigo-400"
+                  />
+                  {/* Checkmark - extended to edges */}
+                  <path
+                    d="M6 16L12 22L26 8"
+                    stroke="rgb(79 70 229)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="dark:stroke-indigo-400"
+                  />
+                </svg>
+                <span className="text-lg font-light text-gray-900 dark:text-white tracking-widest">
+                  DIVERGENT TODOS
+                </span>
+              </div>
               <div className="mt-10 sm:mt-12 lg:mt-8">
-                <a href={ARTICLE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex space-x-6">
+                <a href="https://www.youtube.com/watch?v=PUSC0V2IEvc" target="_blank" rel="noopener noreferrer" className="inline-flex space-x-6">
                   <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm/6 font-semibold text-indigo-600 ring-1 ring-indigo-600/20 ring-inset dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/25">
-                    What's new
+                    Video Introduction
                   </span>
                   <span className="inline-flex items-center space-x-2 text-sm/6 font-medium text-gray-600 dark:text-gray-300">
-                    <span>Read the full article</span>
+                    <span>Watch a 2 min pep talk</span>
                     <ChevronRightIcon aria-hidden="true" className="size-5 text-gray-400 dark:text-gray-500" />
                   </span>
                 </a>
@@ -205,12 +401,20 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
               </div>
             </div>
             <div className="hidden lg:flex lg:ml-10 xl:ml-32 lg:mr-0 lg:flex-none lg:max-w-none">
-              <div className="max-w-3xl flex-none sm:max-w-5xl lg:max-w-none">
-                <img
-                  alt="Divergent Todos App"
-                  src="/front-image.png"
-                  className="w-304 rounded-md shadow-xl ring-1 ring-gray-900/10 dark:ring-white/10"
-                />
+              <div className="w-[900px] h-[600px] pointer-events-none rounded-md shadow-xl ring-1 ring-gray-900/10 dark:ring-white/10 overflow-hidden flex flex-col bg-[var(--color-bg-primary)]">
+                <div className="w-[1400px] h-[700px] flex flex-col">
+                  <Calendar
+                    todos={mockTodos}
+                    isLoading={false}
+                    onAddTodo={() => {}}
+                    onToggleTodoComplete={() => {}}
+                    onMoveTodo={() => {}}
+                    onUpdateTodo={() => {}}
+                    onDeleteTodo={() => {}}
+                    onMoveTodosFromDay={() => {}}
+                    profile={mockProfile}
+                  />
+                </div>
               </div>
             </div>
           </div>

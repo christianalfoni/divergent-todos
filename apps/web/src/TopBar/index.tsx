@@ -49,6 +49,7 @@ interface TopBarProps {
   onOpenSubscription?: () => void;
   onOpenOnboarding?: () => void;
   onOpenAuthModal?: () => void;
+  onSignOut?: () => void;
   currentView?: "calendar" | "activity";
   onViewChange?: (view: "calendar" | "activity") => void;
   activityYear?: number;
@@ -65,6 +66,7 @@ export default function TopBar({
   onOpenSubscription,
   onOpenOnboarding,
   onOpenAuthModal,
+  onSignOut: onSignOutCallback,
   currentView = "calendar",
   onViewChange,
   activityYear,
@@ -84,19 +86,12 @@ export default function TopBar({
 
   const handleSignOut = async () => {
     trackMenuItemClicked("sign_out");
-    const currentUser = auth.currentUser;
 
     try {
       // If test user, delete them on sign out
-      if (currentUser) {
-        // Check custom claims from the auth token
-        const idTokenResult = await currentUser.getIdTokenResult();
-        const isTestUser = idTokenResult.claims.isTestUser === true;
-
-        if (isTestUser) {
-          const deleteTestUser = httpsCallable(functions, "deleteTestUser");
-          await deleteTestUser({ uid: currentUser.uid });
-        }
+      if (isTestUser && auth.currentUser) {
+        const deleteTestUser = httpsCallable(functions, "deleteTestUser");
+        await deleteTestUser({ uid: auth.currentUser.uid });
       }
 
       // Clear landing page flag so user sees it again after sign out

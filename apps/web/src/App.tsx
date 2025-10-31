@@ -100,8 +100,14 @@ function AppContent() {
         localStorage.setItem("hasLeftLandingPage", "true");
         setHasLeftLandingPage(true);
       }
+    } else if (!authentication.isAuthenticating && hadAuthenticatedUser) {
+      // User just signed out
+      const hasLeftInStorage = localStorage.getItem("hasLeftLandingPage") === "true";
+      if (!hasLeftInStorage) {
+        setHasLeftLandingPage(false);
+      }
     }
-  }, [authentication.user, hasLeftLandingPage]);
+  }, [authentication.user, authentication.isAuthenticating, hasLeftLandingPage, hadAuthenticatedUser]);
 
   // Auto-start tutorial for authenticated users who haven't completed onboarding
   useEffect(() => {
@@ -113,7 +119,8 @@ function AppContent() {
     ) {
       onboarding.startOnboarding();
     }
-  }, [authentication.user, profile, onboarding]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authentication.user, profile]);
 
 
   // Sync state with localStorage when user signs out
@@ -531,6 +538,7 @@ function AppContent() {
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           onOpenOnboarding={onboarding.startOnboarding}
           onOpenAuthModal={() => setAuthModalState(true)}
+          onSignOut={undefined}
           currentView={currentView}
           onViewChange={handleViewChange}
           activityYear={activityYear}
