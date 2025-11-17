@@ -80,6 +80,9 @@ importers:
       pipesy:
         specifier: ^0.0.6
         version: 0.0.6(react@19.2.0)
+      rask-ui:
+        specifier: ^0.6.0
+        version: 0.6.0(@swc/helpers@0.5.17)(vite@7.1.9(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.1))
       react:
         specifier: ^19.1.1
         version: 19.2.0
@@ -1316,8 +1319,83 @@ packages:
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
     engines: {node: '>=10'}
 
+  '@swc/core-darwin-arm64@1.15.1':
+    resolution: {integrity: sha512-vEPrVxegWIjKEz+1VCVuKRY89jhokhSmQ/YXBWLnmLj9cI08G61RTZJvdsIcjYUjjTu7NgZlYVK+b2y0fbh11g==}
+    engines: {node: '>=10'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@swc/core-darwin-x64@1.15.1':
+    resolution: {integrity: sha512-z9QguKxE3aldvwKHHDg5OlKehasbJBF1lacn5CnN6SlrHbdwokXHFA3nIoO3Bh1Tw7bCgFtdIR4jKlTTn3kBZA==}
+    engines: {node: '>=10'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@swc/core-linux-arm-gnueabihf@1.15.1':
+    resolution: {integrity: sha512-yS2FHA8E4YeiPG9YeYk/6mKiCWuXR5RdYlCmtlGzKcjWbI4GXUVe7+p9C0M6myRt3zdj3M1knmJxk52MQA9EZQ==}
+    engines: {node: '>=10'}
+    cpu: [arm]
+    os: [linux]
+
+  '@swc/core-linux-arm64-gnu@1.15.1':
+    resolution: {integrity: sha512-IFrjDu7+5Y61jLsUqBVXlXutDoPBX10eEeNTjW6C1yzm+cSTE7ayiKXMIFri4gEZ4VpXS6MUgkwjxtDpIXTh+w==}
+    engines: {node: '>=10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@swc/core-linux-arm64-musl@1.15.1':
+    resolution: {integrity: sha512-fKzP9mRQGbhc5QhJPIsqKNNX/jyWrZgBxmo3Nz1SPaepfCUc7RFmtcJQI5q8xAun3XabXjh90wqcY/OVyg2+Kg==}
+    engines: {node: '>=10'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@swc/core-linux-x64-gnu@1.15.1':
+    resolution: {integrity: sha512-ZLjMi138uTJxb+1wzo4cB8mIbJbAsSLWRNeHc1g1pMvkERPWOGlem+LEYkkzaFzCNv1J8aKcL653Vtw8INHQeg==}
+    engines: {node: '>=10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@swc/core-linux-x64-musl@1.15.1':
+    resolution: {integrity: sha512-jvSI1IdsIYey5kOITzyajjofXOOySVitmLxb45OPUjoNojql4sDojvlW5zoHXXFePdA6qAX4Y6KbzAOV3T3ctA==}
+    engines: {node: '>=10'}
+    cpu: [x64]
+    os: [linux]
+
+  '@swc/core-win32-arm64-msvc@1.15.1':
+    resolution: {integrity: sha512-X/FcDtNrDdY9r4FcXHt9QxUqC/2FbQdvZobCKHlHe8vTSKhUHOilWl5EBtkFVfsEs4D5/yAri9e3bJbwyBhhBw==}
+    engines: {node: '>=10'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@swc/core-win32-ia32-msvc@1.15.1':
+    resolution: {integrity: sha512-vfheiWBux8PpC87oy1cshcqzgH7alWYpnVq5jWe7xuVkjqjGGDbBUKuS84eJCdsWcVaB5EXIWLKt+11W3/BOwA==}
+    engines: {node: '>=10'}
+    cpu: [ia32]
+    os: [win32]
+
+  '@swc/core-win32-x64-msvc@1.15.1':
+    resolution: {integrity: sha512-n3Ppn0LSov/IdlANq+8kxHqENuJRX5XtwQqPgQsgwKIcFq22u17NKfDs9vL5PwRsEHY6Xd67pnOqQX0h4AvbuQ==}
+    engines: {node: '>=10'}
+    cpu: [x64]
+    os: [win32]
+
+  '@swc/core@1.15.1':
+    resolution: {integrity: sha512-s9GN3M2jA32k+StvuS9uGe4ztf5KVGBdlJMMC6LR6Ah23Lq/CWKVcC3WeQi8qaAcLd+DiddoNCNMUWymLv+wWQ==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      '@swc/helpers': '>=0.5.17'
+    peerDependenciesMeta:
+      '@swc/helpers':
+        optional: true
+
+  '@swc/counter@0.1.3':
+    resolution: {integrity: sha512-e2BR4lsJkkRlKZ/qCHPw9ZaSxc0MVUd7gtbtaB7aMvHeJVYe8sOB8DBZkP2DtISHGSku9sCK6T6cnY0CtXrOCQ==}
+
   '@swc/helpers@0.5.17':
     resolution: {integrity: sha512-5IKx/Y13RsYd+sauPb2x+U/xZikHjolzfuDgTAl/Tdf3Q8rslRvC19NKDLgAJQ6wsqADk10ntlv08nPFw/gO/A==}
+
+  '@swc/types@0.1.25':
+    resolution: {integrity: sha512-iAoY/qRhNH8a/hBvm3zKj9qQ4oc2+3w1unPJa2XvTK3XjeLXtzcCingVPw/9e5mn1+0yPqxcBGp9Jf0pkfMb1g==}
 
   '@szmarczak/http-timer@4.0.6':
     resolution: {integrity: sha512-4BAffykYOgO+5nzBWYwE3W90sBgLJoUPRWWcL8wlyiM8IB8ipJz3UMJ9KXQd1RKQXpKp8Tutn80HZtWsu2u76w==}
@@ -2846,6 +2924,12 @@ packages:
   infer-owner@1.0.4:
     resolution: {integrity: sha512-IClj+Xz94+d7irH5qRyfJonOdfTzuDaifE6ZPWfx0N0+/ATZCbuTPq2prFl526urkQd90WyUKIh1DfBQ2hMz9A==}
 
+  inferno-vnode-flags@9.0.4:
+    resolution: {integrity: sha512-w8ZPbsp3/cteyySIs132Ud8h5wuqLslB5P2gtGDhTxcq57zr+y4p7AV0tRY1avqKWpPBByQIuoferuLUD+Cc8A==}
+
+  inferno@9.0.4:
+    resolution: {integrity: sha512-QvU22Ffsxc5LYKeHLSQa8/y3LFvV6Ukrdq1kEb/TtkeIVte54ZMU+OYhivKXUDfhJo8p1UXA8luEv3ISvVxDVw==}
+
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
     deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
@@ -3471,6 +3555,10 @@ packages:
       zod:
         optional: true
 
+  opencollective-postinstall@2.0.3:
+    resolution: {integrity: sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==}
+    hasBin: true
+
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -3739,6 +3827,14 @@ packages:
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
     engines: {node: '>= 0.6'}
+
+  rask-ui@0.6.0:
+    resolution: {integrity: sha512-Du0MaI1G3LXj8SUsefFMpxDEgBv1+fL91OxqHFsulLVbuSFxiCcnACq4f/Js8MtcbGNKYugxMAdBRVzoHbThGA==}
+    peerDependencies:
+      vite: '>=5.0.0'
+    peerDependenciesMeta:
+      vite:
+        optional: true
 
   raw-body@2.5.2:
     resolution: {integrity: sha512-8zGqypfENjCIqGhgXToC8aB2r7YrBX+AQAfIPs/Mlk+BtPTztOvTS01NRW/3Eh60J+a48lt8qsCzirQ6loCVfA==}
@@ -4139,6 +4235,9 @@ packages:
   svg2png@4.1.1:
     resolution: {integrity: sha512-9tOp9Ugjlunuf1ugqkhiYboTmTaTI7p48dz5ZjNA5NQJ5xS1NLTZZ1tF8vkJOIBb/ZwxGJsKZvRWqVpo4q9z9Q==}
     hasBin: true
+
+  swc-plugin-inferno@2.9.0:
+    resolution: {integrity: sha512-0otuuwOnDgRBrTHfdi+Dii/oXCsWUEiDscV6aTOOEVyD1OHDtFjTy0mCamdKlDYWinjjUHmgaSpxz2PMA+XqBg==}
 
   tabbable@6.2.0:
     resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}
@@ -5964,9 +6063,62 @@ snapshots:
 
   '@sindresorhus/is@4.6.0': {}
 
+  '@swc/core-darwin-arm64@1.15.1':
+    optional: true
+
+  '@swc/core-darwin-x64@1.15.1':
+    optional: true
+
+  '@swc/core-linux-arm-gnueabihf@1.15.1':
+    optional: true
+
+  '@swc/core-linux-arm64-gnu@1.15.1':
+    optional: true
+
+  '@swc/core-linux-arm64-musl@1.15.1':
+    optional: true
+
+  '@swc/core-linux-x64-gnu@1.15.1':
+    optional: true
+
+  '@swc/core-linux-x64-musl@1.15.1':
+    optional: true
+
+  '@swc/core-win32-arm64-msvc@1.15.1':
+    optional: true
+
+  '@swc/core-win32-ia32-msvc@1.15.1':
+    optional: true
+
+  '@swc/core-win32-x64-msvc@1.15.1':
+    optional: true
+
+  '@swc/core@1.15.1(@swc/helpers@0.5.17)':
+    dependencies:
+      '@swc/counter': 0.1.3
+      '@swc/types': 0.1.25
+    optionalDependencies:
+      '@swc/core-darwin-arm64': 1.15.1
+      '@swc/core-darwin-x64': 1.15.1
+      '@swc/core-linux-arm-gnueabihf': 1.15.1
+      '@swc/core-linux-arm64-gnu': 1.15.1
+      '@swc/core-linux-arm64-musl': 1.15.1
+      '@swc/core-linux-x64-gnu': 1.15.1
+      '@swc/core-linux-x64-musl': 1.15.1
+      '@swc/core-win32-arm64-msvc': 1.15.1
+      '@swc/core-win32-ia32-msvc': 1.15.1
+      '@swc/core-win32-x64-msvc': 1.15.1
+      '@swc/helpers': 0.5.17
+
+  '@swc/counter@0.1.3': {}
+
   '@swc/helpers@0.5.17':
     dependencies:
       tslib: 2.8.1
+
+  '@swc/types@0.1.25':
+    dependencies:
+      '@swc/counter': 0.1.3
 
   '@szmarczak/http-timer@4.0.6':
     dependencies:
@@ -7886,6 +8038,14 @@ snapshots:
 
   infer-owner@1.0.4: {}
 
+  inferno-vnode-flags@9.0.4: {}
+
+  inferno@9.0.4:
+    dependencies:
+      csstype: 3.1.3
+      inferno-vnode-flags: 9.0.4
+      opencollective-postinstall: 2.0.3
+
   inflight@1.0.6:
     dependencies:
       once: 1.4.0
@@ -8441,6 +8601,8 @@ snapshots:
 
   openai@6.6.0: {}
 
+  opencollective-postinstall@2.0.3: {}
+
   optionator@0.9.4:
     dependencies:
       deep-is: 0.1.4
@@ -8685,6 +8847,17 @@ snapshots:
   quick-lru@5.1.1: {}
 
   range-parser@1.2.1: {}
+
+  rask-ui@0.6.0(@swc/helpers@0.5.17)(vite@7.1.9(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.1)):
+    dependencies:
+      '@swc/core': 1.15.1(@swc/helpers@0.5.17)
+      inferno: 9.0.4
+      inferno-vnode-flags: 9.0.4
+      swc-plugin-inferno: 2.9.0
+    optionalDependencies:
+      vite: 7.1.9(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.1)
+    transitivePeerDependencies:
+      - '@swc/helpers'
 
   raw-body@2.5.2:
     dependencies:
@@ -9166,6 +9339,8 @@ snapshots:
       yargs: 6.6.0
     transitivePeerDependencies:
       - supports-color
+
+  swc-plugin-inferno@2.9.0: {}
 
   tabbable@6.2.0: {}
 

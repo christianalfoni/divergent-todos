@@ -7,7 +7,7 @@ import {
   increment,
   writeBatch,
 } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { useRef } from "react";
 import { generateKeyBetween } from "fractional-indexing";
 
@@ -26,7 +26,7 @@ export type AddTodoState =
     };
 
 export function useAddTodo() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const userRef = useRef(authentication.user);
   const profileRef = useRef(authentication.profile);
 

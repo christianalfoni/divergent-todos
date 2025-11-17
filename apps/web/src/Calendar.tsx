@@ -3,7 +3,7 @@ import { DndContext, DragOverlay } from "@dnd-kit/core";
 import DayCell from "./DayCell";
 import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
-import { useAuthentication } from "./hooks/useAuthentication";
+import { createAuthentication } from "./hooks/useAuthentication";
 import { useAppFocus } from "./hooks/useAppFocus";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";
@@ -20,7 +20,9 @@ import { trackTimeboxOpened } from "./firebase/analytics";
 interface CalendarProps {
   todos: Todo[];
   isLoading: boolean;
-  onAddTodo: (todo: Omit<Todo, "id" | "position"> & { position?: string }) => void;
+  onAddTodo: (
+    todo: Omit<Todo, "id" | "position"> & { position?: string }
+  ) => void;
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
@@ -45,13 +47,16 @@ export default function Calendar({
   onMoveTodosFromDay,
   profile,
 }: CalendarProps) {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const onboarding = useOnboarding();
   const { viewMode, setViewMode } = useViewMode();
   const [timeBoxTodo, setTimeBoxTodo] = useState<Todo | null>(null);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
   const [visibilityTrigger, setVisibilityTrigger] = useState(0);
-  const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), [visibilityTrigger]);
+  const allWeekdays = useMemo(
+    () => getWeekdaysForThreeWeeks(),
+    [visibilityTrigger]
+  );
 
   // Wrap setTimeBoxTodo to track analytics imperatively
   const handleOpenTimeBox = useCallback((todo: Todo | null) => {
@@ -141,7 +146,7 @@ export default function Calendar({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Check for Cmd+Shift+K (case insensitive)
-      if (e.metaKey && e.shiftKey && (e.key === 'K' || e.key === 'k')) {
+      if (e.metaKey && e.shiftKey && (e.key === "K" || e.key === "k")) {
         e.preventDefault();
         if (authentication.user && profile?.isOnboarded) {
           setShowWeekendDialog(true);
@@ -149,8 +154,8 @@ export default function Calendar({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [authentication.user, profile?.isOnboarded]);
 
   return (

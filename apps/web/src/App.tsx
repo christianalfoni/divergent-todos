@@ -11,7 +11,7 @@ import PreviousWeekDialog from "./PreviousWeekDialog";
 import TopBar from "./TopBar";
 import MobileBlocker from "./MobileBlocker";
 import Terms from "./Terms";
-import { useAuthentication } from "./hooks/useAuthentication";
+import { createAuthentication } from "./hooks/useAuthentication";
 import { useTheme } from "./hooks/useTheme";
 import { useFontSize } from "./hooks/useFontSize";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -27,7 +27,7 @@ import {
   trackBulkTodoMove,
   trackDayTodosMoved,
 } from "./firebase/analytics";
-import { isMobileDevice } from "./utils/device";
+import { injectEnv } from "./utils/env";
 import { getSequentialWeek } from "./utils/activity";
 import {
   collection,
@@ -40,6 +40,7 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 import { activityWeekConverter } from "./firebase/types/activity";
+import { createState } from "rask-ui";
 
 export interface Todo {
   id: string;
@@ -55,7 +56,7 @@ export interface Todo {
 }
 
 function AppContent() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const { todos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [authModalState, setAuthModalState] = useState(false);
@@ -106,12 +107,18 @@ function AppContent() {
       }
     } else if (!authentication.isAuthenticating && hadAuthenticatedUser) {
       // User just signed out
-      const hasLeftInStorage = localStorage.getItem("hasLeftLandingPage") === "true";
+      const hasLeftInStorage =
+        localStorage.getItem("hasLeftLandingPage") === "true";
       if (!hasLeftInStorage) {
         setHasLeftLandingPage(false);
       }
     }
-  }, [authentication.user, authentication.isAuthenticating, hasLeftLandingPage, hadAuthenticatedUser]);
+  }, [
+    authentication.user,
+    authentication.isAuthenticating,
+    hasLeftLandingPage,
+    hadAuthenticatedUser,
+  ]);
 
   // Auto-start tutorial for authenticated users who haven't completed onboarding
   useEffect(() => {
@@ -126,7 +133,6 @@ function AppContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authentication.user, profile]);
 
-
   // Sync state with localStorage when user signs out
   // (localStorage is cleared by the sign out button handler)
   useEffect(() => {
@@ -136,7 +142,8 @@ function AppContent() {
       hadAuthenticatedUser
     ) {
       // User signed out - check if localStorage was cleared
-      const hasLeftLandingPageInStorage = localStorage.getItem("hasLeftLandingPage") === "true";
+      const hasLeftLandingPageInStorage =
+        localStorage.getItem("hasLeftLandingPage") === "true";
       if (hasLeftLandingPage && !hasLeftLandingPageInStorage) {
         setHasLeftLandingPage(false);
       }
@@ -301,24 +308,30 @@ function AppContent() {
     // Track the initial timestamp to detect changes
     let initialTimestamp: Date | null = null;
 
-    const unsubscribe = onSnapshot(activityDocRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.data();
+    const unsubscribe = onSnapshot(
+      activityDocRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
 
-        if (initialTimestamp === null) {
-          // First snapshot - store the initial timestamp
-          initialTimestamp = data.updatedAt;
-        } else {
-          // Check if updatedAt has changed (meaning someone else saved)
-          if (data.updatedAt.getTime() !== initialTimestamp.getTime()) {
-            console.log("Week summary was saved on another device - closing dialog");
-            setPreviousWeekDialog(null);
+          if (initialTimestamp === null) {
+            // First snapshot - store the initial timestamp
+            initialTimestamp = data.updatedAt;
+          } else {
+            // Check if updatedAt has changed (meaning someone else saved)
+            if (data.updatedAt.getTime() !== initialTimestamp.getTime()) {
+              console.log(
+                "Week summary was saved on another device - closing dialog"
+              );
+              setPreviousWeekDialog(null);
+            }
           }
         }
+      },
+      (error) => {
+        console.error("Error listening to activity document:", error);
       }
-    }, (error) => {
-      console.error("Error listening to activity document:", error);
-    });
+    );
 
     return () => unsubscribe();
   }, [previousWeekDialog]);
@@ -628,34 +641,35 @@ function AppContent() {
 }
 
 export default function App() {
-  // Check if device is mobile and show blocker if so
-  if (isMobileDevice()) {
-    return <MobileBlocker />;
-  }
+  const env = injectEnv();
 
-  // In Electron, skip the router entirely
-  const isElectron = window.navigator.userAgent.includes("Electron");
+  return () => {
+    // Check if device is mobile and show blocker if so
+    if (env.isMobile) {
+      return <MobileBlocker />;
+    }
 
-  if (isElectron) {
+    if (env.isElectron) {
+      return (
+        <CacheProvider>
+          <OnboardingProvider>
+            <AppContent />
+          </OnboardingProvider>
+        </CacheProvider>
+      );
+    }
+
     return (
-      <CacheProvider>
-        <OnboardingProvider>
-          <AppContent />
-        </OnboardingProvider>
-      </CacheProvider>
+      <BrowserRouter>
+        <CacheProvider>
+          <OnboardingProvider>
+            <Routes>
+              <Route path="/" element={<AppContent />} />
+              <Route path="/terms" element={<Terms />} />
+            </Routes>
+          </OnboardingProvider>
+        </CacheProvider>
+      </BrowserRouter>
     );
-  }
-
-  return (
-    <BrowserRouter>
-      <CacheProvider>
-        <OnboardingProvider>
-          <Routes>
-            <Route path="/" element={<AppContent />} />
-            <Route path="/terms" element={<Terms />} />
-          </Routes>
-        </OnboardingProvider>
-      </CacheProvider>
-    </BrowserRouter>
-  );
+  };
 }

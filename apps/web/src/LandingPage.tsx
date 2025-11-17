@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import { ChevronRightIcon, ArrowDownTrayIcon } from "@heroicons/react/20/solid";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
-import { useAuthentication } from "./hooks/useAuthentication";
+import { createAuthentication } from "./hooks/useAuthentication";
 import { useTestSignin } from "./hooks/useTestSignin";
 import Calendar from "./Calendar";
 import type { Todo } from "./App";
@@ -36,7 +36,8 @@ const createMockTodos = (): Todo[] => {
   let currentDate = new Date(startDate);
   while (workdays.length < 15) {
     const day = currentDate.getDay();
-    if (day !== 0 && day !== 6) { // Not weekend
+    if (day !== 0 && day !== 6) {
+      // Not weekend
       workdays.push(currentDate.toISOString().split("T")[0]);
     }
     currentDate.setDate(currentDate.getDate() + 1);
@@ -51,7 +52,7 @@ const createMockTodos = (): Todo[] => {
       date: workdays[0],
       position: "a0",
       createdAt: new Date(),
-      url: "https://github.com"
+      url: "https://github.com",
     },
     {
       id: "2",
@@ -60,7 +61,7 @@ const createMockTodos = (): Todo[] => {
       date: workdays[0],
       position: "a1",
       createdAt: new Date(),
-      url: "https://docs.example.com"
+      url: "https://docs.example.com",
     },
     {
       id: "3",
@@ -68,15 +69,15 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[0],
       position: "a2",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
     {
       id: "4",
-      text: 'Reply to Sarah\'s email about Q2 budget',
+      text: "Reply to Sarah's email about Q2 budget",
       completed: false,
       date: workdays[0],
       position: "a3",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
 
     // Tuesday
@@ -87,7 +88,7 @@ const createMockTodos = (): Todo[] => {
       date: workdays[1],
       position: "a0",
       createdAt: new Date(),
-      url: "https://figma.com"
+      url: "https://figma.com",
     },
     {
       id: "6",
@@ -95,7 +96,7 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[1],
       position: "a1",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
     {
       id: "7",
@@ -103,7 +104,7 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[1],
       position: "a2",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
 
     // Wednesday
@@ -113,7 +114,7 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[2],
       position: "a0",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
     {
       id: "9",
@@ -122,7 +123,7 @@ const createMockTodos = (): Todo[] => {
       date: workdays[2],
       position: "a1",
       createdAt: new Date(),
-      url: "https://linear.app/issue/PAY-123"
+      url: "https://linear.app/issue/PAY-123",
     },
     {
       id: "10",
@@ -131,7 +132,7 @@ const createMockTodos = (): Todo[] => {
       date: workdays[2],
       position: "a2",
       createdAt: new Date(),
-      url: "https://slack.com"
+      url: "https://slack.com",
     },
 
     // Thursday
@@ -141,7 +142,7 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[3],
       position: "a0",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
     {
       id: "12",
@@ -150,7 +151,7 @@ const createMockTodos = (): Todo[] => {
       date: workdays[3],
       position: "a1",
       createdAt: new Date(),
-      url: "https://slides.example.com"
+      url: "https://slides.example.com",
     },
     {
       id: "13",
@@ -158,7 +159,7 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[3],
       position: "a2",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
 
     // Friday
@@ -168,7 +169,7 @@ const createMockTodos = (): Todo[] => {
       completed: false,
       date: workdays[4],
       position: "a0",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
     {
       id: "15",
@@ -177,15 +178,15 @@ const createMockTodos = (): Todo[] => {
       date: workdays[4],
       position: "a1",
       createdAt: new Date(),
-      url: "https://staging.example.com"
+      url: "https://staging.example.com",
     },
     {
       id: "16",
-      text: 'Draft proposal email for client onboarding',
+      text: "Draft proposal email for client onboarding",
       completed: false,
       date: workdays[4],
       position: "a2",
-      createdAt: new Date()
+      createdAt: new Date(),
     },
   ];
 };
@@ -198,10 +199,15 @@ const mockProfile: Profile = {
 };
 
 export default function LandingPage({ onAuthenticated }: LandingPageProps) {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const [{ isSigningIn }, signIn] = useSignIn();
-  const [{ isSigningIn: isSigningInAnonymously }, signInAnonymously] = useSignInAnonymously();
-  const { signInAsTestUser, loading: isTestSigningIn, error: testSignInError } = useTestSignin();
+  const [{ isSigningIn: isSigningInAnonymously }, signInAnonymously] =
+    useSignInAnonymously();
+  const {
+    signInAsTestUser,
+    loading: isTestSigningIn,
+    error: testSignInError,
+  } = useTestSignin();
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");
@@ -237,13 +243,22 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                 <path d="M.5 200V.5H200" fill="none" />
               </pattern>
             </defs>
-            <svg x="50%" y={-1} className="overflow-visible fill-gray-50 dark:fill-gray-800/20">
+            <svg
+              x="50%"
+              y={-1}
+              className="overflow-visible fill-gray-50 dark:fill-gray-800/20"
+            >
               <path
                 d="M-200 0h201v201h-201Z M600 0h201v201h-201Z M-400 600h201v201h-201Z M200 800h201v201h-201Z"
                 strokeWidth={0}
               />
             </svg>
-            <rect fill="url(#983e3e4c-de6d-4c3f-8d64-b9761d1534cc)" width="100%" height="100%" strokeWidth={0} />
+            <rect
+              fill="url(#983e3e4c-de6d-4c3f-8d64-b9761d1534cc)"
+              width="100%"
+              height="100%"
+              strokeWidth={0}
+            />
           </svg>
           <div
             aria-hidden="true"
@@ -252,7 +267,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
             <div
               style={{
                 clipPath:
-                  'polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)',
+                  "polygon(73.6% 51.7%, 91.7% 11.8%, 100% 46.4%, 97.4% 82.2%, 92.5% 84.9%, 75.7% 64%, 55.3% 47.5%, 46.5% 49.4%, 45% 62.9%, 50.3% 87.2%, 21.3% 64.1%, 0.1% 100%, 5.4% 51.1%, 21.4% 63.9%, 58.9% 0.2%, 73.6% 51.7%)",
               }}
               className="aspect-1108/632 w-277 bg-linear-to-r from-[#80caff] to-[#4f46e5] opacity-20"
             />
@@ -304,13 +319,21 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                 </span>
               </div>
               <div className="mt-10 sm:mt-12 lg:mt-8">
-                <a href="https://www.youtube.com/watch?v=qBoONStM63Y" target="_blank" rel="noopener noreferrer" className="inline-flex space-x-6">
+                <a
+                  href="https://www.youtube.com/watch?v=qBoONStM63Y"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex space-x-6"
+                >
                   <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm/6 font-semibold text-indigo-600 ring-1 ring-indigo-600/20 ring-inset dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/25">
                     Video Introduction
                   </span>
                   <span className="inline-flex items-center space-x-2 text-sm/6 font-medium text-gray-600 dark:text-gray-300">
                     <span>Watch a 1,5 minute pep talk</span>
-                    <ChevronRightIcon aria-hidden="true" className="size-5 text-gray-400 dark:text-gray-500" />
+                    <ChevronRightIcon
+                      aria-hidden="true"
+                      className="size-5 text-gray-400 dark:text-gray-500"
+                    />
                   </span>
                 </a>
               </div>
@@ -318,7 +341,8 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                 Own Your Attention with Divergent Todos
               </h1>
               <p className="mt-8 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8 dark:text-gray-400">
-                Stop letting your tools compete for your attention. Plan where your focus goes, one day at a time.
+                Stop letting your tools compete for your attention. Plan where
+                your focus goes, one day at a time.
               </p>
               <div className="mt-10">
                 <div className="flex items-center justify-between gap-x-6">
@@ -327,7 +351,11 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                       <button
                         type="button"
                         onClick={signInAsTestUser}
-                        disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
+                        disabled={
+                          isSigningIn ||
+                          isSigningInAnonymously ||
+                          isTestSigningIn
+                        }
                         className="rounded-md bg-yellow-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-yellow-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-600 dark:bg-yellow-500 dark:hover:bg-yellow-400 dark:focus-visible:outline-yellow-500 disabled:opacity-50"
                       >
                         {isTestSigningIn ? "Creating..." : "Test App"}
@@ -336,7 +364,9 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     <button
                       type="button"
                       onClick={() => signInAnonymously({})}
-                      disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
+                      disabled={
+                        isSigningIn || isSigningInAnonymously || isTestSigningIn
+                      }
                       className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-500 dark:hover:bg-indigo-400 dark:focus-visible:outline-indigo-500 disabled:opacity-50"
                     >
                       {isSigningInAnonymously ? "Starting..." : "Try App"}
@@ -344,10 +374,16 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     <button
                       type="button"
                       onClick={() => signIn({})}
-                      disabled={isSigningIn || isSigningInAnonymously || isTestSigningIn}
+                      disabled={
+                        isSigningIn || isSigningInAnonymously || isTestSigningIn
+                      }
                       className="rounded-md bg-white dark:bg-gray-800 px-3.5 py-2.5 text-sm font-semibold text-gray-900 dark:text-white shadow-xs ring-1 ring-gray-300 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-600 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+                      <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        className="h-5 w-5"
+                      >
                         <path
                           d="M12.0003 4.75C13.7703 4.75 15.3553 5.36002 16.6053 6.54998L20.0303 3.125C17.9502 1.19 15.2353 0 12.0003 0C7.31028 0 3.25527 2.69 1.28027 6.60998L5.27028 9.70498C6.21525 6.86002 8.87028 4.75 12.0003 4.75Z"
                           fill="#EA4335"
@@ -365,7 +401,11 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                           fill="#34A853"
                         />
                       </svg>
-                      {isSigningIn ? (isElectron ? "Signing in with browser..." : "Signing in...") : "Sign In"}
+                      {isSigningIn
+                        ? isElectron
+                          ? "Signing in with browser..."
+                          : "Signing in..."
+                        : "Sign In"}
                     </button>
                   </div>
                   {!isElectron && (
@@ -389,7 +429,11 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                 <p className="mt-4 text-xs text-gray-600 dark:text-gray-400">
                   By signing in, you agree to our{" "}
                   <a
-                    href={isElectron ? "https://divergent-todos.com/terms" : "/terms"}
+                    href={
+                      isElectron
+                        ? "https://divergent-todos.com/terms"
+                        : "/terms"
+                    }
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-indigo-600 hover:text-indigo-500 underline dark:text-indigo-400 dark:hover:text-indigo-300 cursor-default"
@@ -418,7 +462,6 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
             </div>
           </div>
         </div>
-
       </main>
     </div>
   );

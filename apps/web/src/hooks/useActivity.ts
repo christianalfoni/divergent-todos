@@ -1,13 +1,20 @@
 import { useEffect, useState, useRef } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { activityWeekConverter, type ActivityWeek } from "../firebase/types/activity";
-import { useAuthentication } from "./useAuthentication";
+import {
+  activityWeekConverter,
+  type ActivityWeek,
+} from "../firebase/types/activity";
+import { createAuthentication } from "./useAuthentication";
 
 export function useActivity(year: number) {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   // Keep track of the last fetched data to avoid unnecessary re-renders
-  const lastFetchRef = useRef<{ year: number; userId: string; data: ActivityWeek[] } | null>(null);
+  const lastFetchRef = useRef<{
+    year: number;
+    userId: string;
+    data: ActivityWeek[];
+  } | null>(null);
   const [activityWeeks, setActivityWeeks] = useState<ActivityWeek[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -27,8 +34,10 @@ export function useActivity(year: number) {
     async function fetchActivity() {
       try {
         // Check if we already have this data in ref (same user, same year)
-        if (lastFetchRef.current?.userId === userId &&
-            lastFetchRef.current?.year === year) {
+        if (
+          lastFetchRef.current?.userId === userId &&
+          lastFetchRef.current?.year === year
+        ) {
           setActivityWeeks(lastFetchRef.current.data);
           setLoading(false);
           return;
@@ -37,7 +46,9 @@ export function useActivity(year: number) {
         setLoading(true);
         setError(null);
 
-        const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+        const activityRef = collection(db, "activity").withConverter(
+          activityWeekConverter
+        );
         const q = query(
           activityRef,
           where("userId", "==", userId),
@@ -58,7 +69,9 @@ export function useActivity(year: number) {
         }
       } catch (err) {
         if (!unsubscribed) {
-          setError(err instanceof Error ? err : new Error("Failed to fetch activity"));
+          setError(
+            err instanceof Error ? err : new Error("Failed to fetch activity")
+          );
           setLoading(false);
         }
       }

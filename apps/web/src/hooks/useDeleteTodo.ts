@@ -1,7 +1,7 @@
 import { pipe } from "pipesy";
 import { todosCollection } from "../firebase";
 import { doc, deleteDoc } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { useTodos } from "./useTodos";
 import { useRef } from "react";
 
@@ -20,7 +20,7 @@ export type DeleteTodoState =
     };
 
 export function useDeleteTodo() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const userRef = useRef(authentication.user);
   const { setTodos } = useTodos();
 

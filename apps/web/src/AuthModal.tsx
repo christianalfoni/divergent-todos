@@ -8,7 +8,7 @@ import { UserCircleIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 import { useLinkAnonymousAccount } from "./hooks/useLinkAnonymousAccount";
-import { useAuthentication } from "./hooks/useAuthentication";
+import { createAuthentication } from "./hooks/useAuthentication";
 
 interface AuthModalProps {
   open: boolean;
@@ -16,7 +16,7 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ open, onSignIn }: AuthModalProps) {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const [{ isSigningIn, error }, signIn] = useSignIn();
   const [
     { isSigningIn: isSigningInAnonymously, error: anonymousError },

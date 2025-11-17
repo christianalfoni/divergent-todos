@@ -1,7 +1,7 @@
 import { pipe } from "pipesy";
 import { todosCollection, type Todo } from "../firebase";
 import { doc, writeBatch } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { useTodos } from "./useTodos";
 import { useRef } from "react";
 import { db } from "../firebase";
@@ -21,7 +21,7 @@ export type BatchEditTodosState =
     };
 
 export function useBatchEditTodos() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const userRef = useRef(authentication.user);
   const { setTodos } = useTodos();
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { useEditProfile } from "./useEditProfile";
 import { trackViewModeChanged } from "../firebase/analytics";
 
@@ -25,7 +25,7 @@ function getStoredViewMode(): ViewMode {
 }
 
 export function useViewMode() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const profile = authentication.profile;
   const [, editProfile] = useEditProfile();
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);

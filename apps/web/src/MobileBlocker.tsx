@@ -52,10 +52,12 @@ export default function MobileBlocker() {
         {/* Message */}
         <div className="space-y-4 text-[var(--color-text-secondary)]">
           <p className="text-lg">
-            This app is designed for your workdays and is not supported on mobile devices.
+            This app is designed for your workdays and is not supported on
+            mobile devices.
           </p>
           <p>
-            Your mobile is often a mix of work and private life. We want to do what we can to not bring work into your private life.
+            Your mobile is often a mix of work and private life. We want to do
+            what we can to not bring work into your private life.
           </p>
         </div>
 

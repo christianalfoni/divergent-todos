@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { useEditProfile } from "./useEditProfile";
 import { trackThemeChanged } from "../firebase/analytics";
 
@@ -62,7 +62,7 @@ function applyTheme(state: ThemeState) {
 }
 
 export function useTheme() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const profile = authentication.profile;
   const [, editProfile] = useEditProfile();
   const [themeState, setThemeState] = useState<ThemeState>(getStoredTheme);

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { doc, updateDoc } from "firebase/firestore";
 import { profilesCollection } from "../firebase";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 
 /**
  * Hook that marks the desktop app as installed when running in Electron
@@ -9,14 +9,19 @@ import { useAuthentication } from "./useAuthentication";
  * undefined or false.
  */
 export function useMarkAppInstalled() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
 
   useEffect(() => {
     // Check if running in Electron by checking for window.native API
     const isElectron = !!window.native;
 
     // Only proceed if in Electron, user is authenticated (and not anonymous), and profile exists
-    if (!isElectron || !authentication.user || authentication.user.isAnonymous || !authentication.profile) {
+    if (
+      !isElectron ||
+      !authentication.user ||
+      authentication.user.isAnonymous ||
+      !authentication.profile
+    ) {
       return;
     }
 

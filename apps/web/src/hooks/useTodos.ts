@@ -9,7 +9,7 @@ import {
   or,
   and,
 } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { getCurrentWeekStart, getNextWeekEnd } from "../utils/calendar";
 
 export type TodosState = {
@@ -18,7 +18,7 @@ export type TodosState = {
 };
 
 export function useTodos() {
-  const [authentication] = useAuthentication();
+  const [authentication] = createAuthentication();
   const [{ isLoading, data }, setTodos] = pipe<
     (todos: TodosState) => TodosState,
     TodosState

@@ -1,7 +1,7 @@
 import { pipe } from "pipesy";
 import { profilesCollection, type Profile } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { createAuthentication } from "./useAuthentication";
 import { useRef } from "react";
 
 export type EditProfileState =
@@ -19,7 +19,7 @@ export type EditProfileState =
     };
 
 export function useEditProfile() {
-  const [authentication, setAuthentication] = useAuthentication();
+  const [authentication, setAuthentication] = createAuthentication();
   const userRef = useRef(authentication.user);
 
   userRef.current = authentication.user;
