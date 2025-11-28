@@ -80,7 +80,7 @@ export default function OnboardingNotification() {
           ),
           title: "Add a focus with a URL",
           message:
-            "Focus can include URLs. Copy a sample URL, then paste it into a new focus description.",
+            "Focus can include URLs. Copy a sample URL, then paste it into a new focus description. Tip: Right-click any link to copy its URL!",
           actionLabel: "Add a focus with URL",
           requiresAddTodoWithUrl: true,
           showCopyButton: true,

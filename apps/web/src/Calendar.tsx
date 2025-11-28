@@ -23,9 +23,11 @@ interface CalendarProps {
   onAddTodo: (todo: Omit<Todo, "id" | "position"> & { position?: string }) => void;
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
+  onCopyTodo: (todoId: string, newDate: string, newIndex?: number) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
   onDeleteTodo: (todoId: string) => void;
-  onMoveTodosFromDay: (date: Date) => void;
+  onMoveIncompleteTodosToToday: () => void;
+  hasOldUncompletedTodos: boolean;
   profile: Profile | null;
 }
 
@@ -40,9 +42,11 @@ export default function Calendar({
   onAddTodo,
   onToggleTodoComplete,
   onMoveTodo,
+  onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
-  onMoveTodosFromDay,
+  onMoveIncompleteTodosToToday,
+  hasOldUncompletedTodos,
   profile,
 }: CalendarProps) {
   const [authentication] = useAuthentication();
@@ -64,10 +68,11 @@ export default function Calendar({
   const {
     sensors,
     activeTodo,
+    isCopyMode,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-  } = useTodoDragAndDrop({ todos, onMoveTodo });
+  } = useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo });
 
   const getTodosForDate = (date: Date): Todo[] => {
     const dateString = date.toISOString().split("T")[0];
@@ -185,12 +190,14 @@ export default function Calendar({
                 isLoading={isLoading}
                 todos={getTodosForDate(date)}
                 allTodos={todos}
+                isCopyMode={isCopyMode}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={handleOpenTimeBox}
-                onMoveTodosFromDay={onMoveTodosFromDay}
+                onMoveIncompleteTodosToToday={onMoveIncompleteTodosToToday}
+                hasOldUncompletedTodos={hasOldUncompletedTodos}
               />
             );
           })}

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
 
 type Props = {
   html?: string; // initial serialized HTML with chips (optional)
@@ -15,6 +15,7 @@ export type SmartEditorRef = {
   clear: () => void;
   setHtml: (html: string) => void;
   getHtml: () => string;
+  convertPendingTags: () => void;
 };
 
 const URL_REGEX = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/i;
@@ -56,6 +57,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
 }, forwardedRef) {
   const ref = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
   // Expose imperative methods
   useImperativeHandle(forwardedRef, () => ({
@@ -71,6 +73,39 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     },
     getHtml: () => {
       return ref.current?.innerHTML || "";
+    },
+    convertPendingTags: () => {
+      if (!ref.current) return;
+
+      // Remove any existing shadow first
+      const existingShadow = ref.current.querySelector('.tag-shadow');
+      if (existingShadow) {
+        existingShadow.remove();
+      }
+
+      // Get the word before the cursor
+      const wordInfo = getWordBeforeCursor();
+      if (wordInfo) {
+        const { word, range } = wordInfo;
+
+        // Check if it's a tag
+        const tagMatch = word.match(TAG_REGEX);
+        if (tagMatch) {
+          const tag = tagMatch[1]; // Extract tag without #
+          range.deleteContents();
+          const pill = makeTagPill(tag);
+          range.insertNode(pill);
+
+          // Move cursor after pill
+          range.setStartAfter(pill);
+          range.collapse(true);
+          const sel = document.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+
+          emitChange();
+        }
+      }
     }
   }));
 
@@ -97,15 +132,17 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     // When switching to view mode, swap chip spans -> anchors
     if (!editing) {
       // Convert chip spans to anchors (purely visual; you might store both separately if needed)
-      el.querySelectorAll("span[data-url]").forEach((chip) => {
+      el.querySelectorAll("span[data-url]").forEach((chip, index) => {
         const url = (chip as HTMLElement).dataset.url!;
         const domain = chip.textContent || url;
+        const linkId = `link-${Date.now()}-${index}`;
         const a = document.createElement("a");
         a.href = url;
         a.textContent = domain;
         a.rel = "noopener noreferrer";
         a.target = "_blank";
         a.className = "smartlink-anchor";
+        a.dataset.linkId = linkId;
         a.addEventListener("click", (e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -115,6 +152,15 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           } else {
             window.open(url, "_blank");
           }
+        });
+        a.addEventListener("contextmenu", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          navigator.clipboard.writeText(url);
+          setCopiedLinkId(linkId);
+          setTimeout(() => {
+            setCopiedLinkId(null);
+          }, 1000);
         });
         chip.replaceWith(a);
       });
@@ -502,6 +548,22 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     }
   };
 
+  // Add the copied class to the link when it's copied
+  useEffect(() => {
+    if (!ref.current || !copiedLinkId) return;
+
+    const link = ref.current.querySelector(`[data-link-id="${copiedLinkId}"]`);
+    if (link) {
+      link.classList.add('link-copied');
+    }
+
+    return () => {
+      if (link) {
+        link.classList.remove('link-copied');
+      }
+    };
+  }, [copiedLinkId]);
+
   return (
     <>
       <div
@@ -525,14 +587,15 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
         .smartlink-chip {
           display: inline-flex;
           align-items: center;
-          padding: 0 6px;
+          padding: 0px 6px;
           border-radius: 6px;
           border: 1px solid var(--color-border-secondary);
           background: var(--color-bg-hover);
           line-height: 1.4;
           margin: 0 1px;
           user-select: none;
-          font-size: inherit;
+          font-size: 0.75rem;
+          font-weight: 500;
           color: var(--color-accent-text);
         }
         .smartlink-chip::after {
@@ -625,12 +688,30 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           color: var(--color-accent-text);
           text-decoration: underline;
           cursor: pointer;
+          position: relative;
         }
         .smartlink-anchor:hover {
           color: var(--color-accent-text-hover);
         }
         .smartlinks.is-editing .smartlink-anchor {
           pointer-events: none;
+        }
+        .smartlink-anchor.link-copied {
+          color: transparent;
+          text-decoration: none;
+        }
+        .smartlink-anchor.link-copied::after {
+          content: "copied!";
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--color-accent-text);
+          text-decoration: none;
         }
       `}</style>
     </>
