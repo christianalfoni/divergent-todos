@@ -15,6 +15,7 @@ export type SmartEditorRef = {
   clear: () => void;
   setHtml: (html: string) => void;
   getHtml: () => string;
+  convertPendingTags: () => void;
 };
 
 const URL_REGEX = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/i;
@@ -71,6 +72,39 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     },
     getHtml: () => {
       return ref.current?.innerHTML || "";
+    },
+    convertPendingTags: () => {
+      if (!ref.current) return;
+
+      // Remove any existing shadow first
+      const existingShadow = ref.current.querySelector('.tag-shadow');
+      if (existingShadow) {
+        existingShadow.remove();
+      }
+
+      // Get the word before the cursor
+      const wordInfo = getWordBeforeCursor();
+      if (wordInfo) {
+        const { word, range } = wordInfo;
+
+        // Check if it's a tag
+        const tagMatch = word.match(TAG_REGEX);
+        if (tagMatch) {
+          const tag = tagMatch[1]; // Extract tag without #
+          range.deleteContents();
+          const pill = makeTagPill(tag);
+          range.insertNode(pill);
+
+          // Move cursor after pill
+          range.setStartAfter(pill);
+          range.collapse(true);
+          const sel = document.getSelection();
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+
+          emitChange();
+        }
+      }
     }
   }));
 
