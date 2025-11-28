@@ -205,6 +205,58 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     [deleteTodo, onboarding]
   );
 
+  const copyTodo = useCallback(
+    (todoId: string, newDate: string, newIndex?: number) => {
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
+
+      // Check if user has reached the free limit (applies to both web and desktop)
+      // Skip limit check during onboarding
+      if (!onboarding.isOnboarding) {
+        const hasActiveSubscription = profile?.subscription?.status === "active";
+        const freeTodoCount = profile?.freeTodoCount ?? 0;
+
+        if (!hasActiveSubscription && freeTodoCount >= 20) {
+          trackFreeLimitReached(freeTodoCount);
+          onShowSubscriptionDialog();
+          return;
+        }
+      }
+
+      // Get todos for target date, sorted by position
+      const todosInTargetDate = sortTodosByPosition(
+        firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === newDate)
+      );
+
+      let newPosition: string;
+
+      if (newIndex === undefined || todosInTargetDate.length === 0) {
+        // Copying to a date without specific position - place at end
+        const lastTodo = todosInTargetDate[todosInTargetDate.length - 1];
+        newPosition = generateKeyBetween(lastTodo?.position || null, null);
+      } else {
+        // Copying to specific position
+        const beforeTodo = todosInTargetDate[newIndex - 1];
+        const afterTodo = todosInTargetDate[newIndex];
+        newPosition = generateKeyBetween(beforeTodo?.position || null, afterTodo?.position || null);
+      }
+
+      // Convert string date to Date object
+      const dateObj = new Date(newDate);
+
+      // Add as new todo with same description, starting with moveCount of 0
+      addTodo({ description: todo.description, date: dateObj, lastPosition: newPosition });
+
+      // Track todo creation (it's a copy, but counts as creation)
+      const hasUrl = todo.description.includes('data-url="');
+      trackTodoCreated({
+        hasUrl,
+        isOnboarding: onboarding.isOnboarding,
+      });
+    },
+    [firebaseTodos, addTodo, profile, onShowSubscriptionDialog, onboarding]
+  );
+
   const moveTodosInBatch = useCallback(
     (todoIds: string[], newDate: string) => {
       // Get todos for target date (excluding todos being moved)
@@ -252,6 +304,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     handleAddTodo,
     toggleTodoComplete,
     moveTodo,
+    copyTodo,
     moveTodosInBatch,
     updateTodo,
     handleDeleteTodo,

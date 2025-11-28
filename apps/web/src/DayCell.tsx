@@ -15,6 +15,7 @@ interface DayCellProps {
   isLoading: boolean
   todos: Todo[]
   allTodos: Todo[] // All todos across all days for tag autocomplete
+  isCopyMode: boolean
   onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
   onToggleTodoComplete: (todoId: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
@@ -24,7 +25,7 @@ interface DayCellProps {
   hasOldUncompletedTodos: boolean
 }
 
-export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
+export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, allTodos, isCopyMode, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -178,6 +179,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
               <TodoItem
                 key={todo.id}
                 todo={todo}
+                isCopyMode={isCopyMode}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}

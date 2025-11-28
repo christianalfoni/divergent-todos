@@ -6,6 +6,7 @@ import type { Todo } from "./App";
 
 interface TodoItemProps {
   todo: Todo;
+  isCopyMode: boolean;
   onToggleTodoComplete: (todoId: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
@@ -24,6 +25,7 @@ function isHtmlEmpty(html: string): boolean {
 
 export default function TodoItem({
   todo,
+  isCopyMode,
   onToggleTodoComplete,
   onUpdateTodo,
   onDeleteTodo,
@@ -197,7 +199,7 @@ export default function TodoItem({
       ref={setNodeRef}
       style={style}
       className={`mt-2 relative ${
-        isDragging ? "opacity-0" : ""
+        isDragging && !isCopyMode ? "opacity-0" : ""
       }`}
     >
       <div
