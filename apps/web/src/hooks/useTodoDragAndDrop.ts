@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   PointerSensor,
   useSensor,
@@ -17,6 +17,16 @@ interface UseTodoDragAndDropProps {
 export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProps) {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
 
+  // Use refs to stabilize handler dependencies and prevent recreation during drag
+  const todosRef = useRef(todos)
+  const onMoveTodoRef = useRef(onMoveTodo)
+
+  // Keep refs updated with latest values
+  useEffect(() => {
+    todosRef.current = todos
+    onMoveTodoRef.current = onMoveTodo
+  }, [todos, onMoveTodo])
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -25,37 +35,39 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     })
   )
 
-  const handleDragStart = (event: DragStartEvent) => {
-    const todo = todos.find(t => t.id === event.active.id)
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const todo = todosRef.current.find(t => t.id === event.active.id)
     if (todo) {
       setActiveTodo(todo)
     }
-  }
+  }, [])
 
-  const handleDragOver = (event: DragOverEvent) => {
+  const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event
     if (!over) return
 
     const activeTodoId = active.id as string
     const overItemId = over.id as string
 
-    const activeTodo = todos.find(t => t.id === activeTodoId)
+    const currentTodos = todosRef.current
+    const activeTodo = currentTodos.find(t => t.id === activeTodoId)
     if (!activeTodo) return
 
     // Check if we're over a day cell (date string format) vs another todo
-    const overTodo = todos.find(t => t.id === overItemId)
+    const overTodo = currentTodos.find(t => t.id === overItemId)
 
     if (!overTodo) {
       // We're over an empty day cell
       const overDayId = overItemId
       if (activeTodo.date !== overDayId) {
-        onMoveTodo(activeTodoId, overDayId)
+        // Cross-day move to empty cell - update immediately for visual feedback
+        onMoveTodoRef.current(activeTodoId, overDayId)
       }
     } else {
       // We're over another todo
       if (activeTodo.date !== overTodo.date) {
-        // Moving to different day - move immediately
-        const todosInTargetDay = todos
+        // Moving to different day - update immediately for visual feedback
+        const todosInTargetDay = currentTodos
           .filter(t => t.date === overTodo.date && t.id !== activeTodoId)
           .sort((a, b) => {
             if (a.position < b.position) return -1;
@@ -64,13 +76,13 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
           })
 
         const newIndex = todosInTargetDay.findIndex(t => t.id === overItemId)
-        onMoveTodo(activeTodoId, overTodo.date, newIndex >= 0 ? newIndex : undefined)
+        onMoveTodoRef.current(activeTodoId, overTodo.date, newIndex >= 0 ? newIndex : undefined)
       }
       // If same day, let SortableContext handle the reordering
     }
-  }
+  }, [])
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     setActiveTodo(null)
 
@@ -81,15 +93,17 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
 
     if (activeTodoId === overItemId) return
 
-    const activeTodo = todos.find(t => t.id === activeTodoId)
+    const currentTodos = todosRef.current
+    const activeTodo = currentTodos.find(t => t.id === activeTodoId)
     if (!activeTodo) return
 
     // Check if we're dropping over another todo (for reordering within same day)
-    const overTodo = todos.find(t => t.id === overItemId)
+    const overTodo = currentTodos.find(t => t.id === overItemId)
 
     if (overTodo && activeTodo.date === overTodo.date) {
-      // Reordering within the same day
-      const todosInDay = todos
+      // Same-day reordering - this is the only case we handle here
+      // Cross-day moves are already handled in handleDragOver
+      const todosInDay = currentTodos
         .filter(t => t.date === activeTodo.date)
         .sort((a, b) => {
           if (a.position < b.position) return -1;
@@ -101,11 +115,11 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
       const newIndex = todosInDay.findIndex(t => t.id === overItemId)
 
       if (oldIndex !== newIndex) {
-        onMoveTodo(activeTodoId, activeTodo.date, newIndex)
+        onMoveTodoRef.current(activeTodoId, activeTodo.date, newIndex)
       }
     }
     // Cross-day moves are already handled in handleDragOver
-  }
+  }, [])
 
   return {
     sensors,
