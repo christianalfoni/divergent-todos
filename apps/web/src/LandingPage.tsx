@@ -410,7 +410,8 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     onMoveTodo={() => {}}
                     onUpdateTodo={() => {}}
                     onDeleteTodo={() => {}}
-                    onMoveTodosFromDay={() => {}}
+                    onMoveIncompleteTodosToToday={() => {}}
+                    hasOldUncompletedTodos={false}
                     profile={mockProfile}
                   />
                 </div>

@@ -16,7 +16,6 @@ import Logo from "./Logo";
 import Navigation from "./Navigation";
 import YearNavigation from "./YearNavigation";
 import SubscriptionNotices from "./SubscriptionNotices";
-import OldTodosButton from "./OldTodosButton";
 import UserMenu from "./UserMenu";
 
 function getDownloadUrl(): string | null {
@@ -43,8 +42,6 @@ function getDownloadUrl(): string | null {
 }
 
 interface TopBarProps {
-  oldTodoCount?: number;
-  onMoveOldTodos?: () => void;
   profile?: Profile | null;
   onOpenSubscription?: () => void;
   onOpenOnboarding?: () => void;
@@ -59,8 +56,6 @@ interface TopBarProps {
 }
 
 export default function TopBar({
-  oldTodoCount = 0,
-  onMoveOldTodos,
   profile,
   onOpenSubscription,
   onOpenOnboarding,
@@ -213,10 +208,6 @@ export default function TopBar({
                   onOpenBillingPortal={handleOpenBillingPortal}
                   isOpeningPortal={isOpeningPortal}
                 />
-              )}
-
-              {authentication.user && onMoveOldTodos && (
-                <OldTodosButton count={oldTodoCount} onMoveOldTodos={onMoveOldTodos} />
               )}
 
               {authentication.user && (

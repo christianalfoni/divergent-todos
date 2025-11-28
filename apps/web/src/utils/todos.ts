@@ -10,33 +10,12 @@ export function sortTodosByPosition<T extends { position: string }>(todos: T[]):
   });
 }
 
-export function getCurrentWeekMonday(): Date {
-  const today = new Date();
-  const currentDay = today.getDay();
-  const isWeekend = currentDay === 0 || currentDay === 6;
-
-  let daysToMonday: number;
-  if (isWeekend) {
-    // If it's weekend, return next Monday instead of current Monday
-    // Saturday (6) -> +2 days, Sunday (0) -> +1 day
-    daysToMonday = currentDay === 0 ? 1 : 2;
-  } else {
-    // Weekday -> go back to Monday of current week
-    daysToMonday = -(currentDay - 1);
-  }
-
-  const monday = new Date(today);
-  monday.setDate(today.getDate() + daysToMonday);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
-
 export function getOldUncompletedTodos(todos: Todo[]): Todo[] {
-  const currentWeekMonday = getCurrentWeekMonday();
+  const targetDate = getNextWorkday();
+  const targetDateString = targetDate.toISOString().split("T")[0];
   return todos.filter((todo) => {
     if (todo.completed) return false;
-    const todoDate = new Date(todo.date);
-    return todoDate < currentWeekMonday;
+    return todo.date < targetDateString;
   });
 }
 

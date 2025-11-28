@@ -20,10 +20,11 @@ interface DayCellProps {
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
-  onMoveTodosFromDay: (date: Date) => void
+  onMoveIncompleteTodosToToday: () => void
+  hasOldUncompletedTodos: boolean
 }
 
-export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveTodosFromDay }: DayCellProps) {
+export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -103,9 +104,6 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
   const month = date.toLocaleDateString('en-US', { month: 'short' })
   const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
 
-  // Check if day has uncompleted todos
-  const hasUncompletedTodos = todos.some(todo => !todo.completed)
-
   return (
     <div
       ref={setNodeRef}
@@ -126,6 +124,30 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
           {dayName}
         </span>
       </div>
+      {isToday && isAuthenticated && hasOldUncompletedTodos && (
+        <button
+          onClick={onMoveIncompleteTodosToToday}
+          className="mx-3 mb-2 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+        >
+          <div className="flex h-5 w-4 shrink-0 items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+              />
+            </svg>
+          </div>
+          <span>Move incomplete to this day</span>
+        </button>
+      )}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
         {isLoading ? (
           <TodosLoadingPlaceholder />
@@ -144,56 +166,29 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
             ))}
           </SortableContext>
         )}
-        {isAuthenticated && !isAddingTodo && !isLoading && (
-          <>
-            {canAddTodo ? (
-              <button
-                onClick={handleAddTodoClick}
-                className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+        {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
+          <button
+            onClick={handleAddTodoClick}
+            className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+          >
+            <div className="flex h-5 w-4 shrink-0 items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="w-4 h-4"
               >
-                <div className="flex h-5 w-4 shrink-0 items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
-                    />
-                  </svg>
-                </div>
-                <span>Add focus</span>
-              </button>
-            ) : hasUncompletedTodos ? (
-              <button
-                onClick={() => onMoveTodosFromDay(date)}
-                className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
-              >
-                <div className="flex h-5 w-4 shrink-0 items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    className="w-4 h-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
-                    />
-                  </svg>
-                </div>
-                <span>Move focus</span>
-              </button>
-            ) : null}
-          </>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 4.5v15m7.5-7.5h-15"
+                />
+              </svg>
+            </div>
+            <span>Add focus</span>
+          </button>
         )}
         {isAuthenticated && isAddingTodo && canAddTodo && (
           <div className="mt-2 px-3">

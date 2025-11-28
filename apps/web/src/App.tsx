@@ -25,7 +25,6 @@ import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import {
   trackAppOpened,
   trackBulkTodoMove,
-  trackDayTodosMoved,
 } from "./firebase/analytics";
 import { isMobileDevice } from "./utils/device";
 import { getSequentialWeek } from "./utils/activity";
@@ -411,7 +410,7 @@ function AppContent() {
     [todos]
   );
 
-  // Move old todos to next workday
+  // Move old todos to next workday (or today)
   const moveOldTodosToNextWorkday = () => {
     const targetDate = getNextWorkday();
     const targetDateString = targetDate.toISOString().split("T")[0];
@@ -422,26 +421,6 @@ function AppContent() {
 
     // Track bulk todo move
     trackBulkTodoMove(oldUncompletedTodos.length);
-  };
-
-  // Move uncompleted todos from a specific day to current or next working day
-  const moveTodosFromDay = (date: Date) => {
-    const targetDate = getNextWorkday();
-    const targetDateString = targetDate.toISOString().split("T")[0];
-    const dateString = date.toISOString().split("T")[0];
-
-    // Get uncompleted todos from this specific day
-    const uncompletedTodos = todos.filter(
-      (todo) => todo.date === dateString && !todo.completed
-    );
-
-    const todoIds = uncompletedTodos.map((todo) => todo.id);
-
-    // Use batch operation for better performance
-    todoOperations.moveTodosInBatch(todoIds, targetDateString);
-
-    // Track day todos move
-    trackDayTodosMoved(uncompletedTodos.length);
   };
 
   // Handle previous week dialog "Start week" - moves all uncompleted todos to today and saves edited summary
@@ -536,8 +515,6 @@ function AppContent() {
     <div className="h-screen flex flex-col overflow-hidden">
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar
-          oldTodoCount={oldUncompletedTodos.length}
-          onMoveOldTodos={moveOldTodosToNextWorkday}
           profile={profile}
           onOpenSubscription={() => setShowSubscriptionDialog(true)}
           onOpenOnboarding={onboarding.startOnboarding}
@@ -570,9 +547,10 @@ function AppContent() {
             onDeleteTodo={
               authentication.user ? todoOperations.handleDeleteTodo : () => {}
             }
-            onMoveTodosFromDay={
-              authentication.user ? moveTodosFromDay : () => {}
+            onMoveIncompleteTodosToToday={
+              authentication.user ? moveOldTodosToNextWorkday : () => {}
             }
+            hasOldUncompletedTodos={oldUncompletedTodos.length > 0}
             profile={profile}
           />
         ) : (
