@@ -47,6 +47,38 @@ async function sendErrorEmail(
 }
 
 /**
+ * Send no-op notification email (when batch wasn't created)
+ */
+async function sendNoOpEmail(
+  resendApiKey: string,
+  reason: string,
+  week: number,
+  year: number,
+  details: string
+): Promise<void> {
+  try {
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: "post@divergent-todos.com",
+      to: "christianalfoni@gmail.com",
+      subject: `[Divergent Todos] ⚠️ No Batch Created`,
+      html: `
+        <h2>⚠️ Weekly Summary Batch NOT Created</h2>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+        <p><strong>Week:</strong> ${week}, ${year}</p>
+        <p><strong>Reason:</strong> ${reason}</p>
+        <hr>
+        <h3>Details:</h3>
+        <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">${details}</pre>
+      `,
+    });
+    logger.info("No-op notification email sent");
+  } catch (emailError) {
+    logger.error("Failed to send no-op notification email", emailError);
+  }
+}
+
+/**
  * Scheduled function that runs every Saturday at 6pm UTC
  * Submits batch job to OpenAI for AI summary generation (no polling)
  *
@@ -90,6 +122,13 @@ export const generateWeeklySummaries = onSchedule(
 
       if (userIds.length === 0) {
         logger.info("No users with active subscriptions found");
+        await sendNoOpEmail(
+          RESEND_API_KEY.value(),
+          "No Active Subscribers",
+          targetWeek,
+          targetYear,
+          "No users with active subscriptions were found in the database.\n\nQuery: profiles collection where subscription.status === 'active'"
+        );
         return;
       }
 
@@ -139,6 +178,13 @@ export const generateWeeklySummaries = onSchedule(
 
       if (batchRequests.length === 0) {
         logger.info("No batch requests to submit");
+        await sendNoOpEmail(
+          RESEND_API_KEY.value(),
+          "No Completed Todos",
+          targetWeek,
+          targetYear,
+          `Found ${userIds.length} active subscribers, but NONE had completed todos for Week ${targetWeek}.\n\nAll users were skipped because they had 0 completed todos for the target week.`
+        );
         return;
       }
 
