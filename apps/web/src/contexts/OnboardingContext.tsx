@@ -14,6 +14,7 @@ export type OnboardingStep =
   | "add-todo-with-url"
   | "edit-todo"
   | "move-todo"
+  | "copy-todo"
   | "delete-todo"
   | "timebox"
   | "congratulations"
@@ -32,6 +33,7 @@ interface OnboardingContextValue {
   notifyTodoEditCompleted: () => void;
   notifyWeekModeToggled: () => void;
   notifyTodoMoved: () => void;
+  notifyTodoCopied: () => void;
   notifyTodoDeleted: () => void;
   notifyTimeboxClosed: () => void;
   notifyTodoAdded: () => void;
@@ -50,6 +52,7 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   "add-todo-with-url",
   "edit-todo",
   "move-todo",
+  "copy-todo",
   "delete-todo",
   "timebox",
   "congratulations",
@@ -147,6 +150,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
+  const notifyTodoCopied = () => {
+    if (currentStep === "copy-todo") {
+      nextStep();
+    }
+  };
+
   const notifyTodoDeleted = () => {
     if (currentStep === "delete-todo") {
       nextStep();
@@ -174,6 +183,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         notifyTodoEditCompleted,
         notifyWeekModeToggled,
         notifyTodoMoved,
+        notifyTodoCopied,
         notifyTodoDeleted,
         notifyTimeboxClosed,
         notifyTodoAdded,

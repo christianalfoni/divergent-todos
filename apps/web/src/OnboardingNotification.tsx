@@ -14,6 +14,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   HashtagIcon,
+  DocumentDuplicateIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
@@ -106,6 +107,19 @@ export default function OnboardingNotification() {
             "Drag and drop focus to reorder them within a day or move them to different days.",
           actionLabel: "Move a focus",
           requiresMoveTodo: true,
+        };
+      case "copy-todo":
+        const isMac = navigator.platform.toUpperCase().includes('MAC');
+        const modifierKey = isMac ? "⌘ CMD" : "ALT";
+        return {
+          icon: (
+            <DocumentDuplicateIcon aria-hidden="true" className="size-6 text-cyan-500 dark:text-cyan-400" />
+          ),
+          title: "Copy focus by dragging",
+          message:
+            `Hold ${modifierKey} while dragging a focus to create a copy instead of moving it. This is great for recurring tasks!`,
+          actionLabel: `Hold ${modifierKey} and drag to copy`,
+          requiresCopyTodo: true,
         };
       case "delete-todo":
         return {

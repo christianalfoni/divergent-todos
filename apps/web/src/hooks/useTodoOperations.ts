@@ -17,6 +17,7 @@ import {
   trackTodoEdited,
   trackTodoDeleted,
   trackTodoMoved,
+  trackTodoCopied,
   trackFreeLimitReached,
 } from "../firebase/analytics";
 
@@ -253,6 +254,14 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         hasUrl,
         isOnboarding: onboarding.isOnboarding,
       });
+
+      // Track todo copy specifically
+      trackTodoCopied({ isOnboarding: onboarding.isOnboarding });
+
+      // Notify onboarding if applicable
+      if (onboarding.isOnboarding) {
+        onboarding.notifyTodoCopied();
+      }
     },
     [firebaseTodos, addTodo, profile, onShowSubscriptionDialog, onboarding]
   );

@@ -94,15 +94,83 @@ async function sendErrorEmail(
 }
 
 /**
+ * Send attempt notification email
+ */
+async function sendAttemptEmail(
+  resendApiKey: string,
+  pendingJobCount: number,
+  scheduledTime: string
+): Promise<void> {
+  try {
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: "post@divergent-todos.com",
+      to: "christianalfoni@gmail.com",
+      subject: `[Divergent Todos] 🔍 Checking for Batch Results`,
+      html: `
+        <h2>🔍 Batch Check Started</h2>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+        <p><strong>Scheduled Time:</strong> ${scheduledTime}</p>
+        <p><strong>Pending Batches Found:</strong> ${pendingJobCount}</p>
+        <hr>
+        ${pendingJobCount > 0
+          ? `<p>Checking status of ${pendingJobCount} pending batch job(s)...</p>`
+          : `<p>No pending batch jobs to check.</p>`
+        }
+      `,
+    });
+    logger.info("Attempt notification email sent");
+  } catch (emailError) {
+    logger.error("Failed to send attempt notification email", emailError);
+  }
+}
+
+/**
+ * Send still processing notification email
+ */
+async function sendStillProcessingEmail(
+  resendApiKey: string,
+  batchId: string,
+  status: string,
+  week: number,
+  year: number
+): Promise<void> {
+  try {
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: "post@divergent-todos.com",
+      to: "christianalfoni@gmail.com",
+      subject: `[Divergent Todos] ⏳ Batch Still Processing`,
+      html: `
+        <h2>⏳ Batch Still Processing</h2>
+        <p><strong>Time:</strong> ${new Date().toISOString()}</p>
+        <p><strong>Batch ID:</strong> ${batchId}</p>
+        <p><strong>Week:</strong> ${week}, ${year}</p>
+        <p><strong>OpenAI Status:</strong> ${status}</p>
+        <hr>
+        <p>The batch is still being processed by OpenAI. Will check again in 3 hours.</p>
+      `,
+    });
+    logger.info("Still processing notification email sent");
+  } catch (emailError) {
+    logger.error("Failed to send still processing notification email", emailError);
+  }
+}
+
+/**
  * Scheduled function that runs multiple times on Saturday and Sunday
  * Checks for pending batch jobs and consumes completed ones
  *
- * Runs every 3 hours starting Saturday 3am through Sunday 9pm (24+ hour window)
- * to handle OpenAI's up-to-24-hour batch processing time
+ * Runs every 3 hours starting Saturday 9pm through Sunday 9pm (27 hour window)
+ * First check is 3 hours after Saturday 6pm submission to allow OpenAI processing time
+ * FIXED: Removed 6pm (18:00) from schedule to avoid race condition with batch submission
+ *
+ * Schedule: Saturday & Sunday at 12am, 3am, 9am, 12pm, 3pm, 9pm UTC
+ * Saturday 6pm is excluded to prevent race condition with generateWeeklySummaries
  */
 export const checkAndConsumeBatch = onSchedule(
   {
-    schedule: "0 3,6,9,12,15,18,21 * * 6,0", // Saturday & Sunday every 3 hours UTC
+    schedule: "0 0,3,9,12,15,21 * * 6,0", // Sat & Sun every 3 hours (excluding 6pm) UTC
     timeZone: "UTC",
     secrets: [OPENAI_API_KEY, RESEND_API_KEY],
     memory: "512MiB",
@@ -118,6 +186,13 @@ export const checkAndConsumeBatch = onSchedule(
     try {
       // Step 1: Get pending batch jobs from Firestore
       const pendingJobs = await getPendingBatchJobs(db);
+
+      // Send email notification about the check attempt
+      await sendAttemptEmail(
+        RESEND_API_KEY.value(),
+        pendingJobs.length,
+        event.scheduleTime
+      );
 
       if (pendingJobs.length === 0) {
         logger.info("No pending batch jobs found");
@@ -267,6 +342,15 @@ export const checkAndConsumeBatch = onSchedule(
             logger.info(`Batch ${job.id} still processing`, {
               status: status.status,
             });
+
+            // Send email notification that batch is still processing
+            await sendStillProcessingEmail(
+              RESEND_API_KEY.value(),
+              job.id,
+              status.status,
+              job.week,
+              job.year
+            );
 
             // Update status in Firestore if it changed
             if (status.status !== job.status) {

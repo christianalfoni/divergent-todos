@@ -24,13 +24,16 @@ The Divergent Todos app generates AI-powered weekly summaries for all active sub
    - Sends confirmation email
 
 2. **Batch Check/Consume Function** (`checkAndConsumeBatch.ts`)
-   - Runs every 3 hours on Saturday & Sunday (14 checks over 43 hours)
-   - Schedule: 3am, 6am, 9am, 12pm, 3pm, 6pm, 9pm, 12am UTC (both days)
+   - Runs every 3 hours on Saturday & Sunday (12 checks over 27 hours)
+   - Schedule: 12am, 3am, 9am, 12pm, 3pm, 9pm UTC (both days, excluding 6pm)
    - First check at 9pm Saturday (3 hours after 6pm submission)
+   - Sends email notification when it starts checking (shows pending batch count)
    - Checks pending batches from Firestore
+   - Sends email if batches are still processing (with status update)
    - Downloads and processes completed batches
    - Sends success email when batch completes
    - Cleans up old batch jobs (>7 days)
+   - **IMPORTANT**: 6pm is excluded from schedule to avoid race condition with submission
 
 3. **Manual Trigger** (`triggerWeeklySummaries.ts`)
    - Callable function for admin testing
@@ -235,16 +238,37 @@ The prompt includes 3 example scenarios to guide AI responses:
 
 ### Email Notifications
 
-System sends emails to admin for:
-- **Batch Job Failures**: When OpenAI batch fails or is cancelled
-- **Polling Timeout**: When function times out before batch completes
-- **Processing Errors**: When individual user summaries fail
+System sends emails to admin for ALL batch operations:
+
+**1. Batch Submission** (generateWeeklySummaries):
+- Confirms batch was submitted to OpenAI
+- Includes batch ID, week, year, total users, and request count
+
+**2. Check Attempts** (checkAndConsumeBatch):
+- **NEW**: Sent every time the check function runs
+- Shows number of pending batches found
+- Provides visibility into scheduled function execution
+
+**3. Still Processing** (checkAndConsumeBatch):
+- **NEW**: Sent when batch is still being processed by OpenAI
+- Includes current OpenAI status (validating/in_progress)
+- Confirms the system is actively monitoring the batch
+
+**4. Success** (checkAndConsumeBatch):
+- Sent when batch completes and results are consumed
+- Includes success/error counts and any individual failures
+
+**5. Failures** (checkAndConsumeBatch):
+- Sent when OpenAI batch fails or is cancelled
+- Includes error details and batch ID for manual recovery
 
 **Email Contents:**
-- Timestamp of error
+- Timestamp of event
 - Batch ID (for manual recovery)
-- Error details and stack traces
-- Success/error counts
+- Week and year being processed
+- Status information (pending count, OpenAI status, etc.)
+- Error details and stack traces (if applicable)
+- Success/error counts (for completion emails)
 
 ### Retry Strategy
 
