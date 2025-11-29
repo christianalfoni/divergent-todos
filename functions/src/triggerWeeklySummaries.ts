@@ -281,16 +281,22 @@ export const triggerWeeklySummaries = onCall(
 
 /**
  * Calculate current week number (sequential 1-52)
+ * Week 1 = first Monday-Friday in January (may be partial)
+ * Matches the implementation in apps/web/src/utils/activity.ts
  */
 function getCurrentWeek(date: Date): number {
   const year = date.getFullYear();
   let weekNumber = 0;
 
-  for (let m = 0; m < 12; m++) {
-    const daysInMonth = new Date(year, m + 1, 0).getDate();
+  // Normalize target date to midnight for comparison
+  const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  // Iterate through all days from Jan 1 onwards
+  for (let month = 0; month < 12; month++) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(year, m, day);
+      const currentDate = new Date(year, month, day);
       const dayOfWeek = currentDate.getDay();
 
       // Skip weekends
@@ -301,12 +307,9 @@ function getCurrentWeek(date: Date): number {
         weekNumber++;
       }
 
-      // Check if this is the target date
-      if (
-        currentDate.getFullYear() === date.getFullYear() &&
-        currentDate.getMonth() === date.getMonth() &&
-        currentDate.getDate() === date.getDate()
-      ) {
+      // If we've reached or passed the target date, return the current week
+      // This handles weekends correctly by returning the week they belong to
+      if (currentDate >= targetDate) {
         return weekNumber;
       }
     }
