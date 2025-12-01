@@ -1,15 +1,8 @@
-import { createRoot } from "react-dom/client";
 import "./index.css";
-import App from "./App.tsx";
-import { CacheProvider } from "pipesy";
-import ErrorBoundary from "./ErrorBoundary.tsx";
+import { App } from "./App.tsx";
+
 import "./firebase/admin"; // Load admin tools for console access
 import "./test-helpers"; // Load test helpers for E2E testing (dev only)
+import { render } from "rask-ui";
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundary>
-    <CacheProvider>
-      <App />
-    </CacheProvider>
-  </ErrorBoundary>
-);
+render(<App />, document.getElementById("root")!);

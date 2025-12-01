@@ -2,7 +2,7 @@ import { useState } from "react";
 import { signOut } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
 import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
-import { useAuthentication } from "../hooks/useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { auth, functions, type Profile } from "../firebase";
 import { useTheme } from "../hooks/useTheme";
 import { useFontSize } from "../hooks/useFontSize";
@@ -154,7 +154,10 @@ export default function TopBar({
               currentView === "activity" &&
               activityYear &&
               onActivityYearChange && (
-                <YearNavigation year={activityYear} onYearChange={onActivityYearChange} />
+                <YearNavigation
+                  year={activityYear}
+                  onYearChange={onActivityYearChange}
+                />
               )}
 
             <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
@@ -216,7 +219,10 @@ export default function TopBar({
               )}
 
               {authentication.user && onMoveOldTodos && (
-                <OldTodosButton count={oldTodoCount} onMoveOldTodos={onMoveOldTodos} />
+                <OldTodosButton
+                  count={oldTodoCount}
+                  onMoveOldTodos={onMoveOldTodos}
+                />
               )}
 
               {authentication.user && (

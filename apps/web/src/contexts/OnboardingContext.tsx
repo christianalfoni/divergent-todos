@@ -1,5 +1,4 @@
-import { createContext, useContext, useState } from "react";
-import type { ReactNode } from "react";
+import { createContext, useDerived, useState, useView } from "rask-ui";
 import {
   trackOnboardingStarted,
   trackOnboardingStepCompleted,
@@ -19,30 +18,6 @@ export type OnboardingStep =
   | "congratulations"
   | null;
 
-interface OnboardingContextValue {
-  isOnboarding: boolean;
-  currentStep: OnboardingStep;
-  currentStepIndex: number;
-  totalSteps: number;
-  startOnboarding: () => void;
-  nextStep: () => void;
-  previousStep: () => void;
-  goToStep: (step: number) => void;
-  completeOnboarding: () => void;
-  notifyTodoEditCompleted: () => void;
-  notifyWeekModeToggled: () => void;
-  notifyTodoMoved: () => void;
-  notifyTodoDeleted: () => void;
-  notifyTimeboxClosed: () => void;
-  notifyTodoAdded: () => void;
-  notifyTodoAddedWithTag: () => void;
-  notifyTodoAddedWithUrl: () => void;
-}
-
-const OnboardingContext = createContext<OnboardingContextValue | undefined>(
-  undefined
-);
-
 const ONBOARDING_STEPS: OnboardingStep[] = [
   "workdays",
   "add-todo",
@@ -55,141 +30,124 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   "congratulations",
 ];
 
-interface OnboardingProviderProps {
-  children: ReactNode;
-}
-
-export function OnboardingProvider({ children }: OnboardingProviderProps) {
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>(null);
-
-  const isOnboarding = currentStep !== null;
-  const currentStepIndex = currentStep ? ONBOARDING_STEPS.indexOf(currentStep) : -1;
+export const OnboardingContext = createContext(() => {
+  const state = useState({
+    currentStep: null as OnboardingStep | null,
+  });
+  const derived = useDerived({
+    isOnboarding: () => state.currentStep !== null,
+    currentStepIndex: () =>
+      state.currentStep ? ONBOARDING_STEPS.indexOf(state.currentStep) : -1,
+  });
   const totalSteps = ONBOARDING_STEPS.length;
 
   const startOnboarding = () => {
     trackOnboardingStarted();
-    setCurrentStep(ONBOARDING_STEPS[0]);
+    state.currentStep = ONBOARDING_STEPS[0];
   };
 
   const nextStep = () => {
-    const currentIndex = ONBOARDING_STEPS.indexOf(currentStep!);
+    const currentIndex = ONBOARDING_STEPS.indexOf(state.currentStep!);
 
     // Track step completion before advancing
-    if (currentStep) {
-      trackOnboardingStepCompleted(currentStep);
+    if (state.currentStep) {
+      trackOnboardingStepCompleted(state.currentStep);
     }
 
     if (currentIndex < ONBOARDING_STEPS.length - 1) {
-      setCurrentStep(ONBOARDING_STEPS[currentIndex + 1]);
+      state.currentStep = ONBOARDING_STEPS[currentIndex + 1];
     } else {
-      setCurrentStep(null);
+      state.currentStep = null;
     }
   };
 
   const previousStep = () => {
-    const currentIndex = ONBOARDING_STEPS.indexOf(currentStep!);
+    const currentIndex = ONBOARDING_STEPS.indexOf(state.currentStep!);
     if (currentIndex > 0) {
-      setCurrentStep(ONBOARDING_STEPS[currentIndex - 1]);
+      state.currentStep = ONBOARDING_STEPS[currentIndex - 1];
     }
   };
 
   const goToStep = (stepIndex: number) => {
     if (stepIndex >= 0 && stepIndex < ONBOARDING_STEPS.length) {
-      setCurrentStep(ONBOARDING_STEPS[stepIndex]);
+      state.currentStep = ONBOARDING_STEPS[stepIndex];
     }
   };
 
   const completeOnboarding = () => {
     // Track if onboarding was skipped or completed
-    if (currentStep === "congratulations") {
+    if (state.currentStep === "congratulations") {
       trackOnboardingCompleted();
-    } else if (currentStep) {
-      trackOnboardingSkipped(currentStep);
+    } else if (state.currentStep) {
+      trackOnboardingSkipped(state.currentStep);
     }
 
-    setCurrentStep(null);
+    state.currentStep = null;
   };
 
   const notifyTodoAdded = () => {
-    if (currentStep === "add-todo") {
+    if (state.currentStep === "add-todo") {
       nextStep();
     }
   };
 
   const notifyTodoAddedWithTag = () => {
-    if (currentStep === "add-todo-with-tag") {
+    if (state.currentStep === "add-todo-with-tag") {
       nextStep();
     }
   };
 
   const notifyTodoAddedWithUrl = () => {
-    if (currentStep === "add-todo-with-url") {
+    if (state.currentStep === "add-todo-with-url") {
       nextStep();
     }
   };
 
   const notifyTodoEditCompleted = () => {
-    if (currentStep === "edit-todo") {
+    if (state.currentStep === "edit-todo") {
       nextStep();
     }
   };
 
   const notifyWeekModeToggled = () => {
-    if (currentStep === "workdays") {
+    if (state.currentStep === "workdays") {
       // Complete the step on any TAB press
       nextStep();
     }
   };
 
   const notifyTodoMoved = () => {
-    if (currentStep === "move-todo") {
+    if (state.currentStep === "move-todo") {
       nextStep();
     }
   };
 
   const notifyTodoDeleted = () => {
-    if (currentStep === "delete-todo") {
+    if (state.currentStep === "delete-todo") {
       nextStep();
     }
   };
 
   const notifyTimeboxClosed = () => {
-    if (currentStep === "timebox") {
+    if (state.currentStep === "timebox") {
       nextStep();
     }
   };
 
-  return (
-    <OnboardingContext.Provider
-      value={{
-        isOnboarding,
-        currentStep,
-        currentStepIndex,
-        totalSteps,
-        startOnboarding,
-        nextStep,
-        previousStep,
-        goToStep,
-        completeOnboarding,
-        notifyTodoEditCompleted,
-        notifyWeekModeToggled,
-        notifyTodoMoved,
-        notifyTodoDeleted,
-        notifyTimeboxClosed,
-        notifyTodoAdded,
-        notifyTodoAddedWithTag,
-        notifyTodoAddedWithUrl,
-      }}
-    >
-      {children}
-    </OnboardingContext.Provider>
-  );
-}
-
-export function useOnboarding() {
-  const context = useContext(OnboardingContext);
-  if (context === undefined) {
-    throw new Error("useOnboarding must be used within an OnboardingProvider");
-  }
-  return context;
-}
+  return useView(state, derived, {
+    totalSteps,
+    startOnboarding,
+    nextStep,
+    previousStep,
+    goToStep,
+    completeOnboarding,
+    notifyTodoEditCompleted,
+    notifyWeekModeToggled,
+    notifyTodoMoved,
+    notifyTodoDeleted,
+    notifyTimeboxClosed,
+    notifyTodoAdded,
+    notifyTodoAddedWithTag,
+    notifyTodoAddedWithUrl,
+  });
+});

@@ -1,17 +1,12 @@
-import { useMemo } from "react";
 import { useTodos } from "./useTodos";
 import { convertFirebaseTodoToAppTodo } from "../utils/todos";
-import type { Todo } from "../App";
+import { useDerived } from "rask-ui";
 
 export function useTodosData() {
-  const { isLoading: todosLoading, data: firebaseTodos } = useTodos();
+  const firebaseTodos = useTodos();
 
-  const todos: Todo[] = useMemo(() => {
-    return firebaseTodos.map(convertFirebaseTodoToAppTodo);
-  }, [firebaseTodos]);
-
-  return {
-    todos,
-    isLoading: todosLoading,
-  };
+  return useDerived({
+    todos: () => firebaseTodos.data.map(convertFirebaseTodoToAppTodo),
+    isLoading: () => firebaseTodos.isLoading,
+  });
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuthentication } from "./useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { useEditProfile } from "./useEditProfile";
 import { trackFontSizeChanged } from "../firebase/analytics";
 
@@ -14,7 +14,10 @@ function getStoredFontSize(): FontSize {
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored && (stored === "small" || stored === "medium" || stored === "large")) {
+    if (
+      stored &&
+      (stored === "small" || stored === "medium" || stored === "large")
+    ) {
       return stored as FontSize;
     }
   } catch (error) {

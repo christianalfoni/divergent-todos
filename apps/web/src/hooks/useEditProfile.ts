@@ -1,7 +1,7 @@
 import { pipe } from "pipesy";
 import { profilesCollection, type Profile } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { useRef } from "react";
 
 export type EditProfileState =

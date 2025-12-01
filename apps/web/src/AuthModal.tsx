@@ -8,7 +8,7 @@ import { UserCircleIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import { useSignIn } from "./hooks/useSignIn";
 import { useSignInAnonymously } from "./hooks/useSignInAnonymously";
 import { useLinkAnonymousAccount } from "./hooks/useLinkAnonymousAccount";
-import { useAuthentication } from "./hooks/useAuthentication";
+import { useAuthentication } from "./contexts/AuthenticationContext";
 
 interface AuthModalProps {
   open: boolean;

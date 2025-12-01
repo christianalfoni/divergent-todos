@@ -7,7 +7,7 @@ import {
   increment,
   writeBatch,
 } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { useRef } from "react";
 import { generateKeyBetween } from "fractional-indexing";
 

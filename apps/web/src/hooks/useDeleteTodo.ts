@@ -1,7 +1,7 @@
 import { pipe } from "pipesy";
 import { todosCollection } from "../firebase";
 import { doc, deleteDoc } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { useTodos } from "./useTodos";
 import { useRef } from "react";
 

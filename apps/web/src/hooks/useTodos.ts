@@ -9,8 +9,9 @@ import {
   or,
   and,
 } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { AuthenticationContext } from "../contexts/AuthenticationContext";
 import { getCurrentWeekStart, getNextWeekEnd } from "../utils/calendar";
+import { assignState, useEffect, useState } from "rask-ui";
 
 export type TodosState = {
   isLoading: boolean;
@@ -18,58 +19,50 @@ export type TodosState = {
 };
 
 export function useTodos() {
-  const [authentication] = useAuthentication();
-  const [{ isLoading, data }, setTodos] = pipe<
-    (todos: TodosState) => TodosState,
-    TodosState
-  >()
-    .updateState((state, cb) => cb(state))
-    .use(
-      {
-        isLoading: true,
+  const authentication = AuthenticationContext.use();
+  const state = useState({
+    isLoading: true,
+    data: [] as Todo[],
+  });
+
+  useEffect(() => {
+    if (!authentication.user) {
+      assignState(state, {
+        isLoading: authentication.isAuthenticating,
         data: [],
-      },
-      "todos",
-      () => {
-        if (!authentication.user) {
-          setTodos(() => ({
-            isLoading: authentication.isAuthenticating,
-            data: [],
-          }));
-          return;
-        }
+      });
+      return;
+    }
 
-        const currentWeekStart = getCurrentWeekStart();
-        const nextWeekEnd = getNextWeekEnd();
+    const currentWeekStart = getCurrentWeekStart();
+    const nextWeekEnd = getNextWeekEnd();
 
-        const q = query(
-          todosCollection,
+    const q = query(
+      todosCollection,
+      and(
+        where("userId", "==", authentication.user.uid),
+        or(
+          where("completed", "==", false),
           and(
-            where("userId", "==", authentication.user.uid),
-            or(
-              where("completed", "==", false),
-              and(
-                where("completed", "==", true),
-                where("date", ">=", Timestamp.fromDate(currentWeekStart)),
-                where("date", "<=", Timestamp.fromDate(nextWeekEnd))
-              )
-            )
-          ),
-          orderBy("date", "asc"),
-          orderBy("position", "asc")
-        );
-
-        return onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
-          setTodos(() => ({
-            isLoading: false,
-            data: snapshot.docs.map((doc) =>
-              doc.data({ serverTimestamps: "estimate" })
-            ),
-          }));
-        });
-      },
-      [authentication.user]
+            where("completed", "==", true),
+            where("date", ">=", Timestamp.fromDate(currentWeekStart)),
+            where("date", "<=", Timestamp.fromDate(nextWeekEnd))
+          )
+        )
+      ),
+      orderBy("date", "asc"),
+      orderBy("position", "asc")
     );
 
-  return { isLoading, data, setTodos } as const;
+    return onSnapshot(q, { includeMetadataChanges: true }, (snapshot) => {
+      assignState(state, {
+        isLoading: false,
+        data: snapshot.docs.map((doc) =>
+          doc.data({ serverTimestamps: "estimate" })
+        ),
+      });
+    });
+  });
+
+  return state;
 }

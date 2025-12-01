@@ -1,7 +1,7 @@
 import { pipe } from "pipesy";
 import { todosCollection, type Todo } from "../firebase";
 import { doc, writeBatch } from "firebase/firestore";
-import { useAuthentication } from "./useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { useTodos } from "./useTodos";
 import { useRef } from "react";
 import { db } from "../firebase";

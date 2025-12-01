@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuthentication } from "./useAuthentication";
+import { useAuthentication } from "../contexts/AuthenticationContext";
 import { useEditProfile } from "./useEditProfile";
 import { trackViewModeChanged } from "../firebase/analytics";
 
