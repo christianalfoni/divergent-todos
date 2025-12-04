@@ -34,11 +34,10 @@ import {
   where,
   getDocs,
   doc,
-  updateDoc,
   onSnapshot,
 } from "firebase/firestore";
 import { db } from "./firebase";
-import { activityWeekConverter } from "./firebase/types/activity";
+import { reflectionWeekConverter, type WeekNote } from "./firebase/types/reflection";
 
 export interface Todo {
   id: string;
@@ -75,11 +74,10 @@ function AppContent() {
   >(null);
   const [previousWeekDialog, setPreviousWeekDialog] = useState<{
     show: boolean;
-    summary: string;
+    notes: WeekNote[];
     week: number;
     year: number;
     todoCount: number;
-    tags: string[];
     dailyCounts: [number, number, number, number, number];
     userId: string;
   } | null>(null);
@@ -229,12 +227,12 @@ function AppContent() {
       const previousWeekNumber = previousWeek < 1 ? 52 : previousWeek;
 
       try {
-        // Query previous week's activity
-        const activityRef = collection(db, "activity").withConverter(
-          activityWeekConverter
+        // Query previous week's reflection
+        const reflectionRef = collection(db, "reflections").withConverter(
+          reflectionWeekConverter
         );
         const q = query(
-          activityRef,
+          reflectionRef,
           where("userId", "==", authentication.user.uid),
           where("year", "==", previousYear),
           where("week", "==", previousWeekNumber)
@@ -243,21 +241,15 @@ function AppContent() {
         const querySnapshot = await getDocs(q);
 
         if (!querySnapshot.empty) {
-          const activityDoc = querySnapshot.docs[0].data();
+          const reflectionDoc = querySnapshot.docs[0].data();
 
-          // Only show if there's an AI summary
-          if (activityDoc.aiSummary) {
-            // Extract unique tags from completed todos
-            const uniqueTags = new Set<string>();
-            activityDoc.completedTodos.forEach((todo) => {
-              todo.tags.forEach((tag) => uniqueTags.add(tag));
-            });
-
+          // Only show if there are notes
+          if (reflectionDoc.notes && reflectionDoc.notes.length > 0) {
             // Calculate daily counts (Mon-Fri)
             const dailyCounts: [number, number, number, number, number] = [
               0, 0, 0, 0, 0,
             ];
-            activityDoc.completedTodos.forEach((todo) => {
+            reflectionDoc.completedTodos.forEach((todo) => {
               const todoDate = new Date(todo.date);
               const dayOfWeek = todoDate.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
               if (dayOfWeek >= 1 && dayOfWeek <= 5) {
@@ -267,11 +259,10 @@ function AppContent() {
 
             setPreviousWeekDialog({
               show: true,
-              summary: activityDoc.aiSummary,
+              notes: reflectionDoc.notes,
               week: previousWeekNumber,
               year: previousYear,
-              todoCount: activityDoc.completedTodos.length,
-              tags: Array.from(uniqueTags).sort(),
+              todoCount: reflectionDoc.completedTodos.length,
               dailyCounts,
               userId: authentication.user.uid,
             });
@@ -281,26 +272,26 @@ function AppContent() {
           }
         }
       } catch (error) {
-        console.error("Failed to fetch previous week summary:", error);
+        console.error("Failed to fetch previous week reflection:", error);
       }
     };
 
     checkPreviousWeekDialog();
   }, [authentication.user, profile]);
 
-  // Real-time sync: Close dialog if summary is saved on another device
+  // Real-time sync: Close dialog if reflection is saved on another device
   useEffect(() => {
     if (!previousWeekDialog) return;
 
-    const activityDocId = `${previousWeekDialog.userId}_${previousWeekDialog.year}_${previousWeekDialog.week}`;
-    const activityDocRef = doc(db, "activity", activityDocId).withConverter(
-      activityWeekConverter
+    const reflectionDocId = `${previousWeekDialog.userId}_${previousWeekDialog.year}_${previousWeekDialog.week}`;
+    const reflectionDocRef = doc(db, "reflections", reflectionDocId).withConverter(
+      reflectionWeekConverter
     );
 
     // Track the initial timestamp to detect changes
     let initialTimestamp: Date | null = null;
 
-    const unsubscribe = onSnapshot(activityDocRef, (snapshot) => {
+    const unsubscribe = onSnapshot(reflectionDocRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
 
@@ -310,13 +301,13 @@ function AppContent() {
         } else {
           // Check if updatedAt has changed (meaning someone else saved)
           if (data.updatedAt.getTime() !== initialTimestamp.getTime()) {
-            console.log("Week summary was saved on another device - closing dialog");
+            console.log("Week reflection was saved on another device - closing dialog");
             setPreviousWeekDialog(null);
           }
         }
       }
     }, (error) => {
-      console.error("Error listening to activity document:", error);
+      console.error("Error listening to reflection document:", error);
     });
 
     return () => unsubscribe();
@@ -343,12 +334,12 @@ function AppContent() {
         const previousWeekNumber = previousWeek < 1 ? 52 : previousWeek;
 
         try {
-          // Query previous week's activity
-          const activityRef = collection(db, "activity").withConverter(
-            activityWeekConverter
+          // Query previous week's reflection
+          const reflectionRef = collection(db, "reflections").withConverter(
+            reflectionWeekConverter
           );
           const q = query(
-            activityRef,
+            reflectionRef,
             where("userId", "==", authentication.user.uid),
             where("year", "==", previousYear),
             where("week", "==", previousWeekNumber)
@@ -357,20 +348,14 @@ function AppContent() {
           const querySnapshot = await getDocs(q);
 
           if (!querySnapshot.empty) {
-            const activityDoc = querySnapshot.docs[0].data();
+            const reflectionDoc = querySnapshot.docs[0].data();
 
-            if (activityDoc.aiSummary) {
-              // Extract unique tags from completed todos
-              const uniqueTags = new Set<string>();
-              activityDoc.completedTodos.forEach((todo) => {
-                todo.tags.forEach((tag) => uniqueTags.add(tag));
-              });
-
+            if (reflectionDoc.notes && reflectionDoc.notes.length > 0) {
               // Calculate daily counts (Mon-Fri)
               const dailyCounts: [number, number, number, number, number] = [
                 0, 0, 0, 0, 0,
               ];
-              activityDoc.completedTodos.forEach((todo) => {
+              reflectionDoc.completedTodos.forEach((todo) => {
                 const todoDate = new Date(todo.date);
                 const dayOfWeek = todoDate.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
@@ -380,22 +365,21 @@ function AppContent() {
 
               setPreviousWeekDialog({
                 show: true,
-                summary: activityDoc.aiSummary,
+                notes: reflectionDoc.notes,
                 week: previousWeekNumber,
                 year: previousYear,
-                todoCount: activityDoc.completedTodos.length,
-                tags: Array.from(uniqueTags).sort(),
+                todoCount: reflectionDoc.completedTodos.length,
                 dailyCounts,
                 userId: authentication.user.uid,
               });
             } else {
-              console.log("No AI summary found for previous week");
+              console.log("No notes found for previous week");
             }
           } else {
-            console.log("No activity data found for previous week");
+            console.log("No reflection data found for previous week");
           }
         } catch (error) {
-          console.error("Failed to fetch previous week summary:", error);
+          console.error("Failed to fetch previous week reflection:", error);
         }
       }
     };
@@ -423,8 +407,8 @@ function AppContent() {
     trackBulkTodoMove(oldUncompletedTodos.length);
   };
 
-  // Handle previous week dialog "Start week" - moves all uncompleted todos to today and saves edited summary
-  const handleStartWeek = (editedSummary: string) => {
+  // Handle previous week dialog "Start week" - moves all uncompleted todos to today
+  const handleStartWeek = () => {
     if (!previousWeekDialog) return;
 
     const today = new Date();
@@ -441,18 +425,8 @@ function AppContent() {
       trackBulkTodoMove(uncompletedTodos.length);
     }
 
-    // Close dialog immediately
+    // Close dialog
     setPreviousWeekDialog(null);
-
-    // Update the activity document with edited summary in the background
-    const activityDocId = `${previousWeekDialog.userId}_${previousWeekDialog.year}_${previousWeekDialog.week}`;
-    const activityDocRef = doc(db, "activity", activityDocId);
-    updateDoc(activityDocRef, {
-      aiSummary: editedSummary,
-      updatedAt: new Date(),
-    }).catch((error) => {
-      console.error("Failed to update activity summary:", error);
-    });
   };
 
   // Show landing page if:
@@ -595,13 +569,12 @@ function AppContent() {
       )}
       {previousWeekDialog?.show && (
         <PreviousWeekDialog
-          summary={previousWeekDialog.summary}
+          notes={previousWeekDialog.notes}
           week={previousWeekDialog.week}
           year={previousWeekDialog.year}
           todoCount={previousWeekDialog.todoCount}
-          tags={previousWeekDialog.tags}
           dailyCounts={previousWeekDialog.dailyCounts}
-          onStartWeek={handleStartWeek}
+          onClose={handleStartWeek}
         />
       )}
     </div>

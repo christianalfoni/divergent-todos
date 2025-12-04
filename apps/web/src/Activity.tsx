@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import ActivityDayPopup from './ActivityDayPopup';
+import PreviousWeekDialog from './PreviousWeekDialog';
 import { useAppFocus } from './hooks/useAppFocus';
 import { getMonthDays, getWeekDayIndex, getActivityColor, getSequentialWeek } from './utils/activity';
-import type { ActivityWeek } from './firebase/types/activity';
+import type { ReflectionWeek } from './firebase/types/reflection';
 
 interface ActivityProps {
   year: number;
-  activityWeeks: ActivityWeek[];
+  activityWeeks: ReflectionWeek[];
   loading: boolean;
   onLoaded?: () => void;
 }
@@ -19,6 +20,7 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
   } | null>(null);
   const [showAISummaries, setShowAISummaries] = useState(false);
   const [visibilityTrigger, setVisibilityTrigger] = useState(0);
+  const [selectedWeek, setSelectedWeek] = useState<ReflectionWeek | null>(null);
 
   // Get current week number for highlighting (recalculates when visibilityTrigger changes)
   const today = useMemo(() => new Date(), [visibilityTrigger]);
@@ -70,12 +72,13 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
     return weekMap;
   }, [year]);
 
-  // Build AI summaries map from activity data
+  // Build summaries map from reflection notes
   const aiSummaries: Record<number, string> = useMemo(() => {
     const summaries: Record<number, string> = {};
     activityWeeks.forEach(week => {
-      if (week.aiSummary) {
-        summaries[week.week] = week.aiSummary;
+      if (week.notes && week.notes.length > 0) {
+        // Join all note titles with bullet points
+        summaries[week.week] = week.notes.map(note => note.title).join(' • ');
       }
     });
     return summaries;
@@ -148,6 +151,31 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
     setSelectedDay({ date, todos: dayTodos, position });
   };
 
+  const handleWeekSummaryClick = (weekNumber: number) => {
+    // Find the week data from activityWeeks
+    const weekData = activityWeeks.find(w => w.week === weekNumber);
+    if (weekData) {
+      setSelectedWeek(weekData);
+    }
+  };
+
+  const calculateDailyCounts = (week: ReflectionWeek): [number, number, number, number, number] => {
+    // Calculate counts for each weekday (Mon-Fri)
+    const counts: [number, number, number, number, number] = [0, 0, 0, 0, 0];
+
+    week.completedTodos.forEach(todo => {
+      const date = new Date(todo.date);
+      const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 5 = Friday
+
+      // Map to Monday-Friday (0-4)
+      if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+        counts[dayOfWeek - 1]++;
+      }
+    });
+
+    return counts;
+  };
+
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
   if (loading) {
@@ -214,10 +242,14 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
                       const summary = aiSummaries[weekNumber];
 
                       return (
-                        <div key={weekIndex} className="activity-week-summary">
+                        <div
+                          key={weekIndex}
+                          className={`activity-week-summary ${summary ? 'activity-week-summary-clickable' : ''}`}
+                          onClick={summary ? () => handleWeekSummaryClick(weekNumber) : undefined}
+                        >
                           <strong className="activity-week-label">Week {weekNumber}:</strong>{' '}
                           {summary ? (
-                            summary
+                            <span>{summary}</span>
                           ) : (
                             <span className="activity-no-summary">no reflection</span>
                           )}
@@ -307,6 +339,17 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
         todos={selectedDay.todos}
         position={selectedDay.position}
         onClose={() => setSelectedDay(null)}
+      />
+    )}
+
+    {selectedWeek && (
+      <PreviousWeekDialog
+        notes={selectedWeek.notes}
+        week={selectedWeek.week}
+        year={selectedWeek.year}
+        todoCount={selectedWeek.completedTodos.length}
+        dailyCounts={calculateDailyCounts(selectedWeek)}
+        onClose={() => setSelectedWeek(null)}
       />
     )}
   </>

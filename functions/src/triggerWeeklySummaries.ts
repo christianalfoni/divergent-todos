@@ -6,7 +6,6 @@ import {
   getTodosForWeek,
   getUsersWithActiveSubscription,
   getWeekDateRange,
-  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
 import {
   createBatchRequest,
@@ -86,17 +85,12 @@ export const triggerWeeklySummaries = onCall(
           );
 
           if (completedTodos.length > 0) {
-            // Get user's account creation date
-            const accountCreationDate = await getUserAccountCreationDate(userId);
-
             const request = createBatchRequest(
               userId,
               completedTodos,
               incompleteTodos,
               targetWeek,
-              targetYear,
-              null, // previousWeekSummary - not used in batch processing
-              accountCreationDate
+              targetYear
             );
             batchRequests.push(request);
           } else {
@@ -193,11 +187,11 @@ export const triggerWeeklySummaries = onCall(
                 year
               );
 
-              // Write activity document
-              const activityDocId = `${userId}_${year}_${week}`;
+              // Write reflection document
+              const reflectionDocId = `${userId}_${year}_${week}`;
               await db
-                .collection("activity")
-                .doc(activityDocId)
+                .collection("reflections")
+                .doc(reflectionDocId)
                 .set({
                   userId,
                   year,
@@ -205,15 +199,15 @@ export const triggerWeeklySummaries = onCall(
                   month,
                   completedTodos,
                   incompleteCount: incompleteTodos.length,
-                  aiSummary: result.formalSummary,
-                  aiSummaryGeneratedAt: Timestamp.now(),
+                  notes: result.notes,
+                  notesGeneratedAt: Timestamp.now(),
                   updatedAt: Timestamp.now(),
                 });
 
               successCount++;
-              logger.info(`Successfully wrote activity for ${customId}`);
+              logger.info(`Successfully wrote reflection for ${customId}`);
             } catch (error) {
-              logger.error(`Failed to write activity for ${customId}`, error);
+              logger.error(`Failed to write reflection for ${customId}`, error);
               errors.push({
                 customId,
                 error: error instanceof Error ? error.message : String(error),
@@ -281,16 +275,22 @@ export const triggerWeeklySummaries = onCall(
 
 /**
  * Calculate current week number (sequential 1-52)
+ * Week 1 = first Monday-Friday in January (may be partial)
+ * Matches the implementation in apps/web/src/utils/activity.ts
  */
 function getCurrentWeek(date: Date): number {
   const year = date.getFullYear();
   let weekNumber = 0;
 
-  for (let m = 0; m < 12; m++) {
-    const daysInMonth = new Date(year, m + 1, 0).getDate();
+  // Normalize target date to midnight for comparison
+  const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  // Iterate through all days from Jan 1 onwards
+  for (let month = 0; month < 12; month++) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(year, m, day);
+      const currentDate = new Date(year, month, day);
       const dayOfWeek = currentDate.getDay();
 
       // Skip weekends
@@ -301,12 +301,9 @@ function getCurrentWeek(date: Date): number {
         weekNumber++;
       }
 
-      // Check if this is the target date
-      if (
-        currentDate.getFullYear() === date.getFullYear() &&
-        currentDate.getMonth() === date.getMonth() &&
-        currentDate.getDate() === date.getDate()
-      ) {
+      // If we've reached or passed the target date, return the current week
+      // This handles weekends correctly by returning the week they belong to
+      if (currentDate >= targetDate) {
         return weekNumber;
       }
     }

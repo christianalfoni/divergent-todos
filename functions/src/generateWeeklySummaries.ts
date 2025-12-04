@@ -6,8 +6,6 @@ import { Resend } from "resend";
 import {
   getTodosForWeek,
   getUsersWithActiveSubscription,
-  getPreviousWeekSummary,
-  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
 import {
   createBatchRequest,
@@ -34,7 +32,7 @@ async function sendErrorEmail(
       to: "christianalfoni@gmail.com",
       subject: `[Divergent Todos] ${subject}`,
       html: `
-        <h2>Weekly Summary Generation Error</h2>
+        <h2>Weekly Reflections Generation Error</h2>
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>
         <h3>Error Details:</h3>
         <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto;">${errorDetails}</pre>
@@ -63,7 +61,7 @@ async function sendNoOpEmail(
       to: "christianalfoni@gmail.com",
       subject: `[Divergent Todos] ⚠️ No Batch Created`,
       html: `
-        <h2>⚠️ Weekly Summary Batch NOT Created</h2>
+        <h2>⚠️ Weekly Reflections Batch NOT Created</h2>
         <p><strong>Time:</strong> ${new Date().toISOString()}</p>
         <p><strong>Week:</strong> ${week}, ${year}</p>
         <p><strong>Reason:</strong> ${reason}</p>
@@ -80,7 +78,7 @@ async function sendNoOpEmail(
 
 /**
  * Scheduled function that runs every Saturday at 6pm UTC
- * Submits batch job to OpenAI for AI summary generation (no polling)
+ * Submits batch job to OpenAI for AI notes generation (no polling)
  *
  * Why 6pm UTC?
  * - Ensures Friday has ended in ALL timezones (including UTC-12)
@@ -89,7 +87,7 @@ async function sendNoOpEmail(
  *   - UTC-10 (Hawaii): Saturday 8am
  *   - UTC-8 (Pacific): Saturday 10am
  * - Gives users in western timezones full Friday workday + evening
- *   to complete their todos before weekly summary generation
+ *   to complete their todos before weekly reflection generation
  */
 export const generateWeeklySummaries = onSchedule(
   {
@@ -109,7 +107,7 @@ export const generateWeeklySummaries = onSchedule(
     const targetYear = previousWeek < 1 ? currentYear - 1 : currentYear;
     const targetWeek = previousWeek < 1 ? 52 : previousWeek;
 
-    logger.info("Starting weekly summary batch submission", {
+    logger.info("Starting weekly reflections batch submission", {
       targetYear,
       targetWeek,
       scheduledTime: event.scheduleTime,
@@ -148,25 +146,12 @@ export const generateWeeklySummaries = onSchedule(
           );
 
           if (completedTodos.length > 0) {
-            // Get previous week's summary for continuity
-            const previousWeekSummary = await getPreviousWeekSummary(
-              db,
-              userId,
-              targetWeek,
-              targetYear
-            );
-
-            // Get user's account creation date
-            const accountCreationDate = await getUserAccountCreationDate(userId);
-
             const request = createBatchRequest(
               userId,
               completedTodos,
               incompleteTodos,
               targetWeek,
-              targetYear,
-              previousWeekSummary,
-              accountCreationDate
+              targetYear
             );
             batchRequests.push(request);
           }
@@ -212,9 +197,9 @@ export const generateWeeklySummaries = onSchedule(
       await resend.emails.send({
         from: "post@divergent-todos.com",
         to: "christianalfoni@gmail.com",
-        subject: "[Divergent Todos] Weekly Summary Batch Submitted",
+        subject: "[Divergent Todos] Weekly Reflections Batch Submitted",
         html: `
-          <h2>✅ Weekly Summary Batch Submitted</h2>
+          <h2>✅ Weekly Reflections Batch Submitted</h2>
           <p><strong>Time:</strong> ${new Date().toISOString()}</p>
           <p><strong>Batch ID:</strong> ${batchId}</p>
           <p><strong>Week:</strong> ${targetWeek}, ${targetYear}</p>
@@ -238,7 +223,7 @@ export const generateWeeklySummaries = onSchedule(
       // Send error notification email
       await sendErrorEmail(
         RESEND_API_KEY.value(),
-        "Weekly Summary Batch Submission Failed",
+        "Weekly Reflections Batch Submission Failed",
         `Error: ${errorMessage}\n\nStack trace:\n${errorStack}`
       );
 
@@ -249,16 +234,22 @@ export const generateWeeklySummaries = onSchedule(
 
 /**
  * Calculate current week number (sequential 1-52)
+ * Week 1 = first Monday-Friday in January (may be partial)
+ * Matches the implementation in apps/web/src/utils/activity.ts
  */
 function getCurrentWeek(date: Date): number {
   const year = date.getFullYear();
   let weekNumber = 0;
 
-  for (let m = 0; m < 12; m++) {
-    const daysInMonth = new Date(year, m + 1, 0).getDate();
+  // Normalize target date to midnight for comparison
+  const targetDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  // Iterate through all days from Jan 1 onwards
+  for (let month = 0; month < 12; month++) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(year, m, day);
+      const currentDate = new Date(year, month, day);
       const dayOfWeek = currentDate.getDay();
 
       // Skip weekends
@@ -269,12 +260,9 @@ function getCurrentWeek(date: Date): number {
         weekNumber++;
       }
 
-      // Check if this is the target date
-      if (
-        currentDate.getFullYear() === date.getFullYear() &&
-        currentDate.getMonth() === date.getMonth() &&
-        currentDate.getDate() === date.getDate()
-      ) {
+      // If we've reached or passed the target date, return the current week
+      // This handles weekends correctly by returning the week they belong to
+      if (currentDate >= targetDate) {
         return weekNumber;
       }
     }
