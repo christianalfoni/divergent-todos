@@ -75,6 +75,22 @@ service cloud.firestore {
       allow create, delete: if false;
     }
 
+    // Reflections collection rules
+    match /reflections/{reflectionId} {
+      // Allow read if user is authenticated and owns the reflection document
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+
+      // Allow update only of notes and updatedAt fields (for selecting notes in dialog)
+      // Other fields can only be modified by Cloud Functions
+      allow update: if isAuthenticated()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['notes', 'updatedAt']);
+
+      // Cloud Functions only (no create/delete access for clients)
+      allow create, delete: if false;
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

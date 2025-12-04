@@ -3,22 +3,6 @@ import { functions } from "./index";
 
 const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
 
-interface GenerateWeekSummaryParams {
-  userId: string;
-  week: number;
-  year?: number;
-  customAnalysisInstructions?: string;
-}
-
-interface GenerateWeekSummaryResult {
-  success: boolean;
-  docId: string;
-  weekStart: string;
-  weekEnd: string;
-  totalTodos: number;
-  formalSummary: string;
-}
-
 interface TriggerWeeklySummariesParams {
   week?: number;
   year?: number;
@@ -105,43 +89,27 @@ interface GetBatchJobDetailsResult {
   };
 }
 
-interface GetSummaryDataParams {
+interface GenerateWeekNotesParams {
   userId: string;
   week: number;
   year?: number;
 }
 
-interface CompletedTodo {
-  date: string;
-  text: string;
-  createdAt: string;
-  completedAt: string;
-  moveCount: number;
-  completedWithTimeBox: boolean;
-  hasUrl: boolean;
+interface WeekNote {
+  title: string;
+  summary: string;
   tags: string[];
 }
 
-interface IncompleteTodo {
-  date: string;
-  text: string;
-  createdAt: string;
-  moveCount: number;
-  hasUrl: boolean;
-  tags: string[];
-}
-
-interface GetSummaryDataResult {
+interface GenerateWeekNotesResult {
   success: boolean;
+  docId: string;
   week: number;
   year: number;
   weekStart: string;
   weekEnd: string;
-  completedTodos: CompletedTodo[];
-  incompleteTodos: IncompleteTodo[];
-  previousWeekSummary: string | null;
-  accountCreationDate: string | null;
-  fullPrompt: string; // The complete formatted prompt with data and instructions
+  totalTodos: number;
+  notes: WeekNote[];
 }
 
 /**
@@ -413,120 +381,49 @@ export const admin = {
     },
 
     /**
-     * Get all summary data for a specific user's week (for testing prompts)
-     * Returns the raw data (todos, previous summary, etc.) AND the formatted prompt
-     * The fullPrompt field shows exactly what gets sent to OpenAI, so you can experiment with different instructions
+     * Generate AI notes for a specific user's week
+     * Groups completed todos into thematic notes with tags
      * @param userId - Target user ID
      * @param week - Week number (1-53)
      * @param year - Optional year (defaults to current year)
      */
-    async getSummaryData(
+    async generateWeekNotes(
       userId: string,
       week: number,
       year?: number
-    ): Promise<GetSummaryDataResult> {
-      console.group(`🔧 Admin Script: Get Summary Data`);
+    ): Promise<WeekNote[]> {
+      console.group(`🔧 Admin Script: Generate Week Notes`);
       console.log(`User ID: ${userId}`);
       console.log(`Week: ${week}`);
       console.log(`Year: ${year || "current"}`);
-      console.log(`Fetching data...`);
-
-      try {
-        const callable = httpsCallable<
-          GetSummaryDataParams,
-          GetSummaryDataResult
-        >(functions, "getSummaryData");
-
-        const result = await callable({
-          userId,
-          week,
-          year,
-        });
-
-        console.log(`✅ Data retrieved successfully!`);
-        console.log(`\nWeek Range: ${result.data.weekStart} to ${result.data.weekEnd}`);
-        console.log(`Completed Todos: ${result.data.completedTodos.length}`);
-        console.log(`Incomplete Todos: ${result.data.incompleteTodos.length}`);
-        console.log(`Has Previous Week Summary: ${!!result.data.previousWeekSummary}`);
-        console.log(`Account Creation Date: ${result.data.accountCreationDate || "N/A"}`);
-
-        console.log(`\n📊 Summary of completed todos:`);
-        const tagCounts = result.data.completedTodos.reduce((acc, todo) => {
-          todo.tags.forEach(tag => {
-            acc[tag] = (acc[tag] || 0) + 1;
-          });
-          return acc;
-        }, {} as Record<string, number>);
-        if (Object.keys(tagCounts).length > 0) {
-          console.log(`Tags:`, tagCounts);
-        }
-
-        const focusedSessions = result.data.completedTodos.filter(t => t.completedWithTimeBox).length;
-        console.log(`Focused sessions: ${focusedSessions}`);
-
-        const withUrls = result.data.completedTodos.filter(t => t.hasUrl).length;
-        console.log(`Todos with URLs: ${withUrls}`);
-
-        console.log(`\n📝 Full Prompt (${result.data.fullPrompt.length} chars):`);
-        console.log(`\n${result.data.fullPrompt}`);
-
-        console.groupEnd();
-
-        return result.data;
-      } catch (error: unknown) {
-        console.error(`❌ Error:`, (error as Error).message);
-        if ((error as { code?: string }).code === "permission-denied") {
-          console.error(
-            `This script is only available to admin UID: ${ADMIN_UID}`
-          );
-        }
-        console.groupEnd();
-        throw error;
-      }
-    },
-
-    /**
-     * Generate AI summaries for a specific user's week (single user)
-     * @param userId - Target user ID
-     * @param week - Week number (1-53)
-     * @param year - Optional year (defaults to current year)
-     * @param customAnalysisInstructions - Optional custom analysis instructions to override the default
-     */
-    async generateWeekSummary(
-      userId: string,
-      week: number,
-      year?: number,
-      customAnalysisInstructions?: string
-    ): Promise<void> {
-      console.group(`🔧 Admin Script: Generate Week Summary`);
-      console.log(`User ID: ${userId}`);
-      console.log(`Week: ${week}`);
-      console.log(`Year: ${year || "current"}`);
-      if (customAnalysisInstructions) {
-        console.log(`Custom Instructions: ${customAnalysisInstructions.substring(0, 100)}...`);
-      }
       console.log(`Starting...`);
 
       try {
         const callable = httpsCallable<
-          GenerateWeekSummaryParams,
-          GenerateWeekSummaryResult
-        >(functions, "generateWeekSummary");
+          GenerateWeekNotesParams,
+          GenerateWeekNotesResult
+        >(functions, "generateWeekNotes");
 
         const result = await callable({
           userId,
           week,
           year,
-          customAnalysisInstructions,
         });
 
         console.log(`✅ Success!`);
-        console.log(`\nActivity Document ID: ${result.data.docId}`);
+        console.log(`\nReflection Document ID: ${result.data.docId}`);
         console.log(`Week Range: ${result.data.weekStart} to ${result.data.weekEnd}`);
         console.log(`Total Todos: ${result.data.totalTodos}`);
-        console.log(`\nAttention Reflection Summary:`);
-        console.log(result.data.formalSummary);
+        console.log(`\n📝 Generated ${result.data.notes.length} notes:\n`);
+
+        result.data.notes.forEach((note, index) => {
+          console.log(`\n${index + 1}. ${note.title}`);
+          console.log(`   Tags: [${note.tags.join(", ")}]`);
+          console.log(`   Summary: ${note.summary}`);
+        });
+
         console.groupEnd();
+        return result.data.notes;
       } catch (error: unknown) {
         console.error(`❌ Error:`, (error as Error).message);
         if ((error as { code?: string }).code === "permission-denied") {

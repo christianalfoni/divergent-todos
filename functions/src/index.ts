@@ -1103,23 +1103,20 @@ export const stripeWebhook = onRequest(
 import {
   getTodosForWeek,
   getWeekDateRange,
-  getPreviousWeekSummary,
-  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
-import { generateSummarySync } from "./lib/openai-sync.js";
-import { buildSummaryPrompt } from "./lib/openai-prompt.js";
+import { generateNotesSync } from "./lib/openai-sync-notes.js";
 
 const OPENAI_API_KEY = defineSecret("OPENAI_API_KEY");
 const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
 
-export const getSummaryData = onCall(
-  {},
+export const generateWeekNotes = onCall(
+  { secrets: [OPENAI_API_KEY] },
   async (req) => {
     const callerUid = req.auth?.uid;
 
     // Check admin access
     if (callerUid !== ADMIN_UID) {
-      logger.warn("Unauthorized getSummaryData attempt", { uid: callerUid });
+      logger.warn("Unauthorized generateWeekNotes attempt", { uid: callerUid });
       throw new HttpsError("permission-denied", "Admin access required");
     }
 
@@ -1131,99 +1128,10 @@ export const getSummaryData = onCall(
 
     const targetYear = year || new Date().getFullYear();
 
-    logger.info("Getting summary data", {
+    logger.info("Starting generateWeekNotes", {
       userId,
       week,
       year: targetYear,
-    });
-
-    try {
-      // Calculate date range for the week
-      const { start: weekStart, end: weekEnd } = getWeekDateRange(targetYear, week);
-
-      // Query all todos (completed and incomplete)
-      const { completedTodos, incompleteTodos } = await getTodosForWeek(
-        db,
-        userId,
-        week,
-        targetYear
-      );
-
-      // Get previous week's summary for continuity
-      const previousWeekSummary = await getPreviousWeekSummary(
-        db,
-        userId,
-        week,
-        targetYear
-      );
-
-      // Get user's account creation date
-      const accountCreationDate = await getUserAccountCreationDate(userId);
-
-      // Build the prompt to show the formatted data that would be sent to OpenAI
-      const fullPrompt = buildSummaryPrompt(
-        completedTodos,
-        incompleteTodos,
-        week,
-        targetYear,
-        undefined, // No custom instructions - just show the default
-        previousWeekSummary,
-        accountCreationDate
-      );
-
-      logger.info("Summary data retrieved successfully", {
-        completedCount: completedTodos.length,
-        incompleteCount: incompleteTodos.length,
-        hasPreviousSummary: !!previousWeekSummary,
-        hasAccountCreationDate: !!accountCreationDate,
-      });
-
-      return {
-        success: true,
-        week,
-        year: targetYear,
-        weekStart: weekStart.toISOString().split("T")[0],
-        weekEnd: weekEnd.toISOString().split("T")[0],
-        completedTodos,
-        incompleteTodos,
-        previousWeekSummary,
-        accountCreationDate,
-        fullPrompt, // The complete formatted prompt with data and instructions
-      };
-    } catch (error) {
-      logger.error("Error in getSummaryData", error);
-      if (error instanceof HttpsError) {
-        throw error;
-      }
-      throw new HttpsError("internal", `Failed to get summary data: ${error}`);
-    }
-  }
-);
-
-export const generateWeekSummary = onCall(
-  { secrets: [OPENAI_API_KEY] },
-  async (req) => {
-    const callerUid = req.auth?.uid;
-
-    // Check admin access
-    if (callerUid !== ADMIN_UID) {
-      logger.warn("Unauthorized generateWeekSummary attempt", { uid: callerUid });
-      throw new HttpsError("permission-denied", "Admin access required");
-    }
-
-    const { userId, week, year, customAnalysisInstructions } = req.data;
-
-    if (!userId || !week) {
-      throw new HttpsError("invalid-argument", "userId and week are required");
-    }
-
-    const targetYear = year || new Date().getFullYear();
-
-    logger.info("Starting generateWeekSummary", {
-      userId,
-      week,
-      year: targetYear,
-      hasCustomInstructions: !!customAnalysisInstructions
     });
 
     try {
@@ -1236,7 +1144,7 @@ export const generateWeekSummary = onCall(
         weekEnd: weekEnd.toISOString().split("T")[0],
       });
 
-      // Query all todos (completed and incomplete) using shared module
+      // Query all todos (completed and incomplete)
       logger.info("Querying todos collection...");
       const { completedTodos, incompleteTodos } = await getTodosForWeek(
         db,
@@ -1261,88 +1169,61 @@ export const generateWeekSummary = onCall(
       logger.info("Built activity data", {
         totalCompleted: completedTodos.length,
         totalIncomplete: incompleteTodos.length,
-        sampleCompletedTodos: completedTodos.slice(0, 3),
       });
 
-      // Get previous week's summary for continuity
-      logger.info("Querying previous week summary...");
-      const previousWeekSummary = await getPreviousWeekSummary(
-        db,
-        userId,
-        week,
-        targetYear
-      );
-
-      if (previousWeekSummary) {
-        logger.info("Found previous week summary for continuity context");
-      } else {
-        logger.info("No previous week summary found");
-      }
-
-      // Get user's account creation date
-      logger.info("Fetching user account creation date...");
-      const accountCreationDate = await getUserAccountCreationDate(userId);
-
-      if (accountCreationDate) {
-        logger.info("User account created on:", accountCreationDate);
-      } else {
-        logger.info("Could not determine account creation date");
-      }
-
-      // Generate AI summaries using shared sync module
-      logger.info("Calling OpenAI API...");
-      const result = await generateSummarySync(
+      // Generate AI notes using sync module
+      logger.info("Calling OpenAI API for notes generation...");
+      const result = await generateNotesSync(
         OPENAI_API_KEY.value(),
         completedTodos,
         incompleteTodos,
         week,
-        targetYear,
-        customAnalysisInstructions,
-        previousWeekSummary,
-        accountCreationDate
+        targetYear
       );
 
-      logger.info("AI summary generated successfully", {
-        formalLength: result.formalSummary.length,
+      logger.info("AI notes generated successfully", {
+        notesCount: result.notes.length,
       });
 
       // Calculate month from week start date
       const month = weekStart.getMonth();
 
-      // Create or update activity document
-      const activityDocId = `${userId}_${targetYear}_${week}`;
-      const activityRef = db.collection("activity").doc(activityDocId);
+      // Create or update reflection document
+      const reflectionDocId = `${userId}_${targetYear}_${week}`;
+      const reflectionRef = db.collection("reflections").doc(reflectionDocId);
 
-      logger.info("Writing activity document...", { docId: activityDocId });
+      logger.info("Writing reflection document...", { docId: reflectionDocId });
 
-      await activityRef.set({
+      await reflectionRef.set({
         userId,
         year: targetYear,
         week,
         month,
         completedTodos,
         incompleteCount: incompleteTodos.length,
-        aiSummary: result.formalSummary,
-        aiSummaryGeneratedAt: Timestamp.now(),
+        notes: result.notes,
+        notesGeneratedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
 
-      logger.info("Successfully created/updated activity document");
+      logger.info("Successfully created/updated reflection document");
 
       return {
         success: true,
-        docId: activityDocId,
+        docId: reflectionDocId,
+        week,
+        year: targetYear,
         weekStart: weekStart.toISOString().split("T")[0],
         weekEnd: weekEnd.toISOString().split("T")[0],
         totalTodos: completedTodos.length,
-        formalSummary: result.formalSummary,
+        notes: result.notes,
       };
     } catch (error) {
-      logger.error("Error in generateWeekSummary", error);
+      logger.error("Error in generateWeekNotes", error);
       if (error instanceof HttpsError) {
         throw error;
       }
-      throw new HttpsError("internal", `Failed to generate summary: ${error}`);
+      throw new HttpsError("internal", `Failed to generate notes: ${error}`);
     }
   }
 );

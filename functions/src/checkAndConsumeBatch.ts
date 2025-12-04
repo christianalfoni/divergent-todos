@@ -279,11 +279,11 @@ export const checkAndConsumeBatch = onSchedule(
                   year
                 );
 
-                // Write activity document
-                const activityDocId = `${userId}_${year}_${week}`;
+                // Write reflection document
+                const reflectionDocId = `${userId}_${year}_${week}`;
                 await db
-                  .collection("activity")
-                  .doc(activityDocId)
+                  .collection("reflections")
+                  .doc(reflectionDocId)
                   .set({
                     userId,
                     year,
@@ -291,13 +291,13 @@ export const checkAndConsumeBatch = onSchedule(
                     month,
                     completedTodos,
                     incompleteCount: incompleteTodos.length,
-                    aiSummary: result.formalSummary,
-                    aiSummaryGeneratedAt: Timestamp.now(),
+                    notes: result.notes,
+                    notesGeneratedAt: Timestamp.now(),
                     updatedAt: Timestamp.now(),
                   });
 
                 successCount++;
-                logger.info(`✓ Successfully wrote activity for ${customId}`);
+                logger.info(`✓ Successfully wrote reflection for ${customId}`);
               } catch (error) {
                 const errorMsg = error instanceof Error ? error.message : String(error);
                 logger.error(`✗ Failed to write activity for ${customId}`, error);

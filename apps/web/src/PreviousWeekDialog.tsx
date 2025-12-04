@@ -1,29 +1,30 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { getActivityColor } from './utils/activity';
 import { getTagColor } from './SmartEditor';
 
-interface PreviousWeekDialogProps {
+interface WeekNote {
+  title: string;
   summary: string;
+  tags: string[];
+}
+
+interface PreviousWeekDialogProps {
+  notes: WeekNote[];
   week: number;
   year: number;
   todoCount: number;
-  tags: string[];
   dailyCounts: [number, number, number, number, number]; // [Mon, Tue, Wed, Thu, Fri]
-  onStartWeek: (editedSummary: string) => void;
+  onClose: () => void;
 }
 
 export default function PreviousWeekDialog({
-  summary,
+  notes,
   week,
   todoCount,
-  tags,
   dailyCounts,
-  onStartWeek,
+  onClose,
 }: PreviousWeekDialogProps) {
   const [isVisible, setIsVisible] = useState(false);
-  const [editedSummary, setEditedSummary] = useState(summary);
-  const [isEditing, setIsEditing] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Trigger animation on mount
@@ -31,45 +32,15 @@ export default function PreviousWeekDialog({
     return () => clearTimeout(timer);
   }, []);
 
-  // Initialize content on mount
-  useEffect(() => {
-    if (contentRef.current && contentRef.current.textContent === '') {
-      contentRef.current.textContent = editedSummary;
-    }
-  }, [editedSummary]);
-
-  const handleContentClick = () => {
-    if (!isEditing) {
-      setIsEditing(true);
-      // Focus and move cursor to end
-      setTimeout(() => {
-        if (contentRef.current) {
-          contentRef.current.focus();
-          // Move cursor to end only when entering edit mode
-          const range = document.createRange();
-          const selection = window.getSelection();
-          range.selectNodeContents(contentRef.current);
-          range.collapse(false);
-          selection?.removeAllRanges();
-          selection?.addRange(range);
-        }
-      }, 0);
-    }
-  };
-
-  const handleContentChange = () => {
-    if (contentRef.current) {
-      setEditedSummary(contentRef.current.textContent || '');
-    }
-  };
-
-  const handleBlur = () => {
-    setIsEditing(false);
-  };
-
   return (
-    <div className={`previous-week-dialog-overlay ${isVisible ? 'visible' : ''}`}>
-      <div className={`previous-week-dialog ${isVisible ? 'visible' : ''}`}>
+    <div
+      className={`previous-week-dialog-overlay ${isVisible ? 'visible' : ''}`}
+      onClick={onClose}
+    >
+      <div
+        className={`previous-week-dialog ${isVisible ? 'visible' : ''}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="previous-week-dialog-header">
           <h2>
             <svg className="previous-week-dialog-icon" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
@@ -77,6 +48,14 @@ export default function PreviousWeekDialog({
             </svg>
             Your Week {week} Recap
           </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="previous-week-dialog-close"
+            aria-label="Close dialog"
+          >
+            ×
+          </button>
         </div>
         <div className="previous-week-dialog-content">
           {/* Stats section */}
@@ -106,67 +85,45 @@ export default function PreviousWeekDialog({
                 ))}
               </div>
             </div>
-
-            {/* Tags list with colors */}
-            {tags.length > 0 && (
-              <div className="previous-week-dialog-tags">
-                {tags.map((tag) => {
-                  const color = getTagColor(tag);
-                  return (
-                    <span key={tag} className={`tag-pill tag-pill-${color}`}>
-                      {tag}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
-          {/* Week Reflection Section */}
+          {/* Week Reflection Notes Section */}
           <div className="px-4">
             {/* Divider with "Week Reflection" label */}
             <div className="flex items-center mb-4">
               <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
               <div className="relative flex justify-center">
                 <span className="bg-white px-4 text-sm font-semibold text-[var(--color-text-secondary)] whitespace-nowrap dark:bg-[var(--color-bg-primary)]">
-                  Week Reflection
+                  Week Reflection Notes
                 </span>
               </div>
               <div aria-hidden="true" className="w-full border-t border-gray-300 dark:border-white/15" />
             </div>
 
-            {/* Editable AI Summary - Click to edit */}
-            <div
-              ref={contentRef}
-              contentEditable={isEditing}
-              suppressContentEditableWarning
-              onClick={handleContentClick}
-              onInput={handleContentChange}
-              onBlur={handleBlur}
-              className={`px-4 py-4 text-base text-[var(--color-text-primary)] leading-relaxed rounded-lg transition-all ${
-                isEditing
-                  ? 'cursor-text'
-                  : 'cursor-default'
-              }`}
-              style={{
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                outline: isEditing ? '2px solid var(--color-accent-primary)' : 'none',
-                outlineOffset: '-2px'
-              }}
-            />
+            {/* Notes List */}
+            <ul role="list" className="divide-y divide-gray-100 dark:divide-white/5">
+              {notes.map((note, index) => (
+                <li key={index} className="flex items-center gap-x-6 py-5">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-x-3">
+                      <p className="text-sm/6 font-semibold text-gray-900 dark:text-white">{note.title}</p>
+                      {note.tags.map((tag) => {
+                        const color = getTagColor(tag);
+                        return (
+                          <span key={tag} className={`tag-pill tag-pill-${color} text-xs`}>
+                            {tag}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="mt-1 text-sm/5 text-gray-500 dark:text-gray-400">
+                      {note.summary}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="bg-[var(--color-bg-dialog-footer)] px-6 py-6 flex justify-end">
-          <button
-            type="button"
-            onClick={() => onStartWeek(editedSummary)}
-            className="inline-flex justify-center rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)]"
-          >
-            Save week reflection
-          </button>
         </div>
       </div>
     </div>

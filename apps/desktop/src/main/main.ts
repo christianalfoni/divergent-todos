@@ -221,7 +221,7 @@ ipcMain.handle('update:download', async () => {
 })
 
 ipcMain.handle('update:install', () => {
-  autoUpdater.quitAndInstall()
+  setImmediate(() => autoUpdater.quitAndInstall())
 })
 
 // Auth IPC handlers

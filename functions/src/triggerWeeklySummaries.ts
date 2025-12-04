@@ -6,7 +6,6 @@ import {
   getTodosForWeek,
   getUsersWithActiveSubscription,
   getWeekDateRange,
-  getUserAccountCreationDate,
 } from "./lib/activity-data.js";
 import {
   createBatchRequest,
@@ -86,17 +85,12 @@ export const triggerWeeklySummaries = onCall(
           );
 
           if (completedTodos.length > 0) {
-            // Get user's account creation date
-            const accountCreationDate = await getUserAccountCreationDate(userId);
-
             const request = createBatchRequest(
               userId,
               completedTodos,
               incompleteTodos,
               targetWeek,
-              targetYear,
-              null, // previousWeekSummary - not used in batch processing
-              accountCreationDate
+              targetYear
             );
             batchRequests.push(request);
           } else {
@@ -193,11 +187,11 @@ export const triggerWeeklySummaries = onCall(
                 year
               );
 
-              // Write activity document
-              const activityDocId = `${userId}_${year}_${week}`;
+              // Write reflection document
+              const reflectionDocId = `${userId}_${year}_${week}`;
               await db
-                .collection("activity")
-                .doc(activityDocId)
+                .collection("reflections")
+                .doc(reflectionDocId)
                 .set({
                   userId,
                   year,
@@ -205,15 +199,15 @@ export const triggerWeeklySummaries = onCall(
                   month,
                   completedTodos,
                   incompleteCount: incompleteTodos.length,
-                  aiSummary: result.formalSummary,
-                  aiSummaryGeneratedAt: Timestamp.now(),
+                  notes: result.notes,
+                  notesGeneratedAt: Timestamp.now(),
                   updatedAt: Timestamp.now(),
                 });
 
               successCount++;
-              logger.info(`Successfully wrote activity for ${customId}`);
+              logger.info(`Successfully wrote reflection for ${customId}`);
             } catch (error) {
-              logger.error(`Failed to write activity for ${customId}`, error);
+              logger.error(`Failed to write reflection for ${customId}`, error);
               errors.push({
                 customId,
                 error: error instanceof Error ? error.message : String(error),

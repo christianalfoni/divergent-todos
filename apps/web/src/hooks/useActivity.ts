@@ -1,14 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { activityWeekConverter, type ActivityWeek } from "../firebase/types/activity";
+import { reflectionWeekConverter, type ReflectionWeek } from "../firebase/types/reflection";
 import { useAuthentication } from "./useAuthentication";
 
 export function useActivity(year: number) {
   const [authentication] = useAuthentication();
   // Keep track of the last fetched data to avoid unnecessary re-renders
-  const lastFetchRef = useRef<{ year: number; userId: string; data: ActivityWeek[] } | null>(null);
-  const [activityWeeks, setActivityWeeks] = useState<ActivityWeek[]>([]);
+  const lastFetchRef = useRef<{ year: number; userId: string; data: ReflectionWeek[] } | null>(null);
+  const [activityWeeks, setActivityWeeks] = useState<ReflectionWeek[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -37,15 +37,15 @@ export function useActivity(year: number) {
         setLoading(true);
         setError(null);
 
-        const activityRef = collection(db, "activity").withConverter(activityWeekConverter);
+        const reflectionRef = collection(db, "reflections").withConverter(reflectionWeekConverter);
         const q = query(
-          activityRef,
+          reflectionRef,
           where("userId", "==", userId),
           where("year", "==", year)
         );
 
         const querySnapshot = await getDocs(q);
-        const weeks: ActivityWeek[] = [];
+        const weeks: ReflectionWeek[] = [];
 
         querySnapshot.forEach((doc) => {
           weeks.push(doc.data());
@@ -58,7 +58,7 @@ export function useActivity(year: number) {
         }
       } catch (err) {
         if (!unsubscribed) {
-          setError(err instanceof Error ? err : new Error("Failed to fetch activity"));
+          setError(err instanceof Error ? err : new Error("Failed to fetch reflections"));
           setLoading(false);
         }
       }
