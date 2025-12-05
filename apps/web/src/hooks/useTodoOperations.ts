@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { generateKeyBetween } from "fractional-indexing";
+import { doc } from "firebase/firestore";
 import { useAddTodo } from "./useAddTodo";
 import { useEditTodo } from "./useEditTodo";
 import { useBatchEditTodos } from "./useBatchEditTodos";
@@ -7,9 +8,10 @@ import { useDeleteTodo } from "./useDeleteTodo";
 import { useHittingWood } from "./useHittingWood";
 import { useOnboarding } from "../contexts/OnboardingContext";
 import { useTodos } from "./useTodos";
+import { usePendingTodos } from "./usePendingTodos";
 import { sortTodosByPosition } from "../utils/todos";
 import type { Todo } from "../App";
-import type { Profile } from "../firebase";
+import { todosCollection, type Profile } from "../firebase";
 import {
   trackTodoCreated,
   trackTodoCompleted,
@@ -34,6 +36,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
   const [, deleteTodo] = useDeleteTodo();
   const hittingWood = useHittingWood();
   const onboarding = useOnboarding();
+  const { addPending, removePending, updatePending, getPendingAsTodos } = usePendingTodos();
 
   const handleAddTodo = useCallback(
     (todo: Omit<Todo, "id" | "position"> & { position?: string }) => {
@@ -52,14 +55,34 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         }
       }
 
-      // Find last position for this date
-      const todosForDate = sortTodosByPosition(
-        firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === todo.date)
-      );
+      // Generate document ID upfront
+      const todoDoc = doc(todosCollection);
+      const docId = todoDoc.id;
+
+      // Find last position for this date (including pending todos)
+      const allTodosForDate = [
+        ...firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === todo.date),
+        ...getPendingAsTodos().filter((t) => t.date === todo.date)
+      ];
+      const todosForDate = sortTodosByPosition(allTodosForDate);
 
       const lastPosition = todosForDate.length > 0 ? todosForDate[todosForDate.length - 1].position : null;
+      const newPosition = generateKeyBetween(lastPosition, null);
 
-      addTodo({ description: todo.text, date: dateObj, lastPosition });
+      // Add to pending immediately for optimistic update
+      addPending({
+        id: docId,
+        text: todo.text,
+        url: todo.url,
+        completed: false,
+        date: todo.date,
+        position: newPosition,
+        createdAt: new Date(),
+        isPending: true,
+      });
+
+      // Add to Firebase (with the pre-generated ID and position)
+      addTodo({ description: todo.text, date: dateObj, position: newPosition, docId });
 
       // Track todo creation
       const hasUrl = todo.text.includes('data-url="');
@@ -80,7 +103,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         }
       }
     },
-    [onboarding, firebaseTodos, profile, addTodo, onShowSubscriptionDialog]
+    [onboarding, firebaseTodos, profile, addTodo, onShowSubscriptionDialog, addPending, getPendingAsTodos]
   );
 
   const toggleTodoComplete = useCallback(
@@ -170,15 +193,25 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
   const updateTodo = useCallback(
     (todoId: string, text: string) => {
-      const todo = firebaseTodos.find((t) => t.id === todoId);
-      if (!todo) return;
+      // Check if this is a pending todo
+      const pendingTodos = getPendingAsTodos();
+      const isPending = pendingTodos.some((t) => t.id === todoId);
 
-      editTodo({
-        id: todoId,
-        description: text,
-        completed: todo.completed,
-        date: todo.date,
-      });
+      if (isPending) {
+        // Update in pending state
+        updatePending(todoId, text);
+      } else {
+        // Update in Firebase
+        const todo = firebaseTodos.find((t) => t.id === todoId);
+        if (!todo) return;
+
+        editTodo({
+          id: todoId,
+          description: text,
+          completed: todo.completed,
+          date: todo.date,
+        });
+      }
 
       // Track todo edit
       trackTodoEdited({ isOnboarding: onboarding.isOnboarding });
@@ -188,12 +221,22 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         onboarding.notifyTodoEditCompleted();
       }
     },
-    [firebaseTodos, editTodo, onboarding]
+    [firebaseTodos, editTodo, onboarding, getPendingAsTodos, updatePending]
   );
 
   const handleDeleteTodo = useCallback(
     (todoId: string) => {
-      deleteTodo({ id: todoId });
+      // Check if this is a pending todo
+      const pendingTodos = getPendingAsTodos();
+      const isPending = pendingTodos.some((t) => t.id === todoId);
+
+      if (isPending) {
+        // Just remove from pending state
+        removePending(todoId);
+      } else {
+        // Delete from Firebase
+        deleteTodo({ id: todoId });
+      }
 
       // Track todo deletion
       trackTodoDeleted({ isOnboarding: onboarding.isOnboarding });
@@ -203,7 +246,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         onboarding.notifyTodoDeleted();
       }
     },
-    [deleteTodo, onboarding]
+    [deleteTodo, onboarding, getPendingAsTodos, removePending]
   );
 
   const copyTodo = useCallback(
@@ -224,10 +267,16 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         }
       }
 
-      // Get todos for target date, sorted by position
-      const todosInTargetDate = sortTodosByPosition(
-        firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === newDate)
-      );
+      // Generate document ID upfront
+      const todoDoc = doc(todosCollection);
+      const docId = todoDoc.id;
+
+      // Get todos for target date, sorted by position (including pending)
+      const allTodosInTargetDate = [
+        ...firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === newDate),
+        ...getPendingAsTodos().filter((t) => t.date === newDate)
+      ];
+      const todosInTargetDate = sortTodosByPosition(allTodosInTargetDate);
 
       let newPosition: string;
 
@@ -242,11 +291,22 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         newPosition = generateKeyBetween(beforeTodo?.position || null, afterTodo?.position || null);
       }
 
+      // Add to pending immediately for optimistic update
+      addPending({
+        id: docId,
+        text: todo.description,
+        completed: false,
+        date: newDate,
+        position: newPosition,
+        createdAt: new Date(),
+        isPending: true,
+      });
+
       // Convert string date to Date object
       const dateObj = new Date(newDate);
 
       // Add as new todo with same description, starting with moveCount of 0
-      addTodo({ description: todo.description, date: dateObj, lastPosition: newPosition });
+      addTodo({ description: todo.description, date: dateObj, position: newPosition, docId });
 
       // Track todo creation (it's a copy, but counts as creation)
       const hasUrl = todo.description.includes('data-url="');
@@ -263,7 +323,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         onboarding.notifyTodoCopied();
       }
     },
-    [firebaseTodos, addTodo, profile, onShowSubscriptionDialog, onboarding]
+    [firebaseTodos, addTodo, profile, onShowSubscriptionDialog, onboarding, addPending, getPendingAsTodos]
   );
 
   const moveTodosInBatch = useCallback(
@@ -317,5 +377,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     moveTodosInBatch,
     updateTodo,
     handleDeleteTodo,
+    getPendingAsTodos,
+    removePending,
   };
 }

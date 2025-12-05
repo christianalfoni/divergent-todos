@@ -40,7 +40,7 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
   toFirestore: (
     todo: Todo & { createdAt: FieldValue; updatedAt: FieldValue }
   ): TodoFirestore => {
-    return {
+    const result: any = {
       userId: todo.userId,
       description: todo.description,
       completed: todo.completed,
@@ -54,13 +54,20 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
         todo.updatedAt instanceof Date
           ? Timestamp.fromDate(todo.updatedAt)
           : todo.updatedAt,
-      moveCount: todo.moveCount,
-      completedAt:
-        todo.completedAt instanceof Date
-          ? Timestamp.fromDate(todo.completedAt)
-          : undefined,
-      completedWithTimeBox: todo.completedWithTimeBox,
     };
+
+    // Only include optional fields if they have values
+    if (todo.moveCount !== undefined) {
+      result.moveCount = todo.moveCount;
+    }
+    if (todo.completedAt instanceof Date) {
+      result.completedAt = Timestamp.fromDate(todo.completedAt);
+    }
+    if (todo.completedWithTimeBox !== undefined) {
+      result.completedWithTimeBox = todo.completedWithTimeBox;
+    }
+
+    return result;
   },
   fromFirestore: (
     snapshot: QueryDocumentSnapshot<TodoFirestore>,

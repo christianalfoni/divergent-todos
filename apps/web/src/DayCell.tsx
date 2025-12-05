@@ -73,7 +73,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
         })
         editorRef.current?.clear()
         setNewTodoHtml('')
-        // Keep isAddingTodo true so user can quickly add another todo
+        setIsAddingTodo(false)
       }
     }
   }
@@ -214,7 +214,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
           </button>
         )}
         {isAuthenticated && isAddingTodo && canAddTodo && (
-          <div className="mt-2 px-3">
+          <div className="mt-2 px-3 py-1">
             <div className="flex gap-3">
               <div className="flex h-5 shrink-0 items-center">
                 <div className="group/checkbox grid size-4 grid-cols-1">

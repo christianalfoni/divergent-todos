@@ -210,13 +210,12 @@ export default function TodoItem({
         onMouseDown={handleMouseDown}
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
-        className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none cursor-default ${
-          isPressed ? "bg-[var(--color-bg-active)]" :
-          "hover:bg-[var(--color-bg-hover)]"
+        className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
+          isPressed ? "bg-[var(--color-bg-hover)]" : ""
         } ${todo.completed ? "opacity-60" : ""}`}
       >
         <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
-          <div className="group/checkbox grid size-4 grid-cols-1">
+          <div className="group/checkbox relative grid size-4 grid-cols-1">
             <input
               id={`todo-${todo.id}`}
               name="todo"
@@ -238,6 +237,15 @@ export default function TodoItem({
                 className="opacity-0 group-has-checked/checkbox:opacity-100"
               />
             </svg>
+            {/* Larger click target overlay */}
+            <div
+              className="absolute inset-0 -m-2 cursor-default"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleTodoComplete(todo.id);
+              }}
+              aria-hidden="true"
+            />
           </div>
         </div>
         <div
