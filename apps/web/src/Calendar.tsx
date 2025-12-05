@@ -206,7 +206,7 @@ export default function Calendar({
       </div>
       <DragOverlay dropAnimation={null}>
         {activeTodo && (
-          <div className="bg-[var(--color-bg-secondary)] px-3 py-1 shadow-xl">
+          <div className="bg-[var(--color-bg-secondary)] px-3 py-1 shadow-xl rotate-3">
             <div className="flex gap-3 text-xs/5">
               <div className="flex h-5 shrink-0 items-center">
                 <div className="group/checkbox grid size-4 grid-cols-1">
