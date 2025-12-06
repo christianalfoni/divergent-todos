@@ -210,7 +210,7 @@ export default function TodoItem({
         onMouseDown={handleMouseDown}
         onMouseUp={() => setIsPressed(false)}
         onMouseLeave={() => setIsPressed(false)}
-        className={`group/todo relative flex gap-3 text-xs/5 transition-colors px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
+        className={`group/todo relative flex gap-3 text-xs/5 px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
           isPressed ? "bg-[var(--color-bg-hover)]" : ""
         } ${todo.completed ? "opacity-60" : ""}`}
       >
