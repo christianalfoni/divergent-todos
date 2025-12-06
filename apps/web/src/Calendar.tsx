@@ -143,6 +143,18 @@ export default function Calendar({
     }
   }, [authentication.user, profile?.isOnboarded]);
 
+  // Show weekend dialog on every focus (not just day changes)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isWeekend() && authentication.user && profile?.isOnboarded) {
+        setShowWeekendDialog(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [authentication.user, profile?.isOnboarded]);
+
   // Keyboard shortcut for CMD+SHIFT+K to open weekend dialog
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

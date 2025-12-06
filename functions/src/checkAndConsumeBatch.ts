@@ -161,12 +161,12 @@ async function sendStillProcessingEmail(
  * Scheduled function that runs multiple times on Saturday and Sunday
  * Checks for pending batch jobs and consumes completed ones
  *
- * Runs every 3 hours starting Saturday 9pm through Sunday 9pm (27 hour window)
- * First check is 3 hours after Saturday 6pm submission to allow OpenAI processing time
- * FIXED: Removed 6pm (18:00) from schedule to avoid race condition with batch submission
+ * Batch is created Saturday 6pm UTC (18:00)
+ * First check is Saturday 9pm UTC (21:00) - 3 hours after submission
+ * Continues checking every 3 hours through Sunday 9pm (30 hour window total)
  *
- * Schedule: Saturday & Sunday at 12am, 3am, 9am, 12pm, 3pm, 9pm UTC
- * Saturday 6pm is excluded to prevent race condition with generateWeeklySummaries
+ * Cron Schedule: Saturday & Sunday at 12am, 3am, 9am, 12pm, 3pm, 9pm UTC
+ * Guard: Skips execution on Saturday before 21:00 (batch not created yet)
  */
 export const checkAndConsumeBatch = onSchedule(
   {
@@ -182,6 +182,19 @@ export const checkAndConsumeBatch = onSchedule(
     logger.info("Starting batch check and consume cycle", {
       scheduledTime: event.scheduleTime,
     });
+
+    // Skip execution on Saturday before 21:00 UTC (batch is created at 18:00, first check at 21:00)
+    const now = new Date();
+    const dayOfWeek = now.getUTCDay(); // 0 = Sunday, 6 = Saturday
+    const hourUTC = now.getUTCHours();
+
+    if (dayOfWeek === 6 && hourUTC < 21) {
+      logger.info("Skipping check on Saturday before 21:00 UTC (batch not created yet)", {
+        dayOfWeek,
+        hourUTC,
+      });
+      return;
+    }
 
     try {
       // Step 1: Get pending batch jobs from Firestore
