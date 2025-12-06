@@ -24,16 +24,16 @@ The Divergent Todos app generates AI-powered weekly summaries for all active sub
    - Sends confirmation email
 
 2. **Batch Check/Consume Function** (`checkAndConsumeBatch.ts`)
-   - Runs every 3 hours on Saturday & Sunday (12 checks over 27 hours)
-   - Schedule: 12am, 3am, 9am, 12pm, 3pm, 9pm UTC (both days, excluding 6pm)
+   - Cron runs every 3 hours on Saturday & Sunday at: 12am, 3am, 9am, 12pm, 3pm, 9pm UTC
+   - **Guard logic**: Skips execution on Saturday before 9pm (batch not created yet)
+   - Effective schedule: Saturday 9pm, then Sunday 12am, 3am, 9am, 12pm, 3pm, 9pm (7 checks over 30 hours)
    - First check at 9pm Saturday (3 hours after 6pm submission)
    - Sends email notification when it starts checking (shows pending batch count)
    - Checks pending batches from Firestore
    - Sends email if batches are still processing (with status update)
    - Downloads and processes completed batches
    - Sends success email when batch completes
-   - Cleans up old batch jobs (>7 days)
-   - **IMPORTANT**: 6pm is excluded from schedule to avoid race condition with submission
+   - Cleans up old batch jobs (>7 days completed/failed, >48 hours stuck)
 
 3. **Manual Trigger** (`triggerWeeklySummaries.ts`)
    - Callable function for admin testing

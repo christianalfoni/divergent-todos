@@ -1,4 +1,10 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useImperativeHandle,
+  forwardRef,
+  useState,
+} from "react";
 
 type Props = {
   html?: string; // initial serialized HTML with chips (optional)
@@ -45,16 +51,19 @@ function insertNodeAtSelection(node: Node) {
   sel.addRange(range);
 }
 
-const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
-  html,
-  editing,
-  onChange,
-  placeholder = "Description...",
-  autoFocus = false,
-  onKeyDown: externalOnKeyDown,
-  onBlur: externalOnBlur,
-  availableTags = [],
-}, forwardedRef) {
+const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor(
+  {
+    html,
+    editing,
+    onChange,
+    placeholder = "Description...",
+    autoFocus = false,
+    onKeyDown: externalOnKeyDown,
+    onBlur: externalOnBlur,
+    availableTags = [],
+  },
+  forwardedRef
+) {
   const ref = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
@@ -78,7 +87,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
       if (!ref.current) return;
 
       // Remove any existing shadow first
-      const existingShadow = ref.current.querySelector('.tag-shadow');
+      const existingShadow = ref.current.querySelector(".tag-shadow");
       if (existingShadow) {
         existingShadow.remove();
       }
@@ -106,7 +115,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           emitChange();
         }
       }
-    }
+    },
   }));
 
   // Initialize content only once or when explicitly changing modes
@@ -192,7 +201,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     // When editing=false (view mode), html changes will trigger the effect to update display.
     editing ? null : html,
     editing,
-    autoFocus
+    autoFocus,
   ]);
 
   // Notify changes (serialize innerHTML while editing)
@@ -312,20 +321,22 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
 
   // Get best tag suggestion for partial tag input
   function getTagSuggestion(partial: string): string | null {
-    if (!partial.startsWith('#') || partial.length < 2) return null;
+    if (!partial.startsWith("#") || partial.length < 2) return null;
 
     const partialTag = partial.slice(1).toLowerCase(); // Remove # and lowercase
 
     // Find all matching tags
-    const matches = availableTags.filter(tag =>
-      tag.toLowerCase().startsWith(partialTag) && tag.toLowerCase() !== partialTag
+    const matches = availableTags.filter(
+      (tag) =>
+        tag.toLowerCase().startsWith(partialTag) &&
+        tag.toLowerCase() !== partialTag
     );
 
     if (matches.length === 0) return null;
 
     // Count frequency of each tag
     const frequency = new Map<string, number>();
-    matches.forEach(tag => {
+    matches.forEach((tag) => {
       frequency.set(tag, (frequency.get(tag) || 0) + 1);
     });
 
@@ -344,7 +355,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     if (!editing || !ref.current) return;
 
     // Remove any existing shadow
-    const existingShadow = ref.current.querySelector('.tag-shadow');
+    const existingShadow = ref.current.querySelector(".tag-shadow");
     if (existingShadow) {
       existingShadow.remove();
     }
@@ -353,7 +364,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     if (!sel || !sel.anchorNode) return;
 
     const wordInfo = getWordBeforeCursor();
-    if (!wordInfo || !wordInfo.word.startsWith('#')) {
+    if (!wordInfo || !wordInfo.word.startsWith("#")) {
       return;
     }
 
@@ -367,11 +378,12 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     const remaining = suggestion.slice(partial.length);
 
     // Create shadow span
-    const shadow = document.createElement('span');
-    shadow.className = 'tag-shadow';
+    const shadow = document.createElement("span");
+    shadow.className = "tag-shadow";
     shadow.textContent = remaining;
-    shadow.contentEditable = 'false';
-    shadow.style.cssText = 'color: var(--color-text-tertiary); opacity: 0.5; pointer-events: none; user-select: none;';
+    shadow.contentEditable = "false";
+    shadow.style.cssText =
+      "color: var(--color-text-tertiary); opacity: 0.5; pointer-events: none; user-select: none;";
 
     // Insert shadow after cursor
     const range = sel.getRangeAt(0).cloneRange();
@@ -393,14 +405,14 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     // Handle Tab for autocomplete BEFORE external handler
     if (e.key === "Tab") {
       const wordInfo = getWordBeforeCursor();
-      if (wordInfo && wordInfo.word.startsWith('#')) {
+      if (wordInfo && wordInfo.word.startsWith("#")) {
         const suggestion = getTagSuggestion(wordInfo.word);
         if (suggestion) {
           e.preventDefault();
           e.stopPropagation();
 
           // Remove shadow first
-          const existingShadow = ref.current?.querySelector('.tag-shadow');
+          const existingShadow = ref.current?.querySelector(".tag-shadow");
           if (existingShadow) {
             existingShadow.remove();
           }
@@ -439,7 +451,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
     // Handle tag and link conversion on space/enter BEFORE calling external handler
     if (e.key === " " || (e.key === "Enter" && !e.shiftKey)) {
       // Remove shadow first
-      const existingShadow = ref.current?.querySelector('.tag-shadow');
+      const existingShadow = ref.current?.querySelector(".tag-shadow");
       if (existingShadow) {
         existingShadow.remove();
       }
@@ -509,7 +521,8 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
         if (
           node &&
           (node as HTMLElement).dataset &&
-          ((node as HTMLElement).dataset.url || (node as HTMLElement).dataset.tag)
+          ((node as HTMLElement).dataset.url ||
+            (node as HTMLElement).dataset.tag)
         ) {
           e.preventDefault();
           (node as HTMLElement).remove();
@@ -526,7 +539,8 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
         if (
           prevNode &&
           (prevNode as HTMLElement).dataset &&
-          ((prevNode as HTMLElement).dataset.url || (prevNode as HTMLElement).dataset.tag)
+          ((prevNode as HTMLElement).dataset.url ||
+            (prevNode as HTMLElement).dataset.tag)
         ) {
           e.preventDefault();
           prevNode.remove();
@@ -554,12 +568,12 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
 
     const link = ref.current.querySelector(`[data-link-id="${copiedLinkId}"]`);
     if (link) {
-      link.classList.add('link-copied');
+      link.classList.add("link-copied");
     }
 
     return () => {
       if (link) {
-        link.classList.remove('link-copied');
+        link.classList.remove("link-copied");
       }
     };
   }, [copiedLinkId]);
@@ -580,7 +594,6 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           whiteSpace: "pre-wrap",
           wordBreak: "break-word",
           fontSize: "var(--todo-text-size)",
-          minHeight: "1.5rem",
         }}
       />
       <style>{`
@@ -605,6 +618,8 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor({
           opacity: 0.6;
         }
         .tag-pill {
+          position: relative;
+          top: -1px;
           display: inline-flex;
           align-items: center;
           padding: 0px 6px;
@@ -724,7 +739,16 @@ export function getTagColor(tag: string): string {
   for (let i = 0; i < tag.length; i++) {
     hash = tag.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const colors = ['gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'];
+  const colors = [
+    "gray",
+    "red",
+    "yellow",
+    "green",
+    "blue",
+    "indigo",
+    "purple",
+    "pink",
+  ];
   return colors[Math.abs(hash) % colors.length];
 }
 

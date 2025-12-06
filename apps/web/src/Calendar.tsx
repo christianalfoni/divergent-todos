@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import DayCell from "./DayCell";
+import SmartEditor from "./SmartEditor";
 import TimeBoxDialog from "./TimeBoxDialog";
 import WeekendDialog from "./WeekendDialog";
 import { useAuthentication } from "./hooks/useAuthentication";
@@ -142,6 +143,18 @@ export default function Calendar({
     }
   }, [authentication.user, profile?.isOnboarded]);
 
+  // Show weekend dialog on every focus (not just day changes)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isWeekend() && authentication.user && profile?.isOnboarded) {
+        setShowWeekendDialog(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [authentication.user, profile?.isOnboarded]);
+
   // Keyboard shortcut for CMD+SHIFT+K to open weekend dialog
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -205,7 +218,7 @@ export default function Calendar({
       </div>
       <DragOverlay dropAnimation={null}>
         {activeTodo && (
-          <div className="bg-[var(--color-bg-primary)] shadow-lg rounded-md border border-[var(--color-border-primary)] px-3 py-1 opacity-90">
+          <div className="bg-[var(--color-bg-secondary)] px-3 py-1 shadow-xl rotate-3">
             <div className="flex gap-3 text-xs/5">
               <div className="flex h-5 shrink-0 items-center">
                 <div className="group/checkbox grid size-4 grid-cols-1">
@@ -232,13 +245,14 @@ export default function Calendar({
                 </div>
               </div>
               <div
-                className={`flex-1 min-w-0 text-xs/5 ${
+                className={`flex-1 min-w-0 ${
                   activeTodo.completed
                     ? "line-through text-[var(--color-text-secondary)]"
                     : "text-[var(--color-text-primary)]"
                 }`}
-                dangerouslySetInnerHTML={{ __html: activeTodo.text }}
-              />
+              >
+                <SmartEditor html={activeTodo.text} editing={false} />
+              </div>
             </div>
           </div>
         )}

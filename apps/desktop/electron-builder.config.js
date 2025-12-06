@@ -57,6 +57,7 @@ module.exports = {
     artifactName: 'Divergent-Todos-mac-${arch}.${ext}',
   },
   win: {
+    icon: 'resources/icons/icon.ico',
     target: ['nsis', 'portable'],
     // Code signing configuration
     // Option A: Azure Trusted Signing (uncomment and configure)
@@ -83,6 +84,7 @@ module.exports = {
     artifactName: 'Divergent-Todos-Standalone-${arch}.${ext}', // Clearly named as standalone
   },
   linux: {
+    icon: 'resources/icons/icon.icns',
     target: ['AppImage', 'deb'],
     category: 'Utility',
     artifactName: 'Divergent-Todos-linux-${arch}.${ext}',

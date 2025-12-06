@@ -34,19 +34,19 @@ export function useAddTodo() {
   profileRef.current = authentication.profile;
 
   return pipe<
-    { description: string; date: Date; lastPosition: string | null },
+    { description: string; date: Date; lastPosition?: string | null; position?: string; docId?: string },
     AddTodoState
   >()
     .setState({ isAdding: true, error: null })
-    .async(({ description, date, lastPosition }) => {
-      const todoDoc = doc(todosCollection);
+    .async(({ description, date, lastPosition, position: providedPosition, docId }) => {
+      const todoDoc = docId ? doc(todosCollection, docId) : doc(todosCollection);
 
       if (!userRef.current) {
         throw new Error("can not add todo without a user");
       }
 
-      // Generate position for new todo at the end of the day
-      const position = generateKeyBetween(lastPosition, null);
+      // Use provided position or generate position for new todo at the end of the day
+      const position = providedPosition || generateKeyBetween(lastPosition || null, null);
 
       // Check if user has an active subscription
       const hasActiveSubscription =
@@ -57,15 +57,18 @@ export function useAddTodo() {
         const batch = writeBatch(todosCollection.firestore);
 
         // Add the todo
-        batch.set(doc(todosCollection.firestore, "todos", todoDoc.id), {
+        const todoData = {
+          id: todoDoc.id,
           userId: userRef.current.uid,
           description,
           completed: false,
           date,
           position,
+          moveCount: 0,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-        });
+        };
+        batch.set(todoDoc, todoData);
 
         // Increment freeTodoCount
         const profileDoc = doc(profilesCollection, userRef.current.uid);
@@ -75,17 +78,23 @@ export function useAddTodo() {
       }
 
       // User has subscription, just add the todo
-      return setDoc(doc(todosCollection.firestore, "todos", todoDoc.id), {
+      const todoData = {
+        id: todoDoc.id,
         userId: userRef.current.uid,
         description,
         completed: false,
         date,
         position,
+        moveCount: 0,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-      });
+      };
+      return setDoc(todoDoc, todoData);
     })
     .map(() => ({ isAdding: false, error: null }))
-    .catch((err) => ({ isAdding: false, error: String(err) }))
+    .catch((err) => {
+      console.error('Error adding todo:', err);
+      return { isAdding: false, error: String(err) };
+    })
     .use({ isAdding: false, error: null });
 }

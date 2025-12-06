@@ -54,7 +54,7 @@ export interface Todo {
 
 function AppContent() {
   const [authentication] = useAuthentication();
-  const { todos, isLoading } = useTodosData();
+  const { todos: firebaseTodos, isLoading } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [authModalState, setAuthModalState] = useState(false);
   const [hasLeftLandingPage, setHasLeftLandingPage] = useState(() => {
@@ -145,6 +145,32 @@ function AppContent() {
     hasLeftLandingPage,
   ]);
 
+  // Todo operations
+  const todoOperations = useTodoOperations({
+    profile,
+    onShowSubscriptionDialog: () => setShowSubscriptionDialog(true),
+  });
+
+  // Merge pending todos with Firebase todos (filter out pending todos that are already confirmed)
+  const todos = useMemo(() => {
+    const pending = todoOperations.getPendingAsTodos();
+    const firebaseIds = new Set(firebaseTodos.map(t => t.id));
+    const uniquePending = pending.filter(p => !firebaseIds.has(p.id));
+    return [...uniquePending, ...firebaseTodos];
+  }, [firebaseTodos, todoOperations]);
+
+  // Clean up pending todos when they appear in Firebase
+  useEffect(() => {
+    const pendingTodos = todoOperations.getPendingAsTodos();
+    const firebaseTodoIds = new Set(firebaseTodos.map((t) => t.id));
+
+    pendingTodos.forEach((pending) => {
+      if (firebaseTodoIds.has(pending.id)) {
+        todoOperations.removePending(pending.id);
+      }
+    });
+  }, [firebaseTodos, todoOperations]);
+
   // Debug: Check for duplicate positions
   useEffect(() => {
     const positionMap = new Map<string, string[]>();
@@ -186,12 +212,6 @@ function AppContent() {
 
   // Mark app as installed when running in desktop app (only when authenticated)
   useMarkAppInstalled();
-
-  // Todo operations
-  const todoOperations = useTodoOperations({
-    profile,
-    onShowSubscriptionDialog: () => setShowSubscriptionDialog(true),
-  });
 
   // Check if running in Electron
   const isElectron = window.navigator.userAgent.includes("Electron");

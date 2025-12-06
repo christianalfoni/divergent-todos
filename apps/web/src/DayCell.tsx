@@ -25,7 +25,7 @@ interface DayCellProps {
   hasOldUncompletedTodos: boolean
 }
 
-export default function DayCell({ date, isToday, isAuthenticated, isLoading, todos, allTodos, isCopyMode, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, isCopyMode, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -73,7 +73,7 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
         })
         editorRef.current?.clear()
         setNewTodoHtml('')
-        // Keep isAddingTodo true so user can quickly add another todo
+        setIsAddingTodo(false)
       }
     }
   }
@@ -146,10 +146,11 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
           {dayName}
         </span>
       </div>
-      {isToday && isAuthenticated && hasOldUncompletedTodos && (
+      {(isToday || isNextMonday) && isAuthenticated && hasOldUncompletedTodos && (
         <button
           onClick={onMoveIncompleteTodosToToday}
-          className="mx-3 mb-2 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="mx-3 mb-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
         >
           <div className="flex h-5 w-4 shrink-0 items-center justify-center">
             <svg
@@ -163,11 +164,11 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"
+                d="M3 9h11m0 0v11m-3-3l3 3m0 0l3-3"
               />
             </svg>
           </div>
-          <span>Move incomplete to this day</span>
+          <span>Move incomplete focus</span>
         </button>
       )}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
@@ -192,7 +193,8 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
           <button
             onClick={handleAddTodoClick}
-            className="mt-2 px-3 flex items-center gap-3 text-xs/5 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+            className="mt-2 px-3 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+            style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
           >
             <div className="flex h-5 w-4 shrink-0 items-center justify-center">
               <svg
@@ -240,7 +242,10 @@ export default function DayCell({ date, isToday, isAuthenticated, isLoading, tod
                   </svg>
                 </div>
               </div>
-              <div className="flex-1 min-w-0 text-xs/5 text-[var(--color-text-primary)] empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]">
+              <div
+                className="flex-1 min-w-0 text-[var(--color-text-primary)] empty:before:content-[attr(data-placeholder)] empty:before:text-[var(--color-text-secondary)]"
+                style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
+              >
                 <SmartEditor
                   ref={editorRef}
                   html={newTodoHtml}
