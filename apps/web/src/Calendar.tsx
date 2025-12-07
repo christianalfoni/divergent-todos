@@ -206,10 +206,12 @@ export default function Calendar({
                 isCopyMode={isCopyMode}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
+                onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={handleOpenTimeBox}
                 onMoveIncompleteTodosToToday={onMoveIncompleteTodosToToday}
+                onActivateTwoWeekView={() => setViewMode("two-weeks")}
                 hasOldUncompletedTodos={hasOldUncompletedTodos}
               />
             );

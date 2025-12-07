@@ -18,14 +18,16 @@ interface DayCellProps {
   isCopyMode: boolean
   onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
   onToggleTodoComplete: (todoId: string) => void
+  onCopyTodo: (todoId: string, newDate: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
   onMoveIncompleteTodosToToday: () => void
+  onActivateTwoWeekView: () => void
   hasOldUncompletedTodos: boolean
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, isCopyMode, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, isCopyMode, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, onActivateTwoWeekView, hasOldUncompletedTodos }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -181,10 +183,13 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 key={todo.id}
                 todo={todo}
                 isCopyMode={isCopyMode}
+                date={date}
                 onToggleTodoComplete={onToggleTodoComplete}
+                onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={onOpenTimeBox}
+                onActivateTwoWeekView={onActivateTwoWeekView}
                 availableTags={availableTags}
               />
             ))}
