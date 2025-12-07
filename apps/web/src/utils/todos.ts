@@ -37,6 +37,23 @@ export function getNextWorkday(): Date {
   return targetDate;
 }
 
+export function getNextWorkdayAfterDate(date: Date): Date {
+  const nextDay = new Date(date);
+  nextDay.setDate(date.getDate() + 1);
+  const dayOfWeek = nextDay.getDay();
+
+  // If next day is Saturday (6), move to Monday (+2 more days from next day)
+  // If next day is Sunday (0), move to Monday (+1 more day from next day)
+  // Otherwise, use next day
+  if (dayOfWeek === 6) {
+    nextDay.setDate(nextDay.getDate() + 2);
+  } else if (dayOfWeek === 0) {
+    nextDay.setDate(nextDay.getDate() + 1);
+  }
+
+  return nextDay;
+}
+
 export function convertFirebaseTodoToAppTodo(todo: FirebaseTodo): Todo {
   return {
     id: todo.id,

@@ -93,7 +93,7 @@ export default function OnboardingNotification() {
           ),
           title: "Edit your focus anytime",
           message:
-            "Click on any focus to edit its text. Links don't activate edit mode, so click next to them. During edit mode, use backspace to remove links. Click outside the focus to save your changes.",
+            "Click on any focus to edit its text. Links don't activate edit mode, so click next to them. Use backspace to remove links. Click outside or press Enter to save.",
           actionLabel: "Edit and save a focus",
           requiresEditTodo: true,
         };
@@ -121,6 +121,20 @@ export default function OnboardingNotification() {
           actionLabel: `Hold ${modifierKey} and drag to copy`,
           requiresCopyTodo: true,
         };
+      case "complete-and-continue": {
+        const isMac2 = navigator.platform.toUpperCase().includes('MAC');
+        const modifierKey2 = isMac2 ? "⌘ CMD" : "ALT";
+        return {
+          icon: (
+            <CheckCircleIcon aria-hidden="true" className="size-6 text-emerald-500 dark:text-emerald-400" />
+          ),
+          title: "Build momentum across days",
+          message:
+            `Creating momentum is important. Focus often spreads over multiple days. Hold ${modifierKey2} and click the checkbox to complete a focus and copy it to the next workday—showing you gave it attention but it needs more. If it's Friday, the 2-week view activates automatically!`,
+          actionLabel: `Hold ${modifierKey2} and click checkbox`,
+          requiresCompleteAndContinue: true,
+        };
+      }
       case "delete-todo":
         return {
           icon: (

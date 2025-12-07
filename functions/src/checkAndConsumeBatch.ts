@@ -200,13 +200,6 @@ export const checkAndConsumeBatch = onSchedule(
       // Step 1: Get pending batch jobs from Firestore
       const pendingJobs = await getPendingBatchJobs(db);
 
-      // Send email notification about the check attempt
-      await sendAttemptEmail(
-        RESEND_API_KEY.value(),
-        pendingJobs.length,
-        event.scheduleTime
-      );
-
       if (pendingJobs.length === 0) {
         logger.info("No pending batch jobs found");
         // Clean up old completed jobs
@@ -216,6 +209,13 @@ export const checkAndConsumeBatch = onSchedule(
         }
         return;
       }
+
+      // Send email notification about the check attempt
+      await sendAttemptEmail(
+        RESEND_API_KEY.value(),
+        pendingJobs.length,
+        event.scheduleTime
+      );
 
       logger.info(`Found ${pendingJobs.length} pending batch job(s)`);
 

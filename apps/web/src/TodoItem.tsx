@@ -3,14 +3,19 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import type { Todo } from "./App";
+import { getNextWorkdayAfterDate } from "./utils/todos";
+import { useOnboarding } from "./contexts/OnboardingContext";
 
 interface TodoItemProps {
   todo: Todo;
   isCopyMode: boolean;
+  date: Date;
   onToggleTodoComplete: (todoId: string) => void;
+  onCopyTodo?: (todoId: string, newDate: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenTimeBox?: (todo: Todo) => void;
+  onActivateTwoWeekView?: () => void;
   availableTags?: string[];
 }
 
@@ -26,10 +31,13 @@ function isHtmlEmpty(html: string): boolean {
 export default function TodoItem({
   todo,
   isCopyMode,
+  date,
   onToggleTodoComplete,
+  onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
   onOpenTimeBox,
+  onActivateTwoWeekView,
   availableTags = [],
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -41,6 +49,7 @@ export default function TodoItem({
   const originalHtmlRef = useRef<string>(todo.text);
   const lastClickTimeRef = useRef<number>(0);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onboarding = useOnboarding();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -150,6 +159,34 @@ export default function TodoItem({
     }, 250);
   };
 
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    // Check if CMD (Mac) or ALT (Windows/Linux) is pressed
+    if (e.metaKey || e.altKey) {
+      // Complete the current todo
+      onToggleTodoComplete(todo.id);
+
+      // Get the next working day after this todo's date
+      const nextWorkday = getNextWorkdayAfterDate(date);
+      const nextWorkdayString = nextWorkday.toISOString().split("T")[0];
+
+      // Copy the todo to the next working day
+      onCopyTodo?.(todo.id, nextWorkdayString);
+
+      // If it's Friday (5), activate 2-week view
+      if (date.getDay() === 5) {
+        onActivateTwoWeekView?.();
+      }
+
+      // Notify onboarding
+      onboarding.notifyCompleteAndContinue();
+    } else {
+      // Normal toggle
+      onToggleTodoComplete(todo.id);
+    }
+  };
+
   if (isEditing) {
     return (
       <div className="mt-2 px-3 py-1" ref={containerRef}>
@@ -221,7 +258,7 @@ export default function TodoItem({
               name="todo"
               type="checkbox"
               checked={todo.completed}
-              onChange={() => onToggleTodoComplete(todo.id)}
+              onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
               className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
             />
             <svg
@@ -240,10 +277,7 @@ export default function TodoItem({
             {/* Larger click target overlay */}
             <div
               className="absolute inset-0 -m-2 cursor-default"
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleTodoComplete(todo.id);
-              }}
+              onClick={handleCheckboxClick}
               aria-hidden="true"
             />
           </div>
