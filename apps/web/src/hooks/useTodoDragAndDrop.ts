@@ -12,25 +12,20 @@ import type { Todo } from '../App'
 interface UseTodoDragAndDropProps {
   todos: Todo[]
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void
-  onCopyTodo: (todoId: string, newDate: string, newIndex?: number) => void
 }
 
-export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDragAndDropProps) {
+export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProps) {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
-  const [isCopyMode, setIsCopyMode] = useState(false)
-  const originalPositionRef = useRef<{ date: string; position: string } | null>(null)
 
   // Use refs to stabilize handler dependencies and prevent recreation during drag
   const todosRef = useRef(todos)
   const onMoveTodoRef = useRef(onMoveTodo)
-  const onCopyTodoRef = useRef(onCopyTodo)
 
   // Keep refs updated with latest values
   useEffect(() => {
     todosRef.current = todos
     onMoveTodoRef.current = onMoveTodo
-    onCopyTodoRef.current = onCopyTodo
-  }, [todos, onMoveTodo, onCopyTodo])
+  }, [todos, onMoveTodo])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -40,40 +35,10 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
     })
   )
 
-  // Track modifier keys during drag
-  useEffect(() => {
-    if (!activeTodo) return
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey || e.metaKey) {
-        setIsCopyMode(true)
-      }
-    }
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (!e.altKey && !e.metaKey) {
-        setIsCopyMode(false)
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-    window.addEventListener('keyup', handleKeyUp)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-      window.removeEventListener('keyup', handleKeyUp)
-    }
-  }, [activeTodo])
-
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const todo = todosRef.current.find(t => t.id === event.active.id)
     if (todo) {
       setActiveTodo(todo)
-      // Store original position for copy mode restoration
-      originalPositionRef.current = { date: todo.date, position: todo.position }
-      // Check if ALT (Windows/Linux) or Meta/CMD (Mac) is pressed
-      const nativeEvent = (event.activatorEvent as PointerEvent)
-      setIsCopyMode(nativeEvent.altKey || nativeEvent.metaKey)
     }
   }, [])
 
@@ -96,14 +61,12 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
       const overDayId = overItemId
       if (activeTodo.date !== overDayId) {
         // Cross-day move to empty cell - update immediately for visual feedback
-        // In copy mode, this will be reverted on drag end
         onMoveTodoRef.current(activeTodoId, overDayId)
       }
     } else {
       // We're over another todo
       if (activeTodo.date !== overTodo.date) {
         // Moving to different day - update immediately for visual feedback
-        // In copy mode, this will be reverted on drag end
         const todosInTargetDay = currentTodos
           .filter(t => t.date === overTodo.date && t.id !== activeTodoId)
           .sort((a, b) => {
@@ -121,27 +84,10 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
-    const wasCopyMode = isCopyMode
-    const originalPosition = originalPositionRef.current
 
     setActiveTodo(null)
-    setIsCopyMode(false)
-    originalPositionRef.current = null
 
-    if (!over) {
-      // Drag cancelled - restore original position if in copy mode
-      if (wasCopyMode && originalPosition) {
-        const activeTodoId = active.id as string
-        const currentTodos = todosRef.current
-        const activeTodo = currentTodos.find(t => t.id === activeTodoId)
-
-        // Only restore if the todo was moved during drag
-        if (activeTodo && activeTodo.date !== originalPosition.date) {
-          onMoveTodoRef.current(activeTodoId, originalPosition.date)
-        }
-      }
-      return
-    }
+    if (!over) return
 
     const activeTodoId = active.id as string
     const overItemId = over.id as string
@@ -163,7 +109,7 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
       targetDate = overTodo.date
 
       if (activeTodo.date === overTodo.date) {
-        // Same-day operation
+        // Same-day reordering
         const todosInDay = currentTodos
           .filter(t => t.date === activeTodo.date)
           .sort((a, b) => {
@@ -176,14 +122,11 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
         const newIndex = todosInDay.findIndex(t => t.id === overItemId)
 
         if (oldIndex !== newIndex) {
-          // In copy mode, don't do anything when dropping on same day
-          if (!wasCopyMode) {
-            onMoveTodoRef.current(activeTodoId, activeTodo.date, newIndex)
-          }
+          onMoveTodoRef.current(activeTodoId, activeTodo.date, newIndex)
         }
         return
       } else {
-        // Different day - calculate target index
+        // Cross-day drop - calculate target index
         const todosInTargetDay = currentTodos
           .filter(t => t.date === overTodo.date && t.id !== activeTodoId)
           .sort((a, b) => {
@@ -203,23 +146,13 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
     // If same date, do nothing
     if (activeTodo.date === targetDate) return
 
-    // Handle copy vs move
-    if (wasCopyMode) {
-      // Copy to new location
-      onCopyTodoRef.current(activeTodoId, targetDate, targetIndex)
-      // Restore original to its original position (it was moved during drag for visual feedback)
-      if (originalPosition) {
-        onMoveTodoRef.current(activeTodoId, originalPosition.date)
-      }
-    } else {
-      onMoveTodoRef.current(activeTodoId, targetDate, targetIndex)
-    }
-  }, [isCopyMode])
+    // Finalize the move
+    onMoveTodoRef.current(activeTodoId, targetDate, targetIndex)
+  }, [])
 
   return {
     sensors,
     activeTodo,
-    isCopyMode,
     handleDragStart,
     handleDragOver,
     handleDragEnd,

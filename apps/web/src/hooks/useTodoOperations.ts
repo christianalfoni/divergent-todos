@@ -306,7 +306,8 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       const dateObj = new Date(newDate);
 
       // Add as new todo with same description, starting with moveCount of 0
-      addTodo({ description: todo.description, date: dateObj, position: newPosition, docId });
+      // IMPORTANT: Explicitly set completed to false - copies should always be incomplete
+      addTodo({ description: todo.description, date: dateObj, position: newPosition, docId, completed: false });
 
       // Track todo creation (it's a copy, but counts as creation)
       const hasUrl = todo.description.includes('data-url="');

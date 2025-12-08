@@ -535,9 +535,6 @@ function AppContent() {
             onMoveTodo={
               authentication.user ? todoOperations.moveTodo : () => {}
             }
-            onCopyTodo={
-              authentication.user ? todoOperations.copyTodo : () => {}
-            }
             onUpdateTodo={
               authentication.user ? todoOperations.updateTodo : () => {}
             }

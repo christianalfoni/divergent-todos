@@ -34,11 +34,11 @@ export function useAddTodo() {
   profileRef.current = authentication.profile;
 
   return pipe<
-    { description: string; date: Date; lastPosition?: string | null; position?: string; docId?: string },
+    { description: string; date: Date; lastPosition?: string | null; position?: string; docId?: string; completed?: boolean },
     AddTodoState
   >()
     .setState({ isAdding: true, error: null })
-    .async(({ description, date, lastPosition, position: providedPosition, docId }) => {
+    .async(({ description, date, lastPosition, position: providedPosition, docId, completed }) => {
       const todoDoc = docId ? doc(todosCollection, docId) : doc(todosCollection);
 
       if (!userRef.current) {
@@ -61,7 +61,7 @@ export function useAddTodo() {
           id: todoDoc.id,
           userId: userRef.current.uid,
           description,
-          completed: false,
+          completed: completed ?? false,
           date,
           position,
           moveCount: 0,
@@ -82,7 +82,7 @@ export function useAddTodo() {
         id: todoDoc.id,
         userId: userRef.current.uid,
         description,
-        completed: false,
+        completed: completed ?? false,
         date,
         position,
         moveCount: 0,

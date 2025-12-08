@@ -142,7 +142,7 @@ export default function OnboardingNotification() {
           ),
           title: "Delete focus",
           message:
-            "To delete a focus, click on it to edit, then remove all the text content and press Enter.",
+            "To delete a focus, right-click it and select Delete from the menu. You can also click to edit and remove all text, then press Enter.",
           actionLabel: "Delete a focus",
           requiresDeleteTodo: true,
         };

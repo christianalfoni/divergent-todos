@@ -5,19 +5,13 @@ import { TrashIcon } from "@heroicons/react/20/solid";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
-import { getNextWorkdayAfterDate } from "./utils/todos";
-import { useOnboarding } from "./contexts/OnboardingContext";
 
 interface TodoItemProps {
   todo: Todo;
-  isCopyMode: boolean;
-  date: Date;
   onToggleTodoComplete: (todoId: string) => void;
-  onCopyTodo?: (todoId: string, newDate: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenTimeBox?: (todo: Todo) => void;
-  onActivateTwoWeekView?: () => void;
   availableTags?: string[];
 }
 
@@ -32,14 +26,10 @@ function isHtmlEmpty(html: string): boolean {
 
 export default function TodoItem({
   todo,
-  isCopyMode,
-  date,
   onToggleTodoComplete,
-  onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
   onOpenTimeBox,
-  onActivateTwoWeekView,
   availableTags = [],
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -51,7 +41,6 @@ export default function TodoItem({
   const originalHtmlRef = useRef<string>(todo.text);
   const lastClickTimeRef = useRef<number>(0);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onboarding = useOnboarding();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -163,30 +152,7 @@ export default function TodoItem({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // Check if CMD (Mac) or ALT (Windows/Linux) is pressed
-    if (e.metaKey || e.altKey) {
-      // Complete the current todo
-      onToggleTodoComplete(todo.id);
-
-      // Get the next working day after this todo's date
-      const nextWorkday = getNextWorkdayAfterDate(date);
-      const nextWorkdayString = nextWorkday.toISOString().split("T")[0];
-
-      // Copy the todo to the next working day
-      onCopyTodo?.(todo.id, nextWorkdayString);
-
-      // If it's Friday (5), activate 2-week view
-      if (date.getDay() === 5) {
-        onActivateTwoWeekView?.();
-      }
-
-      // Notify onboarding
-      onboarding.notifyCompleteAndContinue();
-    } else {
-      // Normal toggle
-      onToggleTodoComplete(todo.id);
-    }
+    onToggleTodoComplete(todo.id);
   };
 
   if (isEditing) {
@@ -248,9 +214,7 @@ export default function TodoItem({
         <div
           ref={setNodeRef}
           style={style}
-          className={`mt-2 relative ${
-            isDragging && !isCopyMode ? "opacity-0" : ""
-          }`}
+          className={`mt-2 relative ${isDragging ? "opacity-0" : ""}`}
         >
           <div
             {...attributes}
