@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { TrashIcon } from "@heroicons/react/20/solid";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
+import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
 import { getNextWorkdayAfterDate } from "./utils/todos";
 import { useOnboarding } from "./contexts/OnboardingContext";
@@ -231,67 +233,80 @@ export default function TodoItem({
     );
   }
 
+  const contextMenuItems = [
+    {
+      label: 'Delete',
+      icon: <TrashIcon className="size-4" />,
+      onClick: () => onDeleteTodo?.(todo.id),
+      danger: true,
+    },
+  ];
+
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`mt-2 relative ${
-        isDragging && !isCopyMode ? "opacity-0" : ""
-      }`}
-    >
-      <div
-        {...attributes}
-        {...listeners}
-        onClick={handleContainerClick}
-        onDoubleClick={handleDoubleClick}
-        onMouseDown={handleMouseDown}
-        onMouseUp={() => setIsPressed(false)}
-        onMouseLeave={() => setIsPressed(false)}
-        className={`group/todo relative flex gap-3 text-xs/5 px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
-          isPressed ? "bg-[var(--color-bg-hover)]" : ""
-        } ${todo.completed ? "opacity-60" : ""}`}
-      >
-        <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
-          <div className="group/checkbox relative grid size-4 grid-cols-1">
-            <input
-              id={`todo-${todo.id}`}
-              name="todo"
-              type="checkbox"
-              checked={todo.completed}
-              onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
-              className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
-            />
-            <svg
-              fill="none"
-              viewBox="0 0 14 14"
-              className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
-            >
-              <path
-                d="M3 8L6 11L11 3.5"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="opacity-0 group-has-checked/checkbox:opacity-100"
-              />
-            </svg>
-            {/* Larger click target overlay */}
-            <div
-              className="absolute inset-0 -m-2 cursor-default"
-              onClick={handleCheckboxClick}
-              aria-hidden="true"
-            />
-          </div>
-        </div>
+    <ContextMenu items={contextMenuItems}>
+      {(isContextMenuOpen) => (
         <div
-          className={`flex-1 min-w-0 text-xs/5 select-none ${
-            todo.completed
-              ? "line-through text-[var(--color-text-secondary)]"
-              : "text-[var(--color-text-primary)]"
+          ref={setNodeRef}
+          style={style}
+          className={`mt-2 relative ${
+            isDragging && !isCopyMode ? "opacity-0" : ""
           }`}
         >
-          <SmartEditor html={todo.text} editing={false} />
+          <div
+            {...attributes}
+            {...listeners}
+            onClick={handleContainerClick}
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            onMouseUp={() => setIsPressed(false)}
+            onMouseLeave={() => setIsPressed(false)}
+            className={`group/todo relative flex gap-3 text-xs/5 px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
+              isPressed || isContextMenuOpen ? "bg-[var(--color-bg-hover)]" : ""
+            } ${todo.completed ? "opacity-60" : ""}`}
+          >
+          <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+            <div className="group/checkbox relative grid size-4 grid-cols-1">
+              <input
+                id={`todo-${todo.id}`}
+                name="todo"
+                type="checkbox"
+                checked={todo.completed}
+                onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
+                className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
+              />
+              <svg
+                fill="none"
+                viewBox="0 0 14 14"
+                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
+              >
+                <path
+                  d="M3 8L6 11L11 3.5"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="opacity-0 group-has-checked/checkbox:opacity-100"
+                />
+              </svg>
+              {/* Larger click target overlay */}
+              <div
+                className="absolute inset-0 -m-2 cursor-default"
+                onClick={handleCheckboxClick}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+          <div
+            className={`flex-1 min-w-0 text-xs/5 select-none ${
+              todo.completed
+                ? "line-through text-[var(--color-text-secondary)]"
+                : "text-[var(--color-text-primary)]"
+            }`}
+          >
+            <SmartEditor html={todo.text} editing={false} />
+          </div>
         </div>
       </div>
-    </div>
+      )}
+    </ContextMenu>
   );
 }

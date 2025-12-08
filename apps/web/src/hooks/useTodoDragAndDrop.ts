@@ -18,6 +18,7 @@ interface UseTodoDragAndDropProps {
 export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDragAndDropProps) {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
   const [isCopyMode, setIsCopyMode] = useState(false)
+  const originalPositionRef = useRef<{ date: string; position: string } | null>(null)
 
   // Use refs to stabilize handler dependencies and prevent recreation during drag
   const todosRef = useRef(todos)
@@ -68,6 +69,8 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
     const todo = todosRef.current.find(t => t.id === event.active.id)
     if (todo) {
       setActiveTodo(todo)
+      // Store original position for copy mode restoration
+      originalPositionRef.current = { date: todo.date, position: todo.position }
       // Check if ALT (Windows/Linux) or Meta/CMD (Mac) is pressed
       const nativeEvent = (event.activatorEvent as PointerEvent)
       setIsCopyMode(nativeEvent.altKey || nativeEvent.metaKey)
@@ -85,10 +88,6 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
     const activeTodo = currentTodos.find(t => t.id === activeTodoId)
     if (!activeTodo) return
 
-    // In copy mode, don't perform visual updates during drag
-    // We'll handle the copy on drop
-    if (isCopyMode) return
-
     // Check if we're over a day cell (date string format) vs another todo
     const overTodo = currentTodos.find(t => t.id === overItemId)
 
@@ -97,12 +96,14 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
       const overDayId = overItemId
       if (activeTodo.date !== overDayId) {
         // Cross-day move to empty cell - update immediately for visual feedback
+        // In copy mode, this will be reverted on drag end
         onMoveTodoRef.current(activeTodoId, overDayId)
       }
     } else {
       // We're over another todo
       if (activeTodo.date !== overTodo.date) {
         // Moving to different day - update immediately for visual feedback
+        // In copy mode, this will be reverted on drag end
         const todosInTargetDay = currentTodos
           .filter(t => t.date === overTodo.date && t.id !== activeTodoId)
           .sort((a, b) => {
@@ -116,15 +117,31 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
       }
       // If same day, let SortableContext handle the reordering
     }
-  }, [isCopyMode])
+  }, [])
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
     const wasCopyMode = isCopyMode
+    const originalPosition = originalPositionRef.current
+
     setActiveTodo(null)
     setIsCopyMode(false)
+    originalPositionRef.current = null
 
-    if (!over) return
+    if (!over) {
+      // Drag cancelled - restore original position if in copy mode
+      if (wasCopyMode && originalPosition) {
+        const activeTodoId = active.id as string
+        const currentTodos = todosRef.current
+        const activeTodo = currentTodos.find(t => t.id === activeTodoId)
+
+        // Only restore if the todo was moved during drag
+        if (activeTodo && activeTodo.date !== originalPosition.date) {
+          onMoveTodoRef.current(activeTodoId, originalPosition.date)
+        }
+      }
+      return
+    }
 
     const activeTodoId = active.id as string
     const overItemId = over.id as string
@@ -188,7 +205,12 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo }: UseTodoDra
 
     // Handle copy vs move
     if (wasCopyMode) {
+      // Copy to new location
       onCopyTodoRef.current(activeTodoId, targetDate, targetIndex)
+      // Restore original to its original position (it was moved during drag for visual feedback)
+      if (originalPosition) {
+        onMoveTodoRef.current(activeTodoId, originalPosition.date)
+      }
     } else {
       onMoveTodoRef.current(activeTodoId, targetDate, targetIndex)
     }

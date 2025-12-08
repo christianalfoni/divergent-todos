@@ -51,7 +51,7 @@ export default function PreviousWeekDialog({
           <button
             type="button"
             onClick={onClose}
-            className="previous-week-dialog-close"
+            className="bg-transparent border-0 text-2xl text-[var(--color-text-secondary)] p-0 w-8 h-8 flex items-center justify-center rounded-md transition-all duration-150 hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]"
             aria-label="Close dialog"
           >
             ×
