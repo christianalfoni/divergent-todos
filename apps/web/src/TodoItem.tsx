@@ -157,7 +157,7 @@ export default function TodoItem({
 
   if (isEditing) {
     return (
-      <div className="mt-2 px-3 py-1" ref={containerRef}>
+      <div className="px-3 py-2" ref={containerRef}>
         <div className="flex gap-3">
           <div className="flex h-5 shrink-0 items-center">
             <div className="group/checkbox grid size-4 grid-cols-1">
@@ -214,7 +214,7 @@ export default function TodoItem({
         <div
           ref={setNodeRef}
           style={style}
-          className={`mt-2 relative ${isDragging ? "opacity-0" : ""}`}
+          className={`relative ${isDragging ? "opacity-0" : ""}`}
         >
           <div
             {...attributes}
@@ -224,7 +224,7 @@ export default function TodoItem({
             onMouseDown={handleMouseDown}
             onMouseUp={() => setIsPressed(false)}
             onMouseLeave={() => setIsPressed(false)}
-            className={`group/todo relative flex gap-3 text-xs/5 px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
+            className={`group/todo relative flex gap-3 text-xs/5 px-3 py-2 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
               isPressed || isContextMenuOpen ? "bg-[var(--color-bg-hover)]" : ""
             } ${todo.completed ? "opacity-60" : ""}`}
           >

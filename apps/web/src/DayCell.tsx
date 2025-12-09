@@ -148,7 +148,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
       {(isToday || isNextMonday) && isAuthenticated && hasOldUncompletedTodos && (
         <button
           onClick={onMoveIncompleteTodosToToday}
-          className="mx-3 mb-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="px-3 py-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
         >
           <div className="flex h-5 w-4 shrink-0 items-center justify-center">
@@ -191,7 +191,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
           <button
             onClick={handleAddTodoClick}
-            className="mt-2 px-3 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+            className="px-3 py-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
             style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
           >
             <div className="flex h-5 w-4 shrink-0 items-center justify-center">
@@ -214,7 +214,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           </button>
         )}
         {isAuthenticated && isAddingTodo && canAddTodo && (
-          <div className="mt-2 px-3">
+          <div className="px-3 py-2">
             <div className="flex gap-3">
               <div className="flex h-5 shrink-0 items-center">
                 <div className="group/checkbox grid size-4 grid-cols-1">

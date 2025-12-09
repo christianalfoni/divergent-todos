@@ -17,6 +17,9 @@ interface UseTodoDragAndDropProps {
 export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProps) {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
 
+  // Track the current container to prevent redundant updates
+  const currentContainerRef = useRef<string | null>(null)
+
   // Use refs to stabilize handler dependencies and prevent recreation during drag
   const todosRef = useRef(todos)
   const onMoveTodoRef = useRef(onMoveTodo)
@@ -39,6 +42,8 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     const todo = todosRef.current.find(t => t.id === event.active.id)
     if (todo) {
       setActiveTodo(todo)
+      // Initialize the current container to the starting date
+      currentContainerRef.current = todo.date
     }
   }, [])
 
@@ -59,14 +64,18 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     if (!overTodo) {
       // We're over an empty day cell
       const overDayId = overItemId
-      if (activeTodo.date !== overDayId) {
+      // Only update if we're moving to a different container AND we're not already in that container
+      if (activeTodo.date !== overDayId && currentContainerRef.current !== overDayId) {
         // Cross-day move to empty cell - update immediately for visual feedback
+        currentContainerRef.current = overDayId
         onMoveTodoRef.current(activeTodoId, overDayId)
       }
     } else {
       // We're over another todo
-      if (activeTodo.date !== overTodo.date) {
+      // Only update if we're moving to a different day AND we're not already in that container
+      if (activeTodo.date !== overTodo.date && currentContainerRef.current !== overTodo.date) {
         // Moving to different day - update immediately for visual feedback
+        currentContainerRef.current = overTodo.date
         const todosInTargetDay = currentTodos
           .filter(t => t.date === overTodo.date && t.id !== activeTodoId)
           .sort((a, b) => {
@@ -86,6 +95,8 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     const { active, over } = event
 
     setActiveTodo(null)
+    // Reset the current container tracker
+    currentContainerRef.current = null
 
     if (!over) return
 
