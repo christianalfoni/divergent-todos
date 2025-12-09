@@ -1,21 +1,20 @@
 import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { TrashIcon } from "@heroicons/react/20/solid";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
+import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
 import { getNextWorkdayAfterDate } from "./utils/todos";
-import { useOnboarding } from "./contexts/OnboardingContext";
+import { trackTodoCopied } from "./firebase/analytics";
 
 interface TodoItemProps {
   todo: Todo;
-  isCopyMode: boolean;
-  date: Date;
   onToggleTodoComplete: (todoId: string) => void;
   onCopyTodo?: (todoId: string, newDate: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenTimeBox?: (todo: Todo) => void;
-  onActivateTwoWeekView?: () => void;
   availableTags?: string[];
 }
 
@@ -30,14 +29,11 @@ function isHtmlEmpty(html: string): boolean {
 
 export default function TodoItem({
   todo,
-  isCopyMode,
-  date,
   onToggleTodoComplete,
   onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
   onOpenTimeBox,
-  onActivateTwoWeekView,
   availableTags = [],
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -49,7 +45,6 @@ export default function TodoItem({
   const originalHtmlRef = useRef<string>(todo.text);
   const lastClickTimeRef = useRef<number>(0);
   const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const onboarding = useOnboarding();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -162,25 +157,21 @@ export default function TodoItem({
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    // Check if CMD (Mac) or ALT (Windows/Linux) is pressed
-    if (e.metaKey || e.altKey) {
-      // Complete the current todo
+    // Check if CMD/ALT is held - if so, complete and copy to next workday
+    if ((e.metaKey || e.altKey) && !todo.completed && onCopyTodo) {
+      // First complete the current todo
       onToggleTodoComplete(todo.id);
 
-      // Get the next working day after this todo's date
-      const nextWorkday = getNextWorkdayAfterDate(date);
+      // Calculate next workday after the todo's date
+      const currentDate = new Date(todo.date);
+      const nextWorkday = getNextWorkdayAfterDate(currentDate);
       const nextWorkdayString = nextWorkday.toISOString().split("T")[0];
 
-      // Copy the todo to the next working day
-      onCopyTodo?.(todo.id, nextWorkdayString);
+      // Copy to next workday
+      onCopyTodo(todo.id, nextWorkdayString);
 
-      // If it's Friday (5), activate 2-week view
-      if (date.getDay() === 5) {
-        onActivateTwoWeekView?.();
-      }
-
-      // Notify onboarding
-      onboarding.notifyCompleteAndContinue();
+      // Track the analytics
+      trackTodoCopied({ method: 'complete-to-next-day' });
     } else {
       // Normal toggle
       onToggleTodoComplete(todo.id);
@@ -189,7 +180,7 @@ export default function TodoItem({
 
   if (isEditing) {
     return (
-      <div className="mt-2 px-3 py-1" ref={containerRef}>
+      <div className="px-3 py-2" ref={containerRef}>
         <div className="flex gap-3">
           <div className="flex h-5 shrink-0 items-center">
             <div className="group/checkbox grid size-4 grid-cols-1">
@@ -231,67 +222,78 @@ export default function TodoItem({
     );
   }
 
+  const contextMenuItems = [
+    {
+      label: 'Delete',
+      icon: <TrashIcon className="size-4" />,
+      onClick: () => onDeleteTodo?.(todo.id),
+      danger: true,
+    },
+  ];
+
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={`mt-2 relative ${
-        isDragging && !isCopyMode ? "opacity-0" : ""
-      }`}
-    >
-      <div
-        {...attributes}
-        {...listeners}
-        onClick={handleContainerClick}
-        onDoubleClick={handleDoubleClick}
-        onMouseDown={handleMouseDown}
-        onMouseUp={() => setIsPressed(false)}
-        onMouseLeave={() => setIsPressed(false)}
-        className={`group/todo relative flex gap-3 text-xs/5 px-3 py-1 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
-          isPressed ? "bg-[var(--color-bg-hover)]" : ""
-        } ${todo.completed ? "opacity-60" : ""}`}
-      >
-        <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
-          <div className="group/checkbox relative grid size-4 grid-cols-1">
-            <input
-              id={`todo-${todo.id}`}
-              name="todo"
-              type="checkbox"
-              checked={todo.completed}
-              onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
-              className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
-            />
-            <svg
-              fill="none"
-              viewBox="0 0 14 14"
-              className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
-            >
-              <path
-                d="M3 8L6 11L11 3.5"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="opacity-0 group-has-checked/checkbox:opacity-100"
+    <ContextMenu items={contextMenuItems}>
+      {(isContextMenuOpen) => (
+        <div
+          ref={setNodeRef}
+          style={style}
+          className={`relative ${isDragging ? "opacity-0" : ""}`}
+        >
+          <div
+            {...attributes}
+            {...listeners}
+            onClick={handleContainerClick}
+            onDoubleClick={handleDoubleClick}
+            onMouseDown={handleMouseDown}
+            onMouseUp={() => setIsPressed(false)}
+            onMouseLeave={() => setIsPressed(false)}
+            className={`group/todo relative flex gap-3 text-xs/5 px-3 py-2 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
+              isPressed || isContextMenuOpen ? "bg-[var(--color-bg-hover)]" : ""
+            } ${todo.completed ? "opacity-60" : ""}`}
+          >
+          <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
+            <div className="group/checkbox relative grid size-4 grid-cols-1">
+              <input
+                id={`todo-${todo.id}`}
+                name="todo"
+                type="checkbox"
+                checked={todo.completed}
+                onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
+                className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
               />
-            </svg>
-            {/* Larger click target overlay */}
-            <div
-              className="absolute inset-0 -m-2 cursor-default"
-              onClick={handleCheckboxClick}
-              aria-hidden="true"
-            />
+              <svg
+                fill="none"
+                viewBox="0 0 14 14"
+                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
+              >
+                <path
+                  d="M3 8L6 11L11 3.5"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="opacity-0 group-has-checked/checkbox:opacity-100"
+                />
+              </svg>
+              {/* Larger click target overlay */}
+              <div
+                className="absolute inset-0 -m-2 cursor-default"
+                onClick={handleCheckboxClick}
+                aria-hidden="true"
+              />
+            </div>
+          </div>
+          <div
+            className={`flex-1 min-w-0 text-xs/5 select-none ${
+              todo.completed
+                ? "line-through text-[var(--color-text-secondary)]"
+                : "text-[var(--color-text-primary)]"
+            }`}
+          >
+            <SmartEditor html={todo.text} editing={false} />
           </div>
         </div>
-        <div
-          className={`flex-1 min-w-0 text-xs/5 select-none ${
-            todo.completed
-              ? "line-through text-[var(--color-text-secondary)]"
-              : "text-[var(--color-text-primary)]"
-          }`}
-        >
-          <SmartEditor html={todo.text} editing={false} />
-        </div>
       </div>
-    </div>
+      )}
+    </ContextMenu>
   );
 }

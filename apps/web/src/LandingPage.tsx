@@ -409,6 +409,8 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     onToggleTodoComplete={() => {}}
                     onMoveTodo={() => {}}
                     onCopyTodo={() => {}}
+                    onResetTodoForCopy={() => {}}
+                    onAddTodoWithState={() => {}}
                     onUpdateTodo={() => {}}
                     onDeleteTodo={() => {}}
                     onMoveIncompleteTodosToToday={() => {}}

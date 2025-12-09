@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { DndContext, DragOverlay } from "@dnd-kit/core";
+import { DndContext, DragOverlay, pointerWithin } from "@dnd-kit/core";
 import DayCell from "./DayCell";
 import SmartEditor from "./SmartEditor";
 import TimeBoxDialog from "./TimeBoxDialog";
@@ -25,6 +25,8 @@ interface CalendarProps {
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
   onCopyTodo: (todoId: string, newDate: string, newIndex?: number) => void;
+  onResetTodoForCopy: (todoId: string) => void;
+  onAddTodoWithState: (todo: { text: string; date: string; completed: boolean; position?: string }) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
   onDeleteTodo: (todoId: string) => void;
   onMoveIncompleteTodosToToday: () => void;
@@ -44,6 +46,8 @@ export default function Calendar({
   onToggleTodoComplete,
   onMoveTodo,
   onCopyTodo,
+  onResetTodoForCopy,
+  onAddTodoWithState,
   onUpdateTodo,
   onDeleteTodo,
   onMoveIncompleteTodosToToday,
@@ -69,11 +73,10 @@ export default function Calendar({
   const {
     sensors,
     activeTodo,
-    isCopyMode,
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-  } = useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo });
+  } = useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState });
 
   const getTodosForDate = (date: Date): Todo[] => {
     const dateString = date.toISOString().split("T")[0];
@@ -174,6 +177,7 @@ export default function Calendar({
   return (
     <DndContext
       sensors={sensors}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -203,7 +207,6 @@ export default function Calendar({
                 isLoading={isLoading}
                 todos={getTodosForDate(date)}
                 allTodos={todos}
-                isCopyMode={isCopyMode}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onCopyTodo={onCopyTodo}
@@ -211,7 +214,6 @@ export default function Calendar({
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={handleOpenTimeBox}
                 onMoveIncompleteTodosToToday={onMoveIncompleteTodosToToday}
-                onActivateTwoWeekView={() => setViewMode("two-weeks")}
                 hasOldUncompletedTodos={hasOldUncompletedTodos}
               />
             );

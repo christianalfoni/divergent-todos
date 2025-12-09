@@ -15,7 +15,6 @@ interface DayCellProps {
   isLoading: boolean
   todos: Todo[]
   allTodos: Todo[] // All todos across all days for tag autocomplete
-  isCopyMode: boolean
   onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
   onToggleTodoComplete: (todoId: string) => void
   onCopyTodo: (todoId: string, newDate: string) => void
@@ -23,11 +22,10 @@ interface DayCellProps {
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
   onMoveIncompleteTodosToToday: () => void
-  onActivateTwoWeekView: () => void
   hasOldUncompletedTodos: boolean
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, isCopyMode, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, onActivateTwoWeekView, hasOldUncompletedTodos }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -151,7 +149,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
       {(isToday || isNextMonday) && isAuthenticated && hasOldUncompletedTodos && (
         <button
           onClick={onMoveIncompleteTodosToToday}
-          className="mx-3 mb-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+          className="px-3 py-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
           style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
         >
           <div className="flex h-5 w-4 shrink-0 items-center justify-center">
@@ -182,14 +180,11 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
               <TodoItem
                 key={todo.id}
                 todo={todo}
-                isCopyMode={isCopyMode}
-                date={date}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={onOpenTimeBox}
-                onActivateTwoWeekView={onActivateTwoWeekView}
                 availableTags={availableTags}
               />
             ))}
@@ -198,7 +193,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
           <button
             onClick={handleAddTodoClick}
-            className="mt-2 px-3 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
+            className="px-3 py-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
             style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
           >
             <div className="flex h-5 w-4 shrink-0 items-center justify-center">
@@ -221,7 +216,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           </button>
         )}
         {isAuthenticated && isAddingTodo && canAddTodo && (
-          <div className="mt-2 px-3">
+          <div className="px-3 py-2">
             <div className="flex gap-3">
               <div className="flex h-5 shrink-0 items-center">
                 <div className="group/checkbox grid size-4 grid-cols-1">
