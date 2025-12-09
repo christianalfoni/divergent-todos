@@ -370,6 +370,102 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     [firebaseTodos, batchEditTodos]
   );
 
+  const setTodoCompleted = useCallback(
+    (todoId: string, completed: boolean) => {
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
+
+      editTodo({
+        id: todoId,
+        description: todo.description,
+        completed: completed,
+        date: todo.date,
+        completedAt: completed ? new Date() : undefined,
+      });
+    },
+    [firebaseTodos, editTodo]
+  );
+
+  const resetTodoForCopy = useCallback(
+    (todoId: string) => {
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
+
+      // Reset to incomplete and clear metadata
+      editTodo({
+        id: todoId,
+        description: todo.description,
+        completed: false,
+        date: todo.date,
+        moveCount: 0,
+        completedAt: undefined,
+        completedWithTimeBox: false,
+      });
+    },
+    [firebaseTodos, editTodo]
+  );
+
+  const addTodoWithState = useCallback(
+    (todo: { text: string; date: string; completed: boolean; position?: string }) => {
+      const dateObj = new Date(todo.date);
+
+      // Check if user has reached the free limit (applies to both web and desktop)
+      // Skip limit check during onboarding
+      if (!onboarding.isOnboarding) {
+        const hasActiveSubscription = profile?.subscription?.status === "active";
+        const freeTodoCount = profile?.freeTodoCount ?? 0;
+
+        if (!hasActiveSubscription && freeTodoCount >= 20) {
+          trackFreeLimitReached(freeTodoCount);
+          onShowSubscriptionDialog();
+          return;
+        }
+      }
+
+      // Generate document ID upfront
+      const todoDoc = doc(todosCollection);
+      const docId = todoDoc.id;
+
+      // Use provided position or calculate a new one
+      let newPosition: string;
+      if (todo.position) {
+        // Use the provided position directly
+        newPosition = todo.position;
+      } else {
+        // Find last position for this date (including pending todos)
+        const allTodosForDate = [
+          ...firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === todo.date),
+          ...getPendingAsTodos().filter((t) => t.date === todo.date)
+        ];
+        const todosForDate = sortTodosByPosition(allTodosForDate);
+
+        const lastPosition = todosForDate.length > 0 ? todosForDate[todosForDate.length - 1].position : null;
+        newPosition = generateKeyBetween(lastPosition, null);
+      }
+
+      // Add to pending immediately for optimistic update
+      addPending({
+        id: docId,
+        text: todo.text,
+        completed: todo.completed,
+        date: todo.date,
+        position: newPosition,
+        createdAt: new Date(),
+        isPending: true,
+      });
+
+      // Add to Firebase (with the pre-generated ID and position)
+      addTodo({
+        description: todo.text,
+        date: dateObj,
+        position: newPosition,
+        docId,
+        completed: todo.completed,
+      });
+    },
+    [onboarding, firebaseTodos, profile, addTodo, onShowSubscriptionDialog, addPending, getPendingAsTodos]
+  );
+
   return {
     handleAddTodo,
     toggleTodoComplete,
@@ -378,6 +474,9 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     moveTodosInBatch,
     updateTodo,
     handleDeleteTodo,
+    setTodoCompleted,
+    resetTodoForCopy,
+    addTodoWithState,
     getPendingAsTodos,
     removePending,
   };

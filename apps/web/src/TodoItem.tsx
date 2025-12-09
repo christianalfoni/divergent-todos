@@ -5,10 +5,13 @@ import { TrashIcon } from "@heroicons/react/20/solid";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
+import { getNextWorkdayAfterDate } from "./utils/todos";
+import { trackTodoCopied } from "./firebase/analytics";
 
 interface TodoItemProps {
   todo: Todo;
   onToggleTodoComplete: (todoId: string) => void;
+  onCopyTodo?: (todoId: string, newDate: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenTimeBox?: (todo: Todo) => void;
@@ -27,6 +30,7 @@ function isHtmlEmpty(html: string): boolean {
 export default function TodoItem({
   todo,
   onToggleTodoComplete,
+  onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
   onOpenTimeBox,
@@ -152,7 +156,26 @@ export default function TodoItem({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onToggleTodoComplete(todo.id);
+
+    // Check if CMD/ALT is held - if so, complete and copy to next workday
+    if ((e.metaKey || e.altKey) && !todo.completed && onCopyTodo) {
+      // First complete the current todo
+      onToggleTodoComplete(todo.id);
+
+      // Calculate next workday after the todo's date
+      const currentDate = new Date(todo.date);
+      const nextWorkday = getNextWorkdayAfterDate(currentDate);
+      const nextWorkdayString = nextWorkday.toISOString().split("T")[0];
+
+      // Copy to next workday
+      onCopyTodo(todo.id, nextWorkdayString);
+
+      // Track the analytics
+      trackTodoCopied({ method: 'complete-to-next-day' });
+    } else {
+      // Normal toggle
+      onToggleTodoComplete(todo.id);
+    }
   };
 
   if (isEditing) {

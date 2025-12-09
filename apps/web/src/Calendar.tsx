@@ -24,6 +24,9 @@ interface CalendarProps {
   onAddTodo: (todo: Omit<Todo, "id" | "position"> & { position?: string }) => void;
   onToggleTodoComplete: (todoId: string) => void;
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void;
+  onCopyTodo: (todoId: string, newDate: string, newIndex?: number) => void;
+  onResetTodoForCopy: (todoId: string) => void;
+  onAddTodoWithState: (todo: { text: string; date: string; completed: boolean; position?: string }) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
   onDeleteTodo: (todoId: string) => void;
   onMoveIncompleteTodosToToday: () => void;
@@ -42,6 +45,9 @@ export default function Calendar({
   onAddTodo,
   onToggleTodoComplete,
   onMoveTodo,
+  onCopyTodo,
+  onResetTodoForCopy,
+  onAddTodoWithState,
   onUpdateTodo,
   onDeleteTodo,
   onMoveIncompleteTodosToToday,
@@ -70,7 +76,7 @@ export default function Calendar({
     handleDragStart,
     handleDragOver,
     handleDragEnd,
-  } = useTodoDragAndDrop({ todos, onMoveTodo });
+  } = useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState });
 
   const getTodosForDate = (date: Date): Todo[] => {
     const dateString = date.toISOString().split("T")[0];
@@ -203,6 +209,7 @@ export default function Calendar({
                 allTodos={todos}
                 onAddTodo={onAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
+                onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={handleOpenTimeBox}

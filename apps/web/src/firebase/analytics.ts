@@ -61,7 +61,10 @@ export function trackTodoMoved(params?: {
   amplitude.track("todo_moved", params);
 }
 
-export function trackTodoCopied(params?: { isOnboarding?: boolean }) {
+export function trackTodoCopied(params?: {
+  isOnboarding?: boolean;
+  method?: "drag" | "complete-to-next-day" | "other";
+}) {
   amplitude.track("todo_copied", params);
 }
 

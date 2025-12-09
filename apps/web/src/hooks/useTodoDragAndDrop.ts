@@ -7,28 +7,65 @@ import {
   type DragOverEvent,
   type DragEndEvent,
 } from '@dnd-kit/core'
+import { generateKeyBetween } from 'fractional-indexing'
 import type { Todo } from '../App'
+import { trackTodoCopied } from '../firebase/analytics'
 
 interface UseTodoDragAndDropProps {
   todos: Todo[]
   onMoveTodo: (todoId: string, newDate: string, newIndex?: number) => void
+  onCopyTodo: (todoId: string, newDate: string, newIndex?: number) => void
+  onResetTodoForCopy: (todoId: string) => void
+  onAddTodoWithState: (todo: { text: string; date: string; completed: boolean; position?: string }) => void
 }
 
-export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProps) {
+export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState }: UseTodoDragAndDropProps) {
   const [activeTodo, setActiveTodo] = useState<Todo | null>(null)
+  const [isCopyMode, setIsCopyMode] = useState(false)
 
   // Track the current container to prevent redundant updates
   const currentContainerRef = useRef<string | null>(null)
+  // Track the original date when drag starts (for copy mode detection)
+  const originalDateRef = useRef<string | null>(null)
 
   // Use refs to stabilize handler dependencies and prevent recreation during drag
   const todosRef = useRef(todos)
   const onMoveTodoRef = useRef(onMoveTodo)
+  const onCopyTodoRef = useRef(onCopyTodo)
+  const onResetTodoForCopyRef = useRef(onResetTodoForCopy)
+  const onAddTodoWithStateRef = useRef(onAddTodoWithState)
 
   // Keep refs updated with latest values
   useEffect(() => {
     todosRef.current = todos
     onMoveTodoRef.current = onMoveTodo
-  }, [todos, onMoveTodo])
+    onCopyTodoRef.current = onCopyTodo
+    onResetTodoForCopyRef.current = onResetTodoForCopy
+    onAddTodoWithStateRef.current = onAddTodoWithState
+  }, [todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState])
+
+  // Track CMD/ALT key state
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.altKey) {
+        setIsCopyMode(true)
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (!e.metaKey && !e.altKey) {
+        setIsCopyMode(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -44,8 +81,47 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
       setActiveTodo(todo)
       // Initialize the current container to the starting date
       currentContainerRef.current = todo.date
+      // Store the original date for later comparison
+      originalDateRef.current = todo.date
+
+      // Check if CMD/ALT is held from the actual pointer event
+      const pointerEvent = event.activatorEvent as PointerEvent
+      const isCopyModeDuringDrag = pointerEvent?.metaKey || pointerEvent?.altKey || isCopyMode
+
+      // If in copy mode, immediately create an optimistic copy at the source and reset the dragged todo
+      if (isCopyModeDuringDrag) {
+        // Find todos on the same day, sorted by position
+        const todosInDay = todosRef.current
+          .filter(t => t.date === todo.date)
+          .sort((a, b) => {
+            if (a.position < b.position) return -1;
+            if (a.position > b.position) return 1;
+            return 0;
+          })
+
+        // Find the index of the current todo
+        const currentIndex = todosInDay.findIndex(t => t.id === todo.id)
+
+        // Calculate a new position between the previous todo and current todo
+        const beforeTodo = currentIndex > 0 ? todosInDay[currentIndex - 1] : null
+        const newPosition = generateKeyBetween(beforeTodo?.position || null, todo.position)
+
+        // Create optimistic copy at source with original state
+        onAddTodoWithStateRef.current({
+          text: todo.text,
+          date: todo.date,
+          completed: todo.completed,
+          position: newPosition,
+        })
+
+        // Reset the dragged todo to incomplete (will apply when drag ends)
+        onResetTodoForCopyRef.current(todo.id)
+
+        // Track CMD+drag copy
+        trackTodoCopied({ method: 'drag' })
+      }
     }
-  }, [])
+  }, [isCopyMode])
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { active, over } = event
@@ -94,9 +170,12 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event
 
+    const originalDate = originalDateRef.current
+
     setActiveTodo(null)
     // Reset the current container tracker
     currentContainerRef.current = null
+    originalDateRef.current = null
 
     if (!over) return
 
@@ -119,7 +198,8 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
     if (overTodo) {
       targetDate = overTodo.date
 
-      if (activeTodo.date === overTodo.date) {
+      // Use original date for comparison, not current date (which may have been updated by handleDragOver)
+      if (originalDate === overTodo.date) {
         // Same-day reordering
         const todosInDay = currentTodos
           .filter(t => t.date === activeTodo.date)
@@ -154,12 +234,12 @@ export function useTodoDragAndDrop({ todos, onMoveTodo }: UseTodoDragAndDropProp
       targetIndex = undefined
     }
 
-    // If same date, do nothing
-    if (activeTodo.date === targetDate) return
+    // Check if we're dropping on the same date as we started from
+    if (originalDate === targetDate) return
 
-    // Finalize the move
+    // Finalize the move (reset was already queued in handleDragStart if copy mode)
     onMoveTodoRef.current(activeTodoId, targetDate, targetIndex)
-  }, [])
+  }, [isCopyMode])
 
   return {
     sensors,
