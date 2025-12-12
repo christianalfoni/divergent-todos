@@ -1,0 +1,12 @@
+# Allow all search engines
+User-agent: *
+Allow: /
+
+# Disallow authentication/admin routes (if any)
+# Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://divergent-todos.com/sitemap.xml
+
+# Crawl delay (optional, in seconds)
+# Crawl-delay: 1

@@ -220,7 +220,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
     <div className="bg-white dark:bg-gray-900 h-screen overflow-hidden">
       <main className="h-full">
         {/* Hero section */}
-        <div className="relative isolate overflow-hidden bg-white dark:bg-gray-900 h-full">
+        <section className="relative isolate overflow-hidden bg-white dark:bg-gray-900 h-full" aria-labelledby="hero-heading">
           <svg
             aria-hidden="true"
             className="absolute inset-0 -z-10 size-full mask-[radial-gradient(100%_100%_at_top_right,white,transparent)] stroke-gray-200 dark:stroke-white/10"
@@ -259,7 +259,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
           </div>
           <div className="mx-auto max-w-7xl px-6 h-full flex items-center lg:px-8">
             <div className="mx-auto max-w-2xl shrink-0 lg:mx-0">
-              <div className="flex items-center gap-3">
+              <header className="flex items-center gap-3">
                 <svg
                   width="32"
                   height="32"
@@ -267,7 +267,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-11 w-auto"
-                  aria-label="Divergent Todos"
+                  aria-label="Divergent Todos Logo"
                 >
                   {/* Upper left corner */}
                   <path
@@ -302,7 +302,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                 <span className="text-lg font-light text-gray-900 dark:text-white tracking-widest">
                   DIVERGENT TODOS
                 </span>
-              </div>
+              </header>
               <div className="mt-10 sm:mt-12 lg:mt-8">
                 <a href="https://www.youtube.com/watch?v=qBoONStM63Y" target="_blank" rel="noopener noreferrer" className="inline-flex space-x-6">
                   <span className="rounded-full bg-indigo-50 px-3 py-1 text-sm/6 font-semibold text-indigo-600 ring-1 ring-indigo-600/20 ring-inset dark:bg-indigo-500/10 dark:text-indigo-400 dark:ring-indigo-500/25">
@@ -314,7 +314,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                   </span>
                 </a>
               </div>
-              <h1 className="mt-10 text-5xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-7xl dark:text-white">
+              <h1 id="hero-heading" className="mt-10 text-5xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-7xl dark:text-white">
                 Own Your Attention with Divergent Todos
               </h1>
               <p className="mt-8 text-lg font-medium text-pretty text-gray-500 sm:text-xl/8 dark:text-gray-400">
@@ -421,7 +421,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
       </main>
     </div>

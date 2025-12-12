@@ -44,9 +44,6 @@ importers:
 
   apps/web:
     dependencies:
-      '@amplitude/analytics-browser':
-        specifier: ^2.26.0
-        version: 2.26.0
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -80,6 +77,9 @@ importers:
       pipesy:
         specifier: ^0.0.6
         version: 0.0.6(react@19.2.0)
+      posthog-js:
+        specifier: ^1.306.0
+        version: 1.306.0
       react:
         specifier: ^19.1.1
         version: 19.2.0
@@ -174,33 +174,6 @@ packages:
 
   7zip-bin@5.2.0:
     resolution: {integrity: sha512-ukTPVhqG4jNzMro2qA9HSCSSVJN3aN7tlb+hfqYCt3ER0yWroeA2VR38MNrOHLQ/cVj+DaIMad0kFCtWWowh/A==}
-
-  '@amplitude/analytics-browser@2.26.0':
-    resolution: {integrity: sha512-qbHb7H+J2tDRKVKNK8eMIqi2ixKy6wNbDz4+sPC4Mbq8MWdit0eGqi3GYfoNAq19D8DO91fMH20jy1zcuD9HlA==}
-
-  '@amplitude/analytics-client-common@2.4.5':
-    resolution: {integrity: sha512-n4uq5YUm51FibTc3cvPdrdhqtim47cuohBLWcEszUc5YAQxi9Nkbi9eAgq40vCwglmmOsOxrwp9DeZHL4r/47Q==}
-
-  '@amplitude/analytics-connector@1.6.4':
-    resolution: {integrity: sha512-SpIv0IQMNIq6SH3UqFGiaZyGSc7PBZwRdq7lvP0pBxW8i4Ny+8zwI0pV+VMfMHQwWY3wdIbWw5WQphNjpdq1/Q==}
-
-  '@amplitude/analytics-core@2.27.0':
-    resolution: {integrity: sha512-L6kq9c0WA/CE2Gq82P/YQK1kJKLTUcHhWf0yvIUqaK94fy1T5sia4v+zzL3i26XmwbGikJaRHvgOHQNSFl478Q==}
-
-  '@amplitude/analytics-types@2.10.0':
-    resolution: {integrity: sha512-WP8eEbJh10MmFVnxkHjg92i5DBxBFsRvSZxjDQPXEGL8ZP+i7rSsleiH2K3VrwoKksYfZ/1eAqrZvevAmjSlig==}
-
-  '@amplitude/plugin-autocapture-browser@1.15.0':
-    resolution: {integrity: sha512-ddzgKaKpCEaGiPueM/1wRMA1uswsavhAtxNmEAdEXNcTnm0B48M8zwRfwJv5TbcCKdfCLTNp48egCNNlZeu1yQ==}
-
-  '@amplitude/plugin-network-capture-browser@1.6.6':
-    resolution: {integrity: sha512-Cu8Wp/cpsd/pmm5pRF9xTtjVvt0YDDcMwlHWxcqSgwSIHu93dlzNngBFsXJyS7dGmxQc6X42lyovvZJplLE4QA==}
-
-  '@amplitude/plugin-page-view-tracking-browser@2.5.0':
-    resolution: {integrity: sha512-VnRyUgCUv71MRoCgAX2td93zldEEltfXNZAzf3jpo6ncSQhkaa5/tXMIYvQNkDWyHBubVnaE2SIS17I/q272ag==}
-
-  '@amplitude/plugin-web-vitals-browser@0.1.0-frustrationanalytics.0':
-    resolution: {integrity: sha512-xv4sje6/D8r+SgNFTA22FJ5PhtdhN+VSydvs63Frll+qWlyQwaZ1IgDbPyqjzryEkldHRPD7GUaQual+geoIYg==}
 
   '@babel/code-frame@7.27.1':
     resolution: {integrity: sha512-cjQ7ZlQ0Mv3b47hABuTevyTuYN4i+loJKGeV9flcCgIK37cCXRh+L1bd3iBHlynerhQ7BhCkn2BPbQUL+rGqFg==}
@@ -1132,6 +1105,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  '@posthog/core@1.7.1':
+    resolution: {integrity: sha512-kjK0eFMIpKo9GXIbts8VtAknsoZ18oZorANdtuTj1CbgS28t4ZVq//HAWhnxEuXRTrtkd+SUJ6Ux3j2Af8NCuA==}
+
   '@protobufjs/aspromise@1.1.2':
     resolution: {integrity: sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ==}
 
@@ -2047,6 +2023,9 @@ packages:
     resolution: {integrity: sha512-9Kr/j4O16ISv8zBBhJoi4bXOYNTkFLOqSL3UDB0njXxCXNezjeyVrJyGOWtgfs/q2km1gwBcfH8q1yEGoMYunA==}
     engines: {node: '>=18'}
 
+  core-js@3.47.0:
+    resolution: {integrity: sha512-c3Q2VVkGAUyupsjRnaNX6u8Dq2vAdzm9iuPj5FW0fRxzlxgq9Q39MDq10IvmQSpLgHQNyQzQmOo6bgGHmH3NNg==}
+
   core-util-is@1.0.2:
     resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
 
@@ -2446,6 +2425,9 @@ packages:
     peerDependenciesMeta:
       picomatch:
         optional: true
+
+  fflate@0.4.8:
+    resolution: {integrity: sha512-FJqqoDBR00Mdj9ppamLa/Y7vxm+PRmNWA67N846RvsoYVMKB4q3y/de5PA7gUmRMYK/8CMz2GDZQmCRN1wBcWA==}
 
   file-entry-cache@8.0.0:
     resolution: {integrity: sha512-XXTUwCvisa5oacNGRP9SfNtYBNAMi+RPwBFmblZEF7N7swHYQS6/Zfk7SRwx4D5j3CH211YNRco1DEMNVfZCnQ==}
@@ -3659,10 +3641,16 @@ packages:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
+  posthog-js@1.306.0:
+    resolution: {integrity: sha512-sjsy0El4HL6PgbyWiUF0CaKb2d1Q8okbSeT4eajan3QSvkWus6ygHQuW2l4lfvp6NLRQrIZKH/0sUanhASptUQ==}
+
   postject@1.0.0-alpha.6:
     resolution: {integrity: sha512-b9Eb8h2eVqNE8edvKdwqkrY6O7kAwmI8kcnBv1NScolYJbo59XUF0noFq+lxbC1yN20bmC0WBEbDC5H/7ASb0A==}
     engines: {node: '>=14.0.0'}
     hasBin: true
+
+  preact@10.28.0:
+    resolution: {integrity: sha512-rytDAoiXr3+t6OIP3WGlDd0ouCUG1iCWzkcY3++Nreuoi17y6T5i/zRhe6uYfoVcxq6YU+sBtJouuRDsq8vvqA==}
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -3888,9 +3876,6 @@ packages:
 
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
-
-  rxjs@7.8.2:
-    resolution: {integrity: sha512-dhKf903U/PQZY6boNNtAGdWbG85WAbjT/1xYoZIC7FAY0yWapOBQVsVrDl58W86//e1VpMNBtRV4MaXfdMySFA==}
 
   safe-buffer@5.1.2:
     resolution: {integrity: sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==}
@@ -4449,9 +4434,6 @@ packages:
   web-vitals@4.2.4:
     resolution: {integrity: sha512-r4DIlprAGwJ7YM11VZp4R884m0Vmgr6EAKe3P+kO0PPj3Unqyvv59rczf6UiGcb9Z8QxZVcqKNwv/g0WNdWwsw==}
 
-  web-vitals@5.1.0:
-    resolution: {integrity: sha512-ArI3kx5jI0atlTtmV0fWU3fjpLmq/nD3Zr1iFFlJLaqa5wLBkUSzINwBPySCX/8jRyjlmy1Volw1kz1g9XE4Jg==}
-
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
@@ -4565,57 +4547,6 @@ packages:
 snapshots:
 
   7zip-bin@5.2.0: {}
-
-  '@amplitude/analytics-browser@2.26.0':
-    dependencies:
-      '@amplitude/analytics-core': 2.27.0
-      '@amplitude/plugin-autocapture-browser': 1.15.0
-      '@amplitude/plugin-network-capture-browser': 1.6.6
-      '@amplitude/plugin-page-view-tracking-browser': 2.5.0
-      '@amplitude/plugin-web-vitals-browser': 0.1.0-frustrationanalytics.0
-      tslib: 2.8.1
-
-  '@amplitude/analytics-client-common@2.4.5':
-    dependencies:
-      '@amplitude/analytics-connector': 1.6.4
-      '@amplitude/analytics-core': 2.27.0
-      '@amplitude/analytics-types': 2.10.0
-      tslib: 2.8.1
-
-  '@amplitude/analytics-connector@1.6.4': {}
-
-  '@amplitude/analytics-core@2.27.0':
-    dependencies:
-      '@amplitude/analytics-connector': 1.6.4
-      tslib: 2.8.1
-
-  '@amplitude/analytics-types@2.10.0': {}
-
-  '@amplitude/plugin-autocapture-browser@1.15.0':
-    dependencies:
-      '@amplitude/analytics-core': 2.27.0
-      rxjs: 7.8.2
-      tslib: 2.8.1
-
-  '@amplitude/plugin-network-capture-browser@1.6.6':
-    dependencies:
-      '@amplitude/analytics-core': 2.27.0
-      rxjs: 7.8.2
-      tslib: 2.8.1
-
-  '@amplitude/plugin-page-view-tracking-browser@2.5.0':
-    dependencies:
-      '@amplitude/analytics-client-common': 2.4.5
-      '@amplitude/analytics-core': 2.27.0
-      '@amplitude/analytics-types': 2.10.0
-      tslib: 2.8.1
-
-  '@amplitude/plugin-web-vitals-browser@0.1.0-frustrationanalytics.0':
-    dependencies:
-      '@amplitude/analytics-core': 2.27.0
-      rxjs: 7.8.2
-      tslib: 2.8.1
-      web-vitals: 5.1.0
 
   '@babel/code-frame@7.27.1':
     dependencies:
@@ -5822,6 +5753,10 @@ snapshots:
     dependencies:
       playwright: 1.56.1
 
+  '@posthog/core@1.7.1':
+    dependencies:
+      cross-spawn: 7.0.6
+
   '@protobufjs/aspromise@1.1.2': {}
 
   '@protobufjs/base64@1.1.2': {}
@@ -6813,6 +6748,8 @@ snapshots:
 
   cookie@1.0.2: {}
 
+  core-js@3.47.0: {}
+
   core-util-is@1.0.2: {}
 
   cors@2.8.5:
@@ -7340,6 +7277,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.3):
     optionalDependencies:
       picomatch: 4.0.3
+
+  fflate@0.4.8: {}
 
   file-entry-cache@8.0.0:
     dependencies:
@@ -8614,10 +8553,20 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
+  posthog-js@1.306.0:
+    dependencies:
+      '@posthog/core': 1.7.1
+      core-js: 3.47.0
+      fflate: 0.4.8
+      preact: 10.28.0
+      web-vitals: 4.2.4
+
   postject@1.0.0-alpha.6:
     dependencies:
       commander: 9.5.0
     optional: true
+
+  preact@10.28.0: {}
 
   prelude-ls@1.2.1: {}
 
@@ -8885,10 +8834,6 @@ snapshots:
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
-
-  rxjs@7.8.2:
-    dependencies:
-      tslib: 2.8.1
 
   safe-buffer@5.1.2: {}
 
@@ -9460,8 +9405,6 @@ snapshots:
       defaults: 1.0.4
 
   web-vitals@4.2.4: {}
-
-  web-vitals@5.1.0: {}
 
   webidl-conversions@3.0.1: {}
 

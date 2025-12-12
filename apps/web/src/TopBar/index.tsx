@@ -122,6 +122,7 @@ export default function TopBar({
     setIsOpeningPortal(true);
     try {
       await openBillingPortal({ returnUrl: window.location.origin });
+      setIsOpeningPortal(false);
     } catch (err) {
       console.error("Failed to open billing portal:", err);
       setIsOpeningPortal(false);
