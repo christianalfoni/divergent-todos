@@ -1388,3 +1388,9 @@ export const cleanupOldTestUsers = onSchedule(
     }
   }
 );
+
+// ============================================================================
+// Create Momentum - AI Task Decomposition
+// ============================================================================
+
+export { createMomentum } from "./createMomentum.js";

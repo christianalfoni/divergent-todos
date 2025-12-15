@@ -2,12 +2,83 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+
+    <!-- Primary Meta Tags -->
+    <title>Divergent Todos - Own Your Attention, Plan Your Focus</title>
+    <meta name="title" content="Divergent Todos - Own Your Attention, Plan Your Focus" />
+    <meta name="description" content="Stop letting your tools compete for your attention. Divergent Todos is a minimalist task management app that helps you plan where your focus goes, one day at a time." />
+    <meta name="keywords" content="todo app, task management, productivity app, focus management, attention management, daily planner, week planner, electron app" />
+    <meta name="author" content="Divergent Todos" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#4f46e5" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://divergent-todos.com/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://divergent-todos.com/" />
+    <meta property="og:title" content="Divergent Todos - Own Your Attention, Plan Your Focus" />
+    <meta property="og:description" content="Stop letting your tools compete for your attention. Plan where your focus goes, one day at a time." />
+    <meta property="og:image" content="https://divergent-todos.com/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Divergent Todos" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://divergent-todos.com/" />
+    <meta property="twitter:title" content="Divergent Todos - Own Your Attention, Plan Your Focus" />
+    <meta property="twitter:description" content="Stop letting your tools compete for your attention. Plan where your focus goes, one day at a time." />
+    <meta property="twitter:image" content="https://divergent-todos.com/og-image.png" />
+
+    <!-- Favicons -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Divergent Todos</title>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Divergent Todos",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": ["Windows", "macOS", "Linux"],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "description": "A minimalist task management app that helps you own your attention and plan where your focus goes, one day at a time.",
+      "screenshot": "https://divergent-todos.com/screenshot.png",
+      "url": "https://divergent-todos.com",
+      "downloadUrl": "https://github.com/ChristianAlfoni/divergent-todos/releases/latest",
+      "softwareVersion": "1.20.0",
+      "author": {
+        "@type": "Organization",
+        "name": "Divergent Todos"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Divergent Todos",
+      "url": "https://divergent-todos.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://divergent-todos.com/?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
     <script>
       // Apply theme immediately to prevent flash
       (function() {

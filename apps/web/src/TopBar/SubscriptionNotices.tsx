@@ -46,7 +46,11 @@ export default function SubscriptionNotices({
           />
         </svg>
         <span>
-          {subscriptionStatus === "unpaid" ? "Payment failed" : "Payment past due"}
+          {isOpeningPortal
+            ? "Opening..."
+            : subscriptionStatus === "unpaid"
+              ? "Payment failed"
+              : "Payment past due"}
         </span>
       </button>
     );

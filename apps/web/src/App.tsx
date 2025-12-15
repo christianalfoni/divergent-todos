@@ -8,6 +8,7 @@ import AuthModal from "./AuthModal";
 import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
 import PreviousWeekDialog from "./PreviousWeekDialog";
+import CreateMomentumDialog from "./CreateMomentumDialog";
 import TopBar from "./TopBar";
 import MobileBlocker from "./MobileBlocker";
 import Terms from "./Terms";
@@ -80,6 +81,10 @@ function AppContent() {
     todoCount: number;
     dailyCounts: [number, number, number, number, number];
     userId: string;
+  } | null>(null);
+  const [createMomentumDialog, setCreateMomentumDialog] = useState<{
+    show: boolean;
+    todo: Todo | null;
   } | null>(null);
   const onboarding = useOnboarding();
   const profile = authentication.profile;
@@ -550,6 +555,7 @@ function AppContent() {
             onDeleteTodo={
               authentication.user ? todoOperations.handleDeleteTodo : () => {}
             }
+            onOpenBreakDown={(todo) => setCreateMomentumDialog({ show: true, todo })}
             onMoveIncompleteTodosToToday={
               authentication.user ? moveOldTodosToNextWorkday : () => {}
             }
@@ -601,6 +607,15 @@ function AppContent() {
           todoCount={previousWeekDialog.todoCount}
           dailyCounts={previousWeekDialog.dailyCounts}
           onClose={handleStartWeek}
+        />
+      )}
+      {createMomentumDialog?.show && createMomentumDialog.todo && (
+        <CreateMomentumDialog
+          todo={createMomentumDialog.todo}
+          isOpen={createMomentumDialog.show}
+          onClose={() => setCreateMomentumDialog(null)}
+          onAddTodo={todoOperations.addTodoWithState}
+          onToggleTodoComplete={todoOperations.toggleTodoComplete}
         />
       )}
     </div>

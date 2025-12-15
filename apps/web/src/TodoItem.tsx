@@ -15,6 +15,7 @@ interface TodoItemProps {
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenTimeBox?: (todo: Todo) => void;
+  onOpenBreakDown?: (todo: Todo) => void;
   availableTags?: string[];
 }
 
@@ -34,6 +35,7 @@ export default function TodoItem({
   onUpdateTodo,
   onDeleteTodo,
   onOpenTimeBox,
+  onOpenBreakDown,
   availableTags = [],
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
@@ -139,7 +141,17 @@ export default function TodoItem({
     setIsPressed(true);
   };
 
-  const handleContainerClick = (_e: React.MouseEvent) => {
+  const handleContainerClick = (e: React.MouseEvent) => {
+    // Check for CMD/ALT + SHIFT + Click (break down shortcut)
+    const isBreakDownShortcut = (e.metaKey || e.altKey) && e.shiftKey;
+
+    if (isBreakDownShortcut && !todo.completed && onOpenBreakDown) {
+      e.preventDefault();
+      e.stopPropagation();
+      onOpenBreakDown(todo);
+      return;
+    }
+
     // Delay edit mode activation to allow for double-click
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
