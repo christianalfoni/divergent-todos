@@ -413,6 +413,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     onAddTodoWithState={() => {}}
                     onUpdateTodo={() => {}}
                     onDeleteTodo={() => {}}
+                    onOpenBreakDown={() => {}}
                     onMoveIncompleteTodosToToday={() => {}}
                     hasOldUncompletedTodos={false}
                     profile={mockProfile}

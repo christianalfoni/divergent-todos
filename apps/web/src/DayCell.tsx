@@ -21,11 +21,12 @@ interface DayCellProps {
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenTimeBox: (todo: Todo) => void
+  onOpenBreakDown: (todo: Todo) => void
   onMoveIncompleteTodosToToday: () => void
   hasOldUncompletedTodos: boolean
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -185,6 +186,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenTimeBox={onOpenTimeBox}
+                onOpenBreakDown={onOpenBreakDown}
                 availableTags={availableTags}
               />
             ))}
