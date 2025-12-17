@@ -3,8 +3,8 @@ import "./index.css";
 import App from "./App.tsx";
 import { CacheProvider } from "pipesy";
 import ErrorBoundary from "./ErrorBoundary.tsx";
-import "./firebase/admin"; // Load admin tools for console access
-import "./test-helpers"; // Load test helpers for E2E testing (dev only)
+import "./firebase/admin";
+import "./test-helpers";
 
 createRoot(document.getElementById("root")!).render(
   <ErrorBoundary>
