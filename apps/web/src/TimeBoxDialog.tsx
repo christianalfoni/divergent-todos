@@ -120,7 +120,7 @@ export default function TimeBoxDialog({
                   aria-hidden="true"
                   className="w-6 h-6 text-[var(--color-accent-primary)]"
                 />
-                Hold Focus
+                Time Box
               </DialogTitle>
               <button
                 type="button"

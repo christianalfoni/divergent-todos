@@ -94,7 +94,7 @@ export default function ActivityDayPopup({ date, todos, position, onClose }: Act
       </div>
       <div className="activity-day-popup-content">
         {todos.length === 0 ? (
-          <p className="activity-day-popup-empty">No focus completed</p>
+          <p className="activity-day-popup-empty">No todos completed</p>
         ) : (
           <div className="activity-day-popup-list">
             {todos.map((todo, index) => (

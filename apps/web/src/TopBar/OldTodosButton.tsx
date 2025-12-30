@@ -28,7 +28,7 @@ export default function OldTodosButton({ count, onMoveOldTodos }: OldTodosButton
           strokeLinejoin="round"
         />
       </svg>
-      Move {count} focus
+      Move {count} {count === 1 ? 'todo' : 'todos'}
     </button>
   );
 }

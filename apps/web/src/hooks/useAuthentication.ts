@@ -3,6 +3,7 @@ import { auth, profilesCollection, type Profile } from "../firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { trackUser, trackUserProperties } from "../firebase/analytics";
+import { posthog } from "../posthog";
 
 export type AuthenticationState =
   | {
@@ -84,6 +85,11 @@ export function useAuthentication() {
             user,
             profile,
             error: null,
+          });
+
+          // Identify user to PostHog
+          posthog.identify(user.uid, {
+            email: user.email,
           });
         },
         (error) => {

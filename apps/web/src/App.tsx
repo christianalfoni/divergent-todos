@@ -9,6 +9,7 @@ import SubscriptionDialog from "./SubscriptionDialog";
 import OnboardingNotification from "./OnboardingNotification";
 import PreviousWeekDialog from "./PreviousWeekDialog";
 import CreateMomentumDialog from "./CreateMomentumDialog";
+import Survey from "./components/Survey";
 import TopBar from "./TopBar";
 import MobileBlocker from "./MobileBlocker";
 import Terms from "./Terms";
@@ -22,6 +23,7 @@ import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
 import { useEditProfile } from "./hooks/useEditProfile";
 import { useActivity } from "./hooks/useActivity";
+import { useSurvey } from "./hooks/useSurvey";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import {
   trackAppOpened,
@@ -92,6 +94,12 @@ function AppContent() {
 
   // Fetch activity data at App level so it persists across view changes
   const { activityWeeks, loading: activityLoading } = useActivity(activityYear);
+
+  // Survey hook for one-week check-in
+  const { activeSurvey, dismissSurvey, submitSurvey } = useSurvey({
+    profile: authentication.user ? authentication.profile : null,
+    userId: authentication.user?.uid || null,
+  });
 
   // Track if we've seen an authenticated user in this session
   const [hadAuthenticatedUser, setHadAuthenticatedUser] = useState(false);
@@ -616,6 +624,14 @@ function AppContent() {
           onClose={() => setCreateMomentumDialog(null)}
           onAddTodo={todoOperations.addTodoWithState}
           onToggleTodoComplete={todoOperations.toggleTodoComplete}
+        />
+      )}
+      {activeSurvey && (
+        <Survey
+          surveyId={activeSurvey.id}
+          question={activeSurvey.questions[0]?.question || "How is your experience?"}
+          onDismiss={dismissSurvey}
+          onSubmit={submitSurvey}
         />
       )}
     </div>
