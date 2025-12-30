@@ -1,5 +1,6 @@
 import { httpsCallable } from "firebase/functions";
 import { functions } from "./index";
+import { posthog } from "../posthog";
 
 const ADMIN_UID = "iaSsqsqb99Zemast8LN3dGCxB7o2";
 
@@ -436,6 +437,121 @@ export const admin = {
       }
     },
   },
+
+  // Survey development tools (only in dev mode)
+  ...(import.meta.env.DEV && {
+    survey: {
+      /** List all surveys from PostHog (ignoring targeting/eligibility) */
+      list: async () => {
+        console.group("🔧 Dev Tool: List PostHog Surveys");
+        console.log("Fetching all surveys from PostHog...");
+
+        try {
+          const surveys = await posthog.getActiveMatchingSurveys();
+
+          if (surveys.length === 0) {
+            console.log("❌ No surveys found");
+            console.log(
+              "\n💡 Create a survey in PostHog dashboard with 'API' display mode"
+            );
+          } else {
+            console.log(`✅ Found ${surveys.length} survey(s):\n`);
+            surveys.forEach((s, i) => {
+              console.log(`${i + 1}. ${s.name}`);
+              console.log(`   ID: ${s.id}`);
+              console.log(`   Question: ${s.questions[0]?.question}\n`);
+            });
+            console.log(
+              `\n💡 Use admin.survey.show('survey-id') to test a specific survey`
+            );
+          }
+
+          console.groupEnd();
+          return surveys;
+        } catch (error) {
+          console.error("❌ Error:", error);
+          console.groupEnd();
+          throw error;
+        }
+      },
+
+      /** Show a specific survey by ID (bypasses all eligibility checks) */
+      show: async (surveyId: string) => {
+        console.group(`🔧 Dev Tool: Show Survey`);
+        console.log(`Survey ID: ${surveyId}`);
+        console.log("Fetching survey from PostHog...");
+
+        try {
+          const surveys = await posthog.getActiveMatchingSurveys();
+          const survey = surveys.find((s) => s.id === surveyId);
+
+          if (!survey) {
+            console.error(`❌ Survey not found: ${surveyId}`);
+            console.log("\n💡 Use admin.survey.list() to see available surveys");
+            console.groupEnd();
+            return;
+          }
+
+          console.log(`✓ Found survey: ${survey.name}`);
+          console.log("Dispatching show event...");
+
+          window.dispatchEvent(
+            new CustomEvent("dev:show-survey", { detail: { survey } })
+          );
+
+          console.log("✅ Survey shown");
+          console.groupEnd();
+        } catch (error) {
+          console.error("❌ Error:", error);
+          console.groupEnd();
+          throw error;
+        }
+      },
+
+      /** Show a mock survey for UI testing (no PostHog needed) */
+      showMock: () => {
+        console.log("🔧 Dev Tool: Showing mock survey...");
+
+        const mockSurvey = {
+          id: "dev-mock-survey",
+          name: "One Week Check-in (MOCK)",
+          description: "",
+          type: "api" as const,
+          questions: [
+            {
+              type: "open" as const,
+              question: "How is Divergent Todos working for you so far?",
+              description: "We'd love to hear your honest feedback!",
+            },
+          ],
+          conditions: null,
+          start_date: new Date().toISOString(),
+          end_date: null,
+        };
+
+        window.dispatchEvent(
+          new CustomEvent("dev:show-survey", { detail: { survey: mockSurvey } })
+        );
+
+        console.log("✓ Mock survey shown");
+      },
+
+      /** Info about resetting survey responses */
+      resetInfo: () => {
+        console.group("ℹ️  Dev Tool: Survey Reset Info");
+        console.log(
+          "Survey responses are tracked by PostHog automatically.\n\n" +
+          "To reset and re-show a survey:\n" +
+          "1. Go to PostHog dashboard → Surveys → Your Survey\n" +
+          "2. View the 'Responses' tab\n" +
+          "3. Find your response and delete it\n" +
+          "4. Or adjust targeting rules to re-show (e.g., remove 'Has not completed survey' condition)\n\n" +
+          "💡 PostHog tracks 'survey dismissed' and 'survey sent' events automatically."
+        );
+        console.groupEnd();
+      },
+    },
+  }),
 };
 
 // Expose to window for console access

@@ -57,10 +57,10 @@ export default function OnboardingNotification() {
           icon: (
             <PlusCircleIcon aria-hidden="true" className="size-6 text-green-500 dark:text-green-400" />
           ),
-          title: "Let's add your first focus",
+          title: "Let's add your first todo",
           message:
-            "Try adding a focus by clicking on any day.",
-          actionLabel: "Add a focus",
+            "Try adding a todo by clicking on any day.",
+          actionLabel: "Add a todo",
           requiresAddTodo: true,
         };
       case "add-todo-with-tag":
@@ -68,10 +68,10 @@ export default function OnboardingNotification() {
           icon: (
             <HashtagIcon aria-hidden="true" className="size-6 text-teal-500 dark:text-teal-400" />
           ),
-          title: "Add a focus with a tag",
+          title: "Add a todo with a tag",
           message:
-            "Tags help you organize your focus. Type #some-text and press space or enter to create a tag. Try adding a focus with a tag now!",
-          actionLabel: "Add a focus with a tag",
+            "Tags help you organize your todos. Type #some-text and press space or enter to create a tag. Try adding a todo with a tag now!",
+          actionLabel: "Add a todo with a tag",
           requiresAddTodoWithTag: true,
         };
       case "add-todo-with-url":
@@ -79,10 +79,10 @@ export default function OnboardingNotification() {
           icon: (
             <LinkIcon aria-hidden="true" className="size-6 text-purple-500 dark:text-purple-400" />
           ),
-          title: "Add a focus with a URL",
+          title: "Add a todo with a URL",
           message:
-            "Focus can include URLs. Copy a sample URL, then paste it into a new focus description. Tip: Right-click any link to copy its URL!",
-          actionLabel: "Add a focus with URL",
+            "Todos can include URLs. Copy a sample URL, then paste it into a new todo description. Tip: Right-click any link to copy its URL!",
+          actionLabel: "Add a todo with URL",
           requiresAddTodoWithUrl: true,
           showCopyButton: true,
         };
@@ -91,10 +91,10 @@ export default function OnboardingNotification() {
           icon: (
             <PencilSquareIcon aria-hidden="true" className="size-6 text-orange-500 dark:text-orange-400" />
           ),
-          title: "Edit your focus anytime",
+          title: "Edit your todo anytime",
           message:
-            "Click on any focus to edit its text. Links don't activate edit mode, so click next to them. Use backspace to remove links. Click outside or press Enter to save.",
-          actionLabel: "Edit and save a focus",
+            "Click on any todo to edit its text. Links don't activate edit mode, so click next to them. Use backspace to remove links. Click outside or press Enter to save.",
+          actionLabel: "Edit and save a todo",
           requiresEditTodo: true,
         };
       case "move-todo":
@@ -102,10 +102,10 @@ export default function OnboardingNotification() {
           icon: (
             <ArrowsRightLeftIcon aria-hidden="true" className="size-6 text-indigo-500 dark:text-indigo-400" />
           ),
-          title: "Move focus around",
+          title: "Move todos around",
           message:
-            "Drag and drop focus to reorder them within a day or move them to different days.",
-          actionLabel: "Move a focus",
+            "Drag and drop todos to reorder them within a day or move them to different days.",
+          actionLabel: "Move a todo",
           requiresMoveTodo: true,
         };
       case "copy-todo":
@@ -115,9 +115,9 @@ export default function OnboardingNotification() {
           icon: (
             <DocumentDuplicateIcon aria-hidden="true" className="size-6 text-cyan-500 dark:text-cyan-400" />
           ),
-          title: "Copy focus by dragging",
+          title: "Copy todo by dragging",
           message:
-            `Hold ${modifierKey} while dragging a focus to create a copy instead of moving it. This is great for recurring tasks!`,
+            `Hold ${modifierKey} while dragging a todo to create a copy instead of moving it. This is great for recurring tasks!`,
           actionLabel: `Hold ${modifierKey} and drag to copy`,
           requiresCopyTodo: true,
         };
@@ -130,7 +130,7 @@ export default function OnboardingNotification() {
           ),
           title: "Build momentum across days",
           message:
-            `Creating momentum is important. Focus often spreads over multiple days. Hold ${modifierKey2} and click the checkbox to complete a focus and copy it to the next workday—showing you gave it attention but it needs more. If it's Friday, the 2-week view activates automatically!`,
+            `Creating momentum is important. Work often spreads over multiple days. Hold ${modifierKey2} and click the checkbox to complete a todo and copy it to the next workday—showing you gave it attention but it needs more. If it's Friday, the 2-week view activates automatically!`,
           actionLabel: `Hold ${modifierKey2} and click checkbox`,
           requiresCompleteAndContinue: true,
         };
@@ -140,10 +140,10 @@ export default function OnboardingNotification() {
           icon: (
             <TrashIcon aria-hidden="true" className="size-6 text-red-500 dark:text-red-400" />
           ),
-          title: "Delete focus",
+          title: "Delete todo",
           message:
-            "To delete a focus, right-click it and select Delete from the menu. You can also click to edit and remove all text, then press Enter.",
-          actionLabel: "Delete a focus",
+            "To delete a todo, right-click it and select Delete from the menu. You can also click to edit and remove all text, then press Enter.",
+          actionLabel: "Delete a todo",
           requiresDeleteTodo: true,
         };
       case "timebox":
@@ -151,10 +151,10 @@ export default function OnboardingNotification() {
           icon: (
             <ClockIcon aria-hidden="true" className="size-6 text-pink-500 dark:text-pink-400" />
           ),
-          title: "Use the hold focus feature",
+          title: "Use the time box feature",
           message:
-            "Double-click a focus to hold it for a dedicated amount of time.",
-          actionLabel: "Open and close hold focus",
+            "Double-click a todo to time box it for a dedicated amount of time.",
+          actionLabel: "Open and close time box",
           requiresTimebox: true,
         };
       case "congratulations":

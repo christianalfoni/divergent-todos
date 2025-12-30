@@ -317,7 +317,7 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
                                 key={dayIndex}
                                 className={`activity-day-compact ${colorClass}`}
                                 onClick={(e) => handleDayClick(day, e)}
-                                title={`${monthName} ${day.getDate()}: ${count} focus completed`}
+                                title={`${monthName} ${day.getDate()}: ${count} ${count === 1 ? 'todo' : 'todos'} completed`}
                               />
                             );
                           })}

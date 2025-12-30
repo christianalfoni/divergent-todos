@@ -63,7 +63,7 @@ export default function PreviousWeekDialog({
             <div className="previous-week-dialog-stat">
               <span className="previous-week-dialog-stat-value">{todoCount}</span>
               <span className="previous-week-dialog-stat-label">
-                {todoCount === 1 ? 'focus completed' : 'focus completed'}
+                {todoCount === 1 ? 'todo completed' : 'todos completed'}
               </span>
             </div>
 

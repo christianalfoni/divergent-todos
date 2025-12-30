@@ -169,7 +169,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
               />
             </svg>
           </div>
-          <span>Move incomplete focus</span>
+          <span>Move incomplete todos</span>
         </button>
       )}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
@@ -214,7 +214,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 />
               </svg>
             </div>
-            <span>Add focus</span>
+            <span>Add todo</span>
           </button>
         )}
         {isAuthenticated && isAddingTodo && canAddTodo && (
