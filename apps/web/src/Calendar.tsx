@@ -406,7 +406,6 @@ export default function Calendar({
                 allTodos={todos}
                 onAddTodo={handleAddTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
-                onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenFocus={handleOpenFocus}

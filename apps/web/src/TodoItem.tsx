@@ -10,7 +10,6 @@ import { useCurrentTime } from "./contexts/TimeContext";
 interface TodoItemProps {
   todo: Todo;
   onToggleTodoComplete: (todoId: string) => void;
-  onCopyTodo?: (todoId: string, newDate: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
   onOpenFocus?: (todo: Todo) => void;
@@ -35,7 +34,6 @@ function isHtmlEmpty(html: string): boolean {
 export default function TodoItem({
   todo,
   onToggleTodoComplete,
-  onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
   onOpenFocus,

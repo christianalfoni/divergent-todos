@@ -17,7 +17,6 @@ interface DayCellProps {
   allTodos: Todo[] // All todos across all days for tag autocomplete
   onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => string | undefined
   onToggleTodoComplete: (todoId: string) => void
-  onCopyTodo: (todoId: string, newDate: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
   onOpenFocus: (todo: Todo) => void
@@ -31,7 +30,7 @@ interface DayCellProps {
   todoRefs: React.MutableRefObject<Map<string, HTMLDivElement>>
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, todoRefs }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, todoRefs }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -187,7 +186,6 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 key={todo.id}
                 todo={todo}
                 onToggleTodoComplete={onToggleTodoComplete}
-                onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenFocus={onOpenFocus}
