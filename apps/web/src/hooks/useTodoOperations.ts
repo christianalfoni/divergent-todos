@@ -39,7 +39,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
   const { addPending, removePending, updatePending, getPendingAsTodos } = usePendingTodos();
 
   const handleAddTodo = useCallback(
-    (todo: Omit<Todo, "id" | "position"> & { position?: string }) => {
+    (todo: Omit<Todo, "id" | "position"> & { position?: string }): string | undefined => {
       const dateObj = new Date(todo.date);
 
       // Check if user has reached the free limit (applies to both web and desktop)
@@ -51,7 +51,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         if (!hasActiveSubscription && freeTodoCount >= 20) {
           trackFreeLimitReached(freeTodoCount);
           onShowSubscriptionDialog();
-          return;
+          return undefined;
         }
       }
 
@@ -78,6 +78,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         date: todo.date,
         position: newPosition,
         createdAt: new Date(),
+        updatedAt: new Date(),
         isPending: true,
       });
 
@@ -102,6 +103,9 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
           onboarding.notifyTodoAdded();
         }
       }
+
+      // Return the new todo ID so it can be selected
+      return docId;
     },
     [onboarding, firebaseTodos, profile, addTodo, onShowSubscriptionDialog, addPending, getPendingAsTodos]
   );
@@ -135,6 +139,39 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       }
     },
     [firebaseTodos, hittingWood, editTodo, onboarding.isOnboarding]
+  );
+
+  const addTodoSession = useCallback(
+    (todoId: string, minutes: number, deepFocus: boolean) => {
+      const todo = firebaseTodos.find((t) => t.id === todoId);
+      if (!todo) return;
+
+      // Get existing sessions or initialize empty array
+      const existingSessions = todo.sessions || [];
+
+      // Add new session
+      const newSessions = [
+        ...existingSessions,
+        { minutes, deepFocus, createdAt: new Date() },
+      ];
+
+      // Play sound for deep focus sessions
+      if (deepFocus) {
+        hittingWood.play();
+      }
+
+      // Update Firestore with sessions array
+      editTodo({
+        id: todoId,
+        description: todo.description,
+        completed: todo.completed,
+        date: todo.date,
+        sessions: newSessions,
+      });
+
+      // TODO: Track analytics with trackFocusSessionAdded
+    },
+    [firebaseTodos, hittingWood, editTodo]
   );
 
   const moveTodo = useCallback(
@@ -299,6 +336,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         date: newDate,
         position: newPosition,
         createdAt: new Date(),
+        updatedAt: new Date(),
         isPending: true,
       });
 
@@ -399,7 +437,6 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         date: todo.date,
         moveCount: 0,
         completedAt: undefined,
-        completedWithTimeBox: false,
       });
     },
     [firebaseTodos, editTodo]
@@ -451,6 +488,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         date: todo.date,
         position: newPosition,
         createdAt: new Date(),
+        updatedAt: new Date(),
         isPending: true,
       });
 
@@ -469,6 +507,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
   return {
     handleAddTodo,
     toggleTodoComplete,
+    addTodoSession,
     moveTodo,
     copyTodo,
     moveTodosInBatch,

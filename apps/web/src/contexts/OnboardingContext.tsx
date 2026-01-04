@@ -15,9 +15,9 @@ export type OnboardingStep =
   | "edit-todo"
   | "move-todo"
   | "copy-todo"
-  | "complete-and-continue"
   | "delete-todo"
   | "timebox"
+  | "reflection"
   | "congratulations"
   | null;
 
@@ -35,12 +35,12 @@ interface OnboardingContextValue {
   notifyWeekModeToggled: () => void;
   notifyTodoMoved: () => void;
   notifyTodoCopied: () => void;
-  notifyCompleteAndContinue: () => void;
   notifyTodoDeleted: () => void;
   notifyTimeboxClosed: () => void;
   notifyTodoAdded: () => void;
   notifyTodoAddedWithTag: () => void;
   notifyTodoAddedWithUrl: () => void;
+  notifyActivityViewOpened: () => void;
 }
 
 const OnboardingContext = createContext<OnboardingContextValue | undefined>(
@@ -55,9 +55,9 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   "edit-todo",
   "move-todo",
   "copy-todo",
-  "complete-and-continue",
   "delete-todo",
   "timebox",
+  "reflection",
   "congratulations",
 ];
 
@@ -159,12 +159,6 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
     }
   };
 
-  const notifyCompleteAndContinue = () => {
-    if (currentStep === "complete-and-continue") {
-      nextStep();
-    }
-  };
-
   const notifyTodoDeleted = () => {
     if (currentStep === "delete-todo") {
       nextStep();
@@ -173,6 +167,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const notifyTimeboxClosed = () => {
     if (currentStep === "timebox") {
+      nextStep();
+    }
+  };
+
+  const notifyActivityViewOpened = () => {
+    if (currentStep === "reflection") {
       nextStep();
     }
   };
@@ -193,12 +193,12 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
         notifyWeekModeToggled,
         notifyTodoMoved,
         notifyTodoCopied,
-        notifyCompleteAndContinue,
         notifyTodoDeleted,
         notifyTimeboxClosed,
         notifyTodoAdded,
         notifyTodoAddedWithTag,
         notifyTodoAddedWithUrl,
+        notifyActivityViewOpened,
       }}
     >
       {children}

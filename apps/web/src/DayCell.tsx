@@ -15,18 +15,23 @@ interface DayCellProps {
   isLoading: boolean
   todos: Todo[]
   allTodos: Todo[] // All todos across all days for tag autocomplete
-  onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => void
+  onAddTodo: (todo: Omit<Todo, 'id' | 'position'> & { position?: string }) => string | undefined
   onToggleTodoComplete: (todoId: string) => void
   onCopyTodo: (todoId: string, newDate: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
-  onOpenTimeBox: (todo: Todo) => void
+  onOpenFocus: (todo: Todo) => void
   onOpenBreakDown: (todo: Todo) => void
   onMoveIncompleteTodosToToday: () => void
   hasOldUncompletedTodos: boolean
+  selectedTodoId: string | null
+  onSelectTodo: (todoId: string) => void
+  editModeTodoId: string | null
+  onEditModeEntered: () => void
+  todoRefs: React.MutableRefObject<Map<string, HTMLDivElement>>
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenTimeBox, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos }: DayCellProps) {
+export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onCopyTodo, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, todoRefs }: DayCellProps) {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -185,9 +190,20 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 onCopyTodo={onCopyTodo}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
-                onOpenTimeBox={onOpenTimeBox}
+                onOpenFocus={onOpenFocus}
                 onOpenBreakDown={onOpenBreakDown}
                 availableTags={availableTags}
+                isSelected={todo.id === selectedTodoId}
+                onSelect={() => onSelectTodo(todo.id)}
+                shouldEnterEditMode={todo.id === editModeTodoId}
+                onEditModeEntered={onEditModeEntered}
+                todoRef={(el) => {
+                  if (el) {
+                    todoRefs.current.set(todo.id, el);
+                  } else {
+                    todoRefs.current.delete(todo.id);
+                  }
+                }}
               />
             ))}
           </SortableContext>
