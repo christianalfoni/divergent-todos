@@ -73,12 +73,12 @@ export function trackDayTodosMoved(count: number) {
 }
 
 // Feature usage
-export function trackTimeboxOpened() {
-  posthog.capture("timebox_opened");
+export function trackFocusOpened() {
+  posthog.capture("focus_opened");
 }
 
-export function trackTimeboxClosed() {
-  posthog.capture("timebox_closed");
+export function trackFocusClosed() {
+  posthog.capture("focus_closed");
 }
 
 export function trackViewModeChanged(mode: "one-week" | "two-weeks") {

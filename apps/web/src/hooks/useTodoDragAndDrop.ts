@@ -44,16 +44,16 @@ export function useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo, onResetTodoF
     onAddTodoWithStateRef.current = onAddTodoWithState
   }, [todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState])
 
-  // Track CMD/ALT key state
+  // Track SHIFT key state
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.metaKey || e.altKey) {
+      if (e.shiftKey) {
         setIsCopyMode(true)
       }
     }
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (!e.metaKey && !e.altKey) {
+      if (!e.shiftKey) {
         setIsCopyMode(false)
       }
     }

@@ -8,6 +8,7 @@ export interface ContextMenuItem {
   onClick: () => void;
   icon?: ReactNode;
   danger?: boolean;
+  shortcut?: string;
 }
 
 interface ContextMenuProps {
@@ -92,6 +93,31 @@ export default function ContextMenu({ children, items }: ContextMenuProps) {
     setMenuDimensions({ width: 0, height: 0 });
   };
 
+  // Handle keyboard shortcuts when menu is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Normalize the key to match shortcut format
+      let key = e.key;
+      if (key === 'Delete' || key === 'Backspace') {
+        key = 'DEL';
+      } else {
+        key = key.toUpperCase();
+      }
+
+      // Find menu item with matching shortcut
+      const matchingItem = items.find(item => item.shortcut?.toUpperCase() === key);
+      if (matchingItem) {
+        e.preventDefault();
+        handleItemClick(matchingItem.onClick);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, items]);
+
   return (
     <>
       <div ref={triggerRef} onContextMenu={handleContextMenu}>
@@ -118,18 +144,25 @@ export default function ContextMenu({ children, items }: ContextMenuProps) {
                 <MenuItem key={index}>
                   <button
                     onClick={() => handleItemClick(item.onClick)}
-                    className={`group flex w-full items-center gap-2 px-4 py-2 text-sm text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:hover:bg-white/5 dark:focus:bg-white/5 ${
+                    className={`group flex w-full items-center justify-between gap-2 px-4 py-2 text-sm text-left hover:bg-gray-100 focus:bg-gray-100 focus:outline-none dark:hover:bg-white/5 dark:focus:bg-white/5 ${
                       item.danger
                         ? 'text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300'
                         : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                     }`}
                   >
-                    {item.icon && (
-                      <span className="shrink-0">
-                        {item.icon}
+                    <div className="flex items-center gap-2">
+                      {item.icon && (
+                        <span className="shrink-0">
+                          {item.icon}
+                        </span>
+                      )}
+                      <span>{item.label}</span>
+                    </div>
+                    {item.shortcut && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500 font-mono">
+                        {item.shortcut}
                       </span>
                     )}
-                    <span>{item.label}</span>
                   </button>
                 </MenuItem>
               ))}

@@ -62,5 +62,10 @@ export function convertFirebaseTodoToAppTodo(todo: FirebaseTodo): Todo {
     completed: todo.completed,
     date: todo.date.toISOString().split("T")[0],
     position: todo.position,
+    moveCount: todo.moveCount,
+    createdAt: todo.createdAt,
+    updatedAt: todo.updatedAt,
+    completedAt: todo.completedAt,
+    sessions: todo.sessions,
   };
 }

@@ -9,6 +9,7 @@ interface PendingTodo {
   date: string;
   position: string;
   createdAt: Date;
+  updatedAt: Date;
   isPending: true;
 }
 
@@ -43,6 +44,7 @@ export function usePendingTodos() {
       date: pending.date,
       position: pending.position,
       createdAt: pending.createdAt,
+      updatedAt: pending.updatedAt,
     }));
   }, [pendingTodos]);
 

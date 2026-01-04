@@ -1,6 +1,6 @@
 import { pipe } from "pipesy";
 import { todosCollection, type Todo } from "../firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
 import { useTodos } from "./useTodos";
 import { useRef } from "react";
@@ -31,7 +31,7 @@ export function useEditTodo() {
       position?: string;
       moveCount?: number;
       completedAt?: Date;
-      completedWithTimeBox?: boolean;
+      sessions?: Array<{ minutes: number; deepFocus: boolean; createdAt: Date }>;
     },
     EditTodoState
   >()
@@ -46,7 +46,7 @@ export function useEditTodo() {
       }));
       return updates;
     })
-    .async(({ id, description, completed, date, position, moveCount, completedAt, completedWithTimeBox }) => {
+    .async(({ id, description, completed, date, position, moveCount, completedAt, sessions }) => {
       const todoDoc = doc(todosCollection, id);
 
       if (!userRef.current) {
@@ -57,10 +57,11 @@ export function useEditTodo() {
         completed,
         description,
         date,
+        updatedAt: serverTimestamp(),
         ...(position !== undefined ? { position } : {}),
         ...(moveCount !== undefined ? { moveCount } : {}),
         ...(completedAt !== undefined ? { completedAt } : {}),
-        ...(completedWithTimeBox !== undefined ? { completedWithTimeBox } : {}),
+        ...(sessions !== undefined ? { sessions } : {}),
       });
     })
     .map(() => ({ isEditing: false, error: null }))

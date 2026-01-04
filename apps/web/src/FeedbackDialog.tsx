@@ -62,10 +62,10 @@ export default function FeedbackDialog({ open, onClose }: FeedbackDialogProps) {
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-[var(--color-bg-dialog)] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:outline dark:-outline-offset-1 dark:outline-white/10"
+            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:bg-gray-800 dark:outline dark:-outline-offset-1 dark:outline-white/10"
           >
             {/* Header */}
-            <div className="px-6 py-6 border-b border-[var(--color-border-primary)] flex items-center justify-between">
+            <div className="px-6 pt-6 pb-4 flex items-center justify-between">
               <DialogTitle
                 as="h2"
                 className="text-xl font-semibold text-[var(--color-text-primary)] m-0 flex items-center gap-2"
@@ -89,7 +89,7 @@ export default function FeedbackDialog({ open, onClose }: FeedbackDialogProps) {
 
             {/* Content */}
             <form onSubmit={handleSubmit}>
-              <div className="px-6 py-6">
+              <div className="px-6 pb-6">
                 <div className="rounded-lg bg-[var(--color-bg-dialog)] outline-1 -outline-offset-1 outline-[var(--color-border-secondary)] focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-[var(--color-accent-primary)]">
                   <label htmlFor="feedback" className="sr-only">
                     Feedback
@@ -138,7 +138,7 @@ export default function FeedbackDialog({ open, onClose }: FeedbackDialogProps) {
               </div>
 
               {/* Footer */}
-              <div className="bg-[var(--color-bg-dialog-footer)] px-6 py-6 flex justify-end">
+              <div className="bg-gray-50 px-6 py-6 flex justify-end dark:bg-gray-700/25">
                 <button
                   type="submit"
                   disabled={status === 'submitting' || status === 'success' || !feedback.trim()}

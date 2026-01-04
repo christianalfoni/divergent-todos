@@ -219,10 +219,10 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-[var(--color-bg-dialog)] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:outline dark:-outline-offset-1 dark:outline-white/10"
+            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:bg-gray-800 dark:outline dark:-outline-offset-1 dark:outline-white/10"
           >
             {/* Header */}
-            <div className="px-6 py-6 border-b border-[var(--color-border-primary)] flex items-center justify-between">
+            <div className="px-6 pt-6 pb-4 flex items-center justify-between">
               <DialogTitle
                 as="h2"
                 className="text-xl font-semibold text-[var(--color-text-primary)] m-0 flex items-center gap-2"
@@ -295,7 +295,7 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
             </div>
 
             {/* Footer / Actions */}
-            <div className="bg-[var(--color-bg-dialog-footer)] px-6 py-6 flex gap-3">
+            <div className="bg-gray-50 px-6 py-6 flex gap-3 dark:bg-gray-700/25">
               {/* When active (not canceling): Cancel (left, destructive) + Manage Billing (right, primary) */}
               {subscriptionStatus === "active" && !cancelAtPeriodEnd && (
                 <>

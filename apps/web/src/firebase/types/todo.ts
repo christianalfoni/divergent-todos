@@ -18,7 +18,7 @@ export interface Todo {
   updatedAt: Date;
   moveCount?: number; // Number of times todo has been moved/rescheduled
   completedAt?: Date; // When the todo was marked complete
-  completedWithTimeBox?: boolean; // Whether completed during a time-boxed session
+  sessions?: Array<{ minutes: number; deepFocus: boolean; createdAt: Date }>; // Focus session tracking
 }
 
 // Firestore data format (with Timestamps instead of Dates)
@@ -32,7 +32,7 @@ interface TodoFirestore {
   updatedAt: Timestamp;
   moveCount?: number;
   completedAt?: Timestamp;
-  completedWithTimeBox?: boolean;
+  sessions?: Array<{ minutes: number; deepFocus: boolean; createdAt: Timestamp }>;
 }
 
 // Firestore converter for Todo
@@ -63,8 +63,12 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
     if (todo.completedAt instanceof Date) {
       result.completedAt = Timestamp.fromDate(todo.completedAt);
     }
-    if (todo.completedWithTimeBox !== undefined) {
-      result.completedWithTimeBox = todo.completedWithTimeBox;
+    if (todo.sessions !== undefined) {
+      result.sessions = todo.sessions.map((session) => ({
+        minutes: session.minutes,
+        deepFocus: session.deepFocus,
+        createdAt: Timestamp.fromDate(session.createdAt),
+      }));
     }
 
     return result;
@@ -85,7 +89,11 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
       updatedAt: data.updatedAt.toDate(),
       moveCount: data.moveCount,
       completedAt: data.completedAt?.toDate(),
-      completedWithTimeBox: data.completedWithTimeBox,
+      sessions: data.sessions?.map((session) => ({
+        minutes: session.minutes,
+        deepFocus: session.deepFocus,
+        createdAt: session.createdAt.toDate(),
+      })),
     };
   },
 };

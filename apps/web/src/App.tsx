@@ -18,6 +18,7 @@ import { useTheme } from "./hooks/useTheme";
 import { useFontSize } from "./hooks/useFontSize";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
+import { TimeProvider } from "./contexts/TimeContext";
 import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
@@ -51,8 +52,9 @@ export interface Todo {
   position: string;
   moveCount?: number;
   createdAt?: Date;
+  updatedAt?: Date;
   completedAt?: Date;
-  completedWithTimeBox?: boolean;
+  sessions?: Array<{ minutes: number; deepFocus: boolean }>;
 }
 
 function AppContent() {
@@ -503,6 +505,8 @@ function AppContent() {
     if (pendingView === "activity") {
       setCurrentView("activity");
       setPendingView(null);
+      // Notify onboarding that activity view was opened
+      onboarding.notifyActivityViewOpened();
     }
     setIsLoadingActivity(false);
   };
@@ -540,10 +544,13 @@ function AppContent() {
             todos={todos}
             isLoading={authentication.isAuthenticating || isLoading}
             onAddTodo={
-              authentication.user ? todoOperations.handleAddTodo : () => {}
+              authentication.user ? todoOperations.handleAddTodo : () => undefined
             }
             onToggleTodoComplete={
               authentication.user ? todoOperations.toggleTodoComplete : () => {}
+            }
+            onAddSession={
+              authentication.user ? todoOperations.addTodoSession : () => {}
             }
             onMoveTodo={
               authentication.user ? todoOperations.moveTodo : () => {}
@@ -651,7 +658,9 @@ export default function App() {
     return (
       <CacheProvider>
         <OnboardingProvider>
-          <AppContent />
+          <TimeProvider>
+            <AppContent />
+          </TimeProvider>
         </OnboardingProvider>
       </CacheProvider>
     );
@@ -661,10 +670,12 @@ export default function App() {
     <BrowserRouter>
       <CacheProvider>
         <OnboardingProvider>
-          <Routes>
-            <Route path="/" element={<AppContent />} />
-            <Route path="/terms" element={<Terms />} />
-          </Routes>
+          <TimeProvider>
+            <Routes>
+              <Route path="/" element={<AppContent />} />
+              <Route path="/terms" element={<Terms />} />
+            </Routes>
+          </TimeProvider>
         </OnboardingProvider>
       </CacheProvider>
     </BrowserRouter>

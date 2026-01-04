@@ -405,8 +405,9 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                   <Calendar
                     todos={mockTodos}
                     isLoading={false}
-                    onAddTodo={() => {}}
+                    onAddTodo={() => undefined}
                     onToggleTodoComplete={() => {}}
+                    onAddSession={() => {}}
                     onMoveTodo={() => {}}
                     onCopyTodo={() => {}}
                     onResetTodoForCopy={() => {}}

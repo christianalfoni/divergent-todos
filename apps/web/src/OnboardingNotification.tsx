@@ -15,6 +15,7 @@ import {
   ChevronRightIcon,
   HashtagIcon,
   DocumentDuplicateIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { useEditProfile } from "./hooks/useEditProfile";
@@ -91,9 +92,9 @@ export default function OnboardingNotification() {
           icon: (
             <PencilSquareIcon aria-hidden="true" className="size-6 text-orange-500 dark:text-orange-400" />
           ),
-          title: "Edit your todo anytime",
+          title: "Select and edit todos",
           message:
-            "Click on any todo to edit its text. Links don't activate edit mode, so click next to them. Use backspace to remove links. Click outside or press Enter to save.",
+            "Click a todo to select it, or use arrow keys to navigate. Press E or right-click and select Edit to edit. Press Enter or click outside to save, ESC to cancel.",
           actionLabel: "Edit and save a todo",
           requiresEditTodo: true,
         };
@@ -109,32 +110,16 @@ export default function OnboardingNotification() {
           requiresMoveTodo: true,
         };
       case "copy-todo":
-        const isMac = navigator.platform.toUpperCase().includes('MAC');
-        const modifierKey = isMac ? "⌘ CMD" : "ALT";
         return {
           icon: (
             <DocumentDuplicateIcon aria-hidden="true" className="size-6 text-cyan-500 dark:text-cyan-400" />
           ),
           title: "Copy todo by dragging",
           message:
-            `Hold ${modifierKey} while dragging a todo to create a copy instead of moving it. This is great for recurring tasks!`,
-          actionLabel: `Hold ${modifierKey} and drag to copy`,
+            "Hold SHIFT while dragging a todo to create a copy instead of moving it. This is great for recurring tasks!",
+          actionLabel: "Hold SHIFT and drag to copy",
           requiresCopyTodo: true,
         };
-      case "complete-and-continue": {
-        const isMac2 = navigator.platform.toUpperCase().includes('MAC');
-        const modifierKey2 = isMac2 ? "⌘ CMD" : "ALT";
-        return {
-          icon: (
-            <CheckCircleIcon aria-hidden="true" className="size-6 text-emerald-500 dark:text-emerald-400" />
-          ),
-          title: "Build momentum across days",
-          message:
-            `Creating momentum is important. Work often spreads over multiple days. Hold ${modifierKey2} and click the checkbox to complete a todo and copy it to the next workday—showing you gave it attention but it needs more. If it's Friday, the 2-week view activates automatically!`,
-          actionLabel: `Hold ${modifierKey2} and click checkbox`,
-          requiresCompleteAndContinue: true,
-        };
-      }
       case "delete-todo":
         return {
           icon: (
@@ -142,7 +127,7 @@ export default function OnboardingNotification() {
           ),
           title: "Delete todo",
           message:
-            "To delete a todo, right-click it and select Delete from the menu. You can also click to edit and remove all text, then press Enter.",
+            "Select a todo and press DEL or BACKSPACE to delete it. You can also right-click and select Delete, or edit the todo and remove all text.",
           actionLabel: "Delete a todo",
           requiresDeleteTodo: true,
         };
@@ -151,11 +136,22 @@ export default function OnboardingNotification() {
           icon: (
             <ClockIcon aria-hidden="true" className="size-6 text-pink-500 dark:text-pink-400" />
           ),
-          title: "Use the time box feature",
+          title: "Focus on your work",
           message:
-            "Double-click a todo to time box it for a dedicated amount of time.",
-          actionLabel: "Open and close time box",
+            "Double-click a todo or select it and press F to open the Focus dialog. The timer tracks how long you work. When done, click 'Without distraction' for calm, uninterrupted work or 'With distraction' if you got interrupted.",
+          actionLabel: "Open and close Focus dialog",
           requiresTimebox: true,
+        };
+      case "reflection":
+        return {
+          icon: (
+            <ChartBarIcon aria-hidden="true" className="size-6 text-violet-500 dark:text-violet-400" />
+          ),
+          title: "Weekly reflection",
+          message:
+            "Every week, a summary of your work is automatically created. It highlights your focus sessions and shows the average time you're able to spend in calm, uninterrupted work. Click the Reflection tab above to explore it!",
+          actionLabel: "Open Reflection view",
+          requiresActivityView: true,
         };
       case "congratulations":
         return {

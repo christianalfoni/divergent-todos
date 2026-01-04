@@ -1,22 +1,25 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { TrashIcon } from "@heroicons/react/20/solid";
+import { TrashIcon, PencilIcon, ClockIcon, LightBulbIcon } from "@heroicons/react/20/solid";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
-import { getNextWorkdayAfterDate } from "./utils/todos";
-import { trackTodoCopied } from "./firebase/analytics";
+import { useCurrentTime } from "./contexts/TimeContext";
 
 interface TodoItemProps {
   todo: Todo;
   onToggleTodoComplete: (todoId: string) => void;
-  onCopyTodo?: (todoId: string, newDate: string) => void;
   onUpdateTodo?: (todoId: string, text: string) => void;
   onDeleteTodo?: (todoId: string) => void;
-  onOpenTimeBox?: (todo: Todo) => void;
+  onOpenFocus?: (todo: Todo) => void;
   onOpenBreakDown?: (todo: Todo) => void;
   availableTags?: string[];
+  isSelected?: boolean;
+  onSelect?: () => void;
+  shouldEnterEditMode?: boolean;
+  onEditModeEntered?: () => void;
+  todoRef?: (el: HTMLDivElement | null) => void;
 }
 
 // Helper function to check if HTML content is empty
@@ -31,28 +34,62 @@ function isHtmlEmpty(html: string): boolean {
 export default function TodoItem({
   todo,
   onToggleTodoComplete,
-  onCopyTodo,
   onUpdateTodo,
   onDeleteTodo,
-  onOpenTimeBox,
+  onOpenFocus,
   onOpenBreakDown,
   availableTags = [],
+  isSelected = false,
+  onSelect,
+  shouldEnterEditMode = false,
+  onEditModeEntered,
+  todoRef,
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
   const [isPressed, setIsPressed] = useState(false);
-  const [dragEnabled, setDragEnabled] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<SmartEditorRef>(null);
   const originalHtmlRef = useRef<string>(todo.text);
-  const lastClickTimeRef = useRef<number>(0);
-  const clickTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentTime = useCurrentTime();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
       animateLayoutChanges: () => false,
-      disabled: !dragEnabled,
     });
+
+  // Calculate session statistics
+  const sessionStats = useMemo(() => {
+    if (!todo.sessions || todo.sessions.length === 0) return null;
+
+    const focused = todo.sessions
+      .filter((s) => s.deepFocus)
+      .reduce((sum, s) => sum + s.minutes, 0);
+
+    const distracted = todo.sessions
+      .filter((s) => !s.deepFocus)
+      .reduce((sum, s) => sum + s.minutes, 0);
+
+    return { focused, distracted };
+  }, [todo.sessions]);
+
+  // Format relative time (depends on currentTime from context)
+  const relativeTime = useMemo(() => {
+    if (!todo.updatedAt) return "";
+
+    const diffMs = currentTime.getTime() - todo.updatedAt.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return "just now";
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+
+    // Show date for older items
+    return todo.updatedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }, [todo.updatedAt, currentTime]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -88,6 +125,15 @@ export default function TodoItem({
     };
   }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo, onDeleteTodo]);
 
+  useEffect(() => {
+    if (shouldEnterEditMode && !isEditing) {
+      originalHtmlRef.current = todo.text;
+      setEditingHtml(todo.text);
+      setIsEditing(true);
+      onEditModeEntered?.();
+    }
+  }, [shouldEnterEditMode, isEditing, todo.text, onEditModeEntered]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
       // Revert to original content
@@ -109,38 +155,6 @@ export default function TodoItem({
     }
   };
 
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Cancel any pending single-click edit activation
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-      clickTimeoutRef.current = null;
-    }
-
-    if (!todo.completed) {
-      onOpenTimeBox?.(todo);
-    }
-  };
-
-  const handleMouseDown = () => {
-    const now = Date.now();
-    const timeSinceLastClick = now - lastClickTimeRef.current;
-    lastClickTimeRef.current = now;
-
-    // If this is a potential double-click (within 300ms), temporarily disable drag
-    if (timeSinceLastClick < 300) {
-      setDragEnabled(false);
-      // Re-enable drag after a short delay
-      setTimeout(() => setDragEnabled(true), 100);
-      return;
-    }
-
-    setDragEnabled(true);
-    setIsPressed(true);
-  };
-
   const handleContainerClick = (e: React.MouseEvent) => {
     // Check for CMD/ALT + SHIFT + Click (break down shortcut)
     const isBreakDownShortcut = (e.metaKey || e.altKey) && e.shiftKey;
@@ -152,42 +166,22 @@ export default function TodoItem({
       return;
     }
 
-    // Delay edit mode activation to allow for double-click
-    if (clickTimeoutRef.current) {
-      clearTimeout(clickTimeoutRef.current);
-    }
+    // Select the todo on click
+    onSelect?.();
+  };
 
-    clickTimeoutRef.current = setTimeout(() => {
-      // Save original content when entering edit mode
-      originalHtmlRef.current = todo.text;
-      setEditingHtml(todo.text);
-      setIsEditing(true);
-      clickTimeoutRef.current = null;
-    }, 250);
+  const handleContainerDoubleClick = (e: React.MouseEvent) => {
+    // Double-click opens Focus dialog for incomplete todos
+    if (!todo.completed && onOpenFocus) {
+      e.preventDefault();
+      e.stopPropagation();
+      onOpenFocus(todo);
+    }
   };
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // Check if CMD/ALT is held - if so, complete and copy to next workday
-    if ((e.metaKey || e.altKey) && !todo.completed && onCopyTodo) {
-      // First complete the current todo
-      onToggleTodoComplete(todo.id);
-
-      // Calculate next workday after the todo's date
-      const currentDate = new Date(todo.date);
-      const nextWorkday = getNextWorkdayAfterDate(currentDate);
-      const nextWorkdayString = nextWorkday.toISOString().split("T")[0];
-
-      // Copy to next workday
-      onCopyTodo(todo.id, nextWorkdayString);
-
-      // Track the analytics
-      trackTodoCopied({ method: 'complete-to-next-day' });
-    } else {
-      // Normal toggle
-      onToggleTodoComplete(todo.id);
-    }
+    onToggleTodoComplete(todo.id);
   };
 
   if (isEditing) {
@@ -236,10 +230,31 @@ export default function TodoItem({
 
   const contextMenuItems = [
     {
+      label: 'Focus',
+      icon: <ClockIcon className="size-4" />,
+      onClick: () => {
+        if (!todo.completed) {
+          onOpenFocus?.(todo);
+        }
+      },
+      shortcut: 'F',
+    },
+    {
+      label: 'Edit',
+      icon: <PencilIcon className="size-4" />,
+      onClick: () => {
+        originalHtmlRef.current = todo.text;
+        setEditingHtml(todo.text);
+        setIsEditing(true);
+      },
+      shortcut: 'E',
+    },
+    {
       label: 'Delete',
       icon: <TrashIcon className="size-4" />,
       onClick: () => onDeleteTodo?.(todo.id),
       danger: true,
+      shortcut: 'DEL',
     },
   ];
 
@@ -247,20 +262,26 @@ export default function TodoItem({
     <ContextMenu items={contextMenuItems}>
       {(isContextMenuOpen) => (
         <div
-          ref={setNodeRef}
+          ref={(el) => {
+            setNodeRef(el);
+            todoRef?.(el);
+          }}
           style={style}
           className={`relative ${isDragging ? "opacity-0" : ""}`}
+          data-todo-item
         >
           <div
             {...attributes}
             {...listeners}
             onClick={handleContainerClick}
-            onDoubleClick={handleDoubleClick}
-            onMouseDown={handleMouseDown}
+            onDoubleClick={handleContainerDoubleClick}
+            onMouseDown={() => setIsPressed(true)}
             onMouseUp={() => setIsPressed(false)}
             onMouseLeave={() => setIsPressed(false)}
             className={`group/todo relative flex gap-3 text-xs/5 px-3 py-2 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
-              isPressed || isContextMenuOpen ? "bg-[var(--color-bg-hover)]" : ""
+              isPressed || isContextMenuOpen || isSelected ? "bg-[var(--color-bg-hover)]" : ""
+            } ${
+              isSelected ? "[box-shadow:inset_0_0_0_1px_var(--color-accent-primary)]" : ""
             } ${todo.completed ? "opacity-60" : ""}`}
           >
           <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
@@ -302,6 +323,28 @@ export default function TodoItem({
             }`}
           >
             <SmartEditor html={todo.text} editing={false} />
+            {/* Footer: updated time on left, session stats on right */}
+            <div className="mt-1 flex items-center justify-between text-xs">
+              <span className="text-gray-400">
+                {relativeTime}
+              </span>
+              {sessionStats && (
+                <div className="flex gap-2">
+                  {sessionStats.focused > 0 && (
+                    <span className="flex items-center gap-1 text-yellow-500 font-medium">
+                      <LightBulbIcon className="size-3" />
+                      {sessionStats.focused}min
+                    </span>
+                  )}
+                  {sessionStats.distracted > 0 && (
+                    <span className="flex items-center gap-1 text-gray-400">
+                      <ClockIcon className="size-3" />
+                      {sessionStats.distracted}min
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
