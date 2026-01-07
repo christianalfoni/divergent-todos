@@ -25,7 +25,7 @@ export type SmartEditorRef = {
 };
 
 const URL_REGEX = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/i;
-const TAG_REGEX = /^#(\w+)$/;
+const TAG_REGEX = /^#([\w-]+)$/;
 
 function extractDomain(url: string): string | null {
   try {
@@ -295,7 +295,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor(
     const beforeCursor = text.slice(0, offset);
 
     // Match word starting with # or URL pattern
-    const match = beforeCursor.match(/(#\w+|\S+)$/);
+    const match = beforeCursor.match(/(#[\w-]+|\S+)$/);
     if (!match) return null;
 
     const word = match[0];

@@ -1,4 +1,4 @@
-import { CalendarIcon, ChartBarIcon, LockClosedIcon } from "@heroicons/react/24/outline";
+import { CalendarIcon, ChartBarIcon, LockClosedIcon, ClockIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../firebase";
 
 interface NavigationProps {
@@ -10,6 +10,9 @@ interface NavigationProps {
   ChartBarIconComponent?: typeof ChartBarIcon;
   isLoadingActivity?: boolean;
   shouldPulsate?: boolean;
+  activeFocusTodo?: any;
+  isFocusMinimized?: boolean;
+  onRestoreFocus?: () => void;
 }
 
 export default function Navigation({
@@ -21,11 +24,27 @@ export default function Navigation({
   ChartBarIconComponent = ChartBarIcon,
   isLoadingActivity = false,
   shouldPulsate = false,
+  activeFocusTodo,
+  isFocusMinimized = false,
+  onRestoreFocus,
 }: NavigationProps) {
   const hasActiveSubscription = profile?.subscription?.status === "active";
+  const showFocusButton = activeFocusTodo && isFocusMinimized;
 
   return (
-    <div className="flex rounded-lg bg-[var(--color-bg-secondary)] p-1">
+    <div className="flex items-center gap-3">
+      {/* Focus button - shown when focus is minimized */}
+      {showFocusButton && (
+        <button
+          onClick={onRestoreFocus}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-accent-primary)] text-white shadow-sm hover:bg-[var(--color-accent-hover)] transition-colors"
+        >
+          <ClockIcon className="size-4" />
+          Focus
+        </button>
+      )}
+
+      <div className="flex rounded-lg bg-[var(--color-bg-secondary)] p-1">
       <button
         onClick={() => onViewChange("calendar")}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -56,6 +75,7 @@ export default function Navigation({
         Reflection
         {!hasActiveSubscription && <LockClosedIcon className="ml-1 size-3" />}
       </button>
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ interface FocusDialogProps {
   open: boolean;
   todo: Todo | null;
   onClose: () => void;
+  onMinimize: () => void;
   onAddSession: (todoId: string, minutes: number, deepFocus: boolean) => void;
 }
 
@@ -22,6 +23,7 @@ export default function FocusDialog({
   open,
   todo,
   onClose,
+  onMinimize,
   onAddSession,
 }: FocusDialogProps) {
   const [elapsedMinutes, setElapsedMinutes] = useState(0);
@@ -75,7 +77,7 @@ export default function FocusDialog({
 
   return (
     <>
-      <Dialog open={open} onClose={handleClose} className="relative z-[60]">
+      <Dialog open={open} onClose={onMinimize} className="relative z-[60]">
       <DialogBackdrop
         transition
         className="fixed inset-0 backdrop-blur-md bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"

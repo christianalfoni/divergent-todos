@@ -53,6 +53,9 @@ interface TopBarProps {
   isLoading?: boolean;
   isLoadingActivity?: boolean;
   shouldPulsate?: boolean;
+  activeFocusTodo?: any;
+  isFocusMinimized?: boolean;
+  onRestoreFocus?: () => void;
 }
 
 export default function TopBar({
@@ -67,6 +70,9 @@ export default function TopBar({
   isLoading = false,
   isLoadingActivity = false,
   shouldPulsate = false,
+  activeFocusTodo,
+  isFocusMinimized = false,
+  onRestoreFocus,
 }: TopBarProps) {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
@@ -192,6 +198,9 @@ export default function TopBar({
                   onOpenSubscription={onOpenSubscription}
                   isLoadingActivity={isLoadingActivity}
                   shouldPulsate={shouldPulsate}
+                  activeFocusTodo={activeFocusTodo}
+                  isFocusMinimized={isFocusMinimized}
+                  onRestoreFocus={onRestoreFocus}
                 />
               )}
 
