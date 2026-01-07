@@ -90,6 +90,11 @@ function AppContent() {
     show: boolean;
     todo: Todo | null;
   } | null>(null);
+  const [focusState, setFocusState] = useState<{
+    todo: Todo | null;
+    isMinimized: boolean;
+    onRestore: () => void;
+  }>({ todo: null, isMinimized: false, onRestore: () => {} });
   const onboarding = useOnboarding();
   const profile = authentication.profile;
   const [, editProfile] = useEditProfile();
@@ -536,6 +541,9 @@ function AppContent() {
           onActivityYearChange={setActivityYear}
           isLoading={authentication.isAuthenticating || isLoading}
           isLoadingActivity={isLoadingActivity}
+          activeFocusTodo={focusState.todo}
+          isFocusMinimized={focusState.isMinimized}
+          onRestoreFocus={focusState.onRestore}
           shouldPulsate={shouldPulsate}
         />
         {authentication.user && <OnboardingNotification />}
@@ -576,6 +584,9 @@ function AppContent() {
             }
             hasOldUncompletedTodos={oldUncompletedTodos.length > 0}
             profile={profile}
+            onFocusStateChange={(todo, isMinimized, onRestore) =>
+              setFocusState({ todo, isMinimized, onRestore })
+            }
           />
         ) : (
           <Activity

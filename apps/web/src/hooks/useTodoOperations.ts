@@ -155,11 +155,6 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         { minutes, deepFocus, createdAt: new Date() },
       ];
 
-      // Play sound for deep focus sessions
-      if (deepFocus) {
-        hittingWood.play();
-      }
-
       // Update Firestore with sessions array
       editTodo({
         id: todoId,
@@ -171,7 +166,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
 
       // TODO: Track analytics with trackFocusSessionAdded
     },
-    [firebaseTodos, hittingWood, editTodo]
+    [firebaseTodos, editTodo]
   );
 
   const moveTodo = useCallback(

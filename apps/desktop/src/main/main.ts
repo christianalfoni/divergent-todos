@@ -167,8 +167,8 @@ async function createWindow() {
   // Check for updates when window becomes visible/focused
   win.on('focus', () => {
     if (app.isPackaged) {
-      // Reset to idle state before checking to avoid showing stale update status
-      win?.webContents.send('update:reset')
+      // Don't reset state - if update is already downloaded, keep button visible
+      // while checking for potentially newer updates in the background
       autoUpdater.checkForUpdates()
     }
   })

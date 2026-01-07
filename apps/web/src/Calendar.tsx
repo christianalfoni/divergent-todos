@@ -36,6 +36,7 @@ interface CalendarProps {
   onMoveIncompleteTodosToToday: () => void;
   hasOldUncompletedTodos: boolean;
   profile: Profile | null;
+  onFocusStateChange?: (todo: Todo | null, isMinimized: boolean, onRestore: () => void) => void;
 }
 
 const isWeekend = () => {
@@ -59,12 +60,14 @@ export default function Calendar({
   onMoveIncompleteTodosToToday,
   hasOldUncompletedTodos,
   profile,
+  onFocusStateChange,
 }: CalendarProps) {
   const [authentication] = useAuthentication();
   const onboarding = useOnboarding();
   const { viewMode, setViewMode } = useViewMode();
   const currentTime = useCurrentTime();
   const [focusTodo, setFocusTodo] = useState<Todo | null>(null);
+  const [isFocusMinimized, setIsFocusMinimized] = useState(false);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
   const [visibilityTrigger, setVisibilityTrigger] = useState(0);
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
@@ -78,7 +81,26 @@ export default function Calendar({
       trackFocusOpened();
     }
     setFocusTodo(todo);
+    setIsFocusMinimized(false);
   }, []);
+
+  const handleMinimizeFocus = useCallback(() => {
+    setIsFocusMinimized(true);
+  }, []);
+
+  const handleRestoreFocus = useCallback(() => {
+    setIsFocusMinimized(false);
+  }, []);
+
+  const handleCloseFocus = useCallback(() => {
+    setFocusTodo(null);
+    setIsFocusMinimized(false);
+  }, []);
+
+  // Notify parent of focus state changes
+  useEffect(() => {
+    onFocusStateChange?.(focusTodo, isFocusMinimized, handleRestoreFocus);
+  }, [focusTodo, isFocusMinimized, handleRestoreFocus, onFocusStateChange]);
 
   const {
     sensors,
@@ -291,6 +313,8 @@ export default function Calendar({
       if (e.key === 'e' || e.key === 'E') {
         setEditModeTodoId(selectedTodoId);
       } else if (e.key === 'f' || e.key === 'F') {
+        // Don't allow focusing another todo if there's already an active focus
+        if (focusTodo) return;
         const todo = todos.find(t => t.id === selectedTodoId);
         if (todo && !todo.completed) {
           handleOpenFocus(todo);
@@ -319,7 +343,7 @@ export default function Calendar({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTodoId, orderedTodos, datesWithTodos, todos, handleOpenFocus, onDeleteTodo, onToggleTodoComplete, onCopyTodo, scrollTodoIntoView]);
+  }, [selectedTodoId, orderedTodos, datesWithTodos, todos, focusTodo, handleOpenFocus, onDeleteTodo, onToggleTodoComplete, onCopyTodo, scrollTodoIntoView]);
 
   // Handle app focus when day changes
   const handleDayChange = useCallback(() => {
@@ -486,9 +510,10 @@ export default function Calendar({
         )}
       </DragOverlay>
       <FocusDialog
-        open={!!focusTodo}
+        open={!!focusTodo && !isFocusMinimized}
         todo={focusTodo}
-        onClose={() => setFocusTodo(null)}
+        onClose={handleCloseFocus}
+        onMinimize={handleMinimizeFocus}
         onAddSession={onAddSession}
       />
       <WeekendDialog
