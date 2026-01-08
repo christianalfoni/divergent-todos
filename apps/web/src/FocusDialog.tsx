@@ -5,7 +5,7 @@ import {
   DialogPanel,
   DialogTitle,
 } from "@headlessui/react";
-import { ClockIcon, LightBulbIcon } from "@heroicons/react/24/outline";
+import { LightBulbIcon } from "@heroicons/react/24/outline";
 import type { Todo } from "./App";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { trackFocusClosed } from "./firebase/analytics";
@@ -79,17 +79,10 @@ export default function FocusDialog({
                 as="h2"
                 className="text-xl font-semibold text-[var(--color-text-primary)] m-0 flex items-center gap-2"
               >
-                {isFocused ? (
-                  <LightBulbIcon
-                    aria-hidden="true"
-                    className="w-6 h-6 text-yellow-500"
-                  />
-                ) : (
-                  <ClockIcon
-                    aria-hidden="true"
-                    className="w-6 h-6 text-[var(--color-accent-primary)]"
-                  />
-                )}
+                <LightBulbIcon
+                  aria-hidden="true"
+                  className={`w-6 h-6 ${isFocused ? "text-yellow-500" : "text-[var(--color-accent-primary)]"}`}
+                />
                 Focus
               </DialogTitle>
             </div>

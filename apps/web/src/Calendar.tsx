@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { DndContext, DragOverlay, pointerWithin } from "@dnd-kit/core";
-import { ClockIcon } from "@heroicons/react/20/solid";
+import { LightBulbIcon } from "@heroicons/react/24/outline";
 import DayCell from "./DayCell";
 import SmartEditor from "./SmartEditor";
 import FocusDialog from "./FocusDialog";
@@ -482,7 +482,7 @@ export default function Calendar({
                   </span>
                   {activeSessionCount && (
                     <span className="flex items-center gap-1 text-gray-400">
-                      <ClockIcon className="size-3" />
+                      <LightBulbIcon className="size-3" />
                       {activeSessionCount}
                     </span>
                   )}
