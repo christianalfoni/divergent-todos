@@ -64,7 +64,10 @@ export default function Calendar({
   const [authentication] = useAuthentication();
   const onboarding = useOnboarding();
   const { viewMode, setViewMode } = useViewMode();
-  const [focusTodo, setFocusTodo] = useState<Todo | null>(null);
+  const [focusTodoId, setFocusTodoId] = useState<string | null>(null);
+  const focusTodo = useMemo(() =>
+    focusTodoId ? todos.find(t => t.id === focusTodoId) ?? null : null
+  , [todos, focusTodoId]);
   const [isFocusMinimized, setIsFocusMinimized] = useState(false);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
   const [visibilityTrigger, setVisibilityTrigger] = useState(0);
@@ -78,7 +81,7 @@ export default function Calendar({
     if (todo) {
       trackFocusOpened();
     }
-    setFocusTodo(todo);
+    setFocusTodoId(todo ? todo.id : null);
     setIsFocusMinimized(false);
   }, []);
 
@@ -91,14 +94,15 @@ export default function Calendar({
   }, []);
 
   const handleCloseFocus = useCallback(() => {
-    setFocusTodo(null);
+    setFocusTodoId(null);
     setIsFocusMinimized(false);
   }, []);
 
-  // Notify parent of focus state changes
+  // Notify parent of focus state changes (only when ID or minimize state changes, not when todo data updates)
   useEffect(() => {
     onFocusStateChange?.(focusTodo, isFocusMinimized, handleRestoreFocus);
-  }, [focusTodo, isFocusMinimized, handleRestoreFocus, onFocusStateChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusTodoId, isFocusMinimized]);
 
   const {
     sensors,
@@ -494,6 +498,7 @@ export default function Calendar({
         onClose={handleCloseFocus}
         onMinimize={handleMinimizeFocus}
         onAddSession={onAddSession}
+        onToggleTodoComplete={onToggleTodoComplete}
       />
       <WeekendDialog
         open={showWeekendDialog}
