@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { TrashIcon, PencilIcon, ClockIcon, LightBulbIcon } from "@heroicons/react/20/solid";
+import { TrashIcon, PencilIcon, ClockIcon } from "@heroicons/react/20/solid";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
-import { useCurrentTime } from "./contexts/TimeContext";
 
 interface TodoItemProps {
   todo: Todo;
@@ -51,7 +50,6 @@ export default function TodoItem({
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<SmartEditorRef>(null);
   const originalHtmlRef = useRef<string>(todo.text);
-  const currentTime = useCurrentTime();
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -59,25 +57,16 @@ export default function TodoItem({
     });
 
   // Calculate session statistics
-  const sessionStats = useMemo(() => {
+  const sessionCount = useMemo(() => {
     if (!todo.sessions || todo.sessions.length === 0) return null;
-
-    const focused = todo.sessions
-      .filter((s) => s.deepFocus)
-      .reduce((sum, s) => sum + s.minutes, 0);
-
-    const distracted = todo.sessions
-      .filter((s) => !s.deepFocus)
-      .reduce((sum, s) => sum + s.minutes, 0);
-
-    return { focused, distracted };
+    return todo.sessions.length;
   }, [todo.sessions]);
 
-  // Format relative time (depends on currentTime from context)
+  // Format relative time
   const relativeTime = useMemo(() => {
     if (!todo.updatedAt) return "";
 
-    const diffMs = currentTime.getTime() - todo.updatedAt.getTime();
+    const diffMs = Date.now() - todo.updatedAt.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -89,7 +78,7 @@ export default function TodoItem({
 
     // Show date for older items
     return todo.updatedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  }, [todo.updatedAt, currentTime]);
+  }, [todo.updatedAt]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -328,21 +317,11 @@ export default function TodoItem({
               <span className="text-gray-400">
                 {relativeTime}
               </span>
-              {sessionStats && (
-                <div className="flex gap-2">
-                  {sessionStats.focused > 0 && (
-                    <span className="flex items-center gap-1 text-yellow-500 font-medium">
-                      <LightBulbIcon className="size-3" />
-                      {sessionStats.focused}min
-                    </span>
-                  )}
-                  {sessionStats.distracted > 0 && (
-                    <span className="flex items-center gap-1 text-gray-400">
-                      <ClockIcon className="size-3" />
-                      {sessionStats.distracted}min
-                    </span>
-                  )}
-                </div>
+              {sessionCount && (
+                <span className="flex items-center gap-1 text-gray-400">
+                  <ClockIcon className="size-3" />
+                  {sessionCount}
+                </span>
               )}
             </div>
           </div>

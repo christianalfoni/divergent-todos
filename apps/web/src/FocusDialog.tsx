@@ -26,49 +26,40 @@ export default function FocusDialog({
   onMinimize,
   onAddSession,
 }: FocusDialogProps) {
-  const [elapsedMinutes, setElapsedMinutes] = useState(0);
+  const [startTime, setStartTime] = useState<Date | null>(null);
   const [isHoveringNoDistraction, setIsHoveringNoDistraction] = useState(false);
   const onboarding = useOnboarding();
 
-  // Timer that counts up every second
-  useEffect(() => {
-    if (!open) return;
-
-    const interval = setInterval(() => {
-      setElapsedMinutes((prev) => prev + 1);
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [open]);
-
-  // Reset timer when dialog opens
+  // Track start time when dialog opens
   useEffect(() => {
     if (open) {
-      setElapsedMinutes(0);
+      setStartTime(new Date());
     }
   }, [open]);
 
   const handleClose = () => {
-    setElapsedMinutes(0);
+    setStartTime(null);
     trackFocusClosed();
     onClose();
     onboarding.notifyTimeboxClosed(); // Keep old function name for now
   };
 
   const handleNoDistractions = () => {
-    if (!todo) return;
+    if (!todo || !startTime) return;
     // Reset hover state immediately when button is clicked
     setIsHoveringNoDistraction(false);
-    // Round up to at least 1 minute
-    const minutes = Math.max(1, elapsedMinutes);
+    // Calculate elapsed minutes from start time to now
+    const elapsedMs = Date.now() - startTime.getTime();
+    const minutes = Math.max(1, Math.floor(elapsedMs / 60000));
     onAddSession(todo.id, minutes, true);
     handleClose();
   };
 
   const handleGotDistracted = () => {
-    if (!todo) return;
-    // Round up to at least 1 minute
-    const minutes = Math.max(1, elapsedMinutes);
+    if (!todo || !startTime) return;
+    // Calculate elapsed minutes from start time to now
+    const elapsedMs = Date.now() - startTime.getTime();
+    const minutes = Math.max(1, Math.floor(elapsedMs / 60000));
     onAddSession(todo.id, minutes, false);
     handleClose();
   };
@@ -121,23 +112,10 @@ export default function FocusDialog({
             {/* Content */}
             <div className="px-6 pb-6">
               <div
-                className="text-[var(--color-text-primary)] mb-6"
+                className="text-[var(--color-text-primary)]"
                 style={{ ["--todo-text-size" as string]: "1.125rem" }}
               >
                 <SmartEditor html={todo.text} editing={false} />
-              </div>
-
-              {/* Timer Display */}
-              <div className="text-center my-8">
-                <div className={`text-5xl font-bold transition-colors ${
-                  isHoveringNoDistraction ? "text-yellow-500" : "text-[var(--color-accent-text)]"
-                }`}>
-                  {elapsedMinutes < 60
-                    ? `${elapsedMinutes} minutes`
-                    : `${Math.floor(elapsedMinutes / 60)}h ${
-                        elapsedMinutes % 60
-                      }min`}
-                </div>
               </div>
             </div>
 

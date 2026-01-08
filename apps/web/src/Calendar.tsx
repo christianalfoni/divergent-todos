@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { DndContext, DragOverlay, pointerWithin } from "@dnd-kit/core";
-import { ClockIcon, LightBulbIcon } from "@heroicons/react/20/solid";
+import { ClockIcon } from "@heroicons/react/20/solid";
 import DayCell from "./DayCell";
 import SmartEditor from "./SmartEditor";
 import FocusDialog from "./FocusDialog";
@@ -10,7 +10,6 @@ import { useAppFocus } from "./hooks/useAppFocus";
 import { useTodoDragAndDrop } from "./hooks/useTodoDragAndDrop";
 import { useViewMode } from "./hooks/useViewMode";
 import { useOnboarding } from "./contexts/OnboardingContext";
-import { useCurrentTime } from "./contexts/TimeContext";
 import {
   getWeekdaysForThreeWeeks,
   isToday,
@@ -65,7 +64,6 @@ export default function Calendar({
   const [authentication] = useAuthentication();
   const onboarding = useOnboarding();
   const { viewMode, setViewMode } = useViewMode();
-  const currentTime = useCurrentTime();
   const [focusTodo, setFocusTodo] = useState<Todo | null>(null);
   const [isFocusMinimized, setIsFocusMinimized] = useState(false);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
@@ -111,25 +109,16 @@ export default function Calendar({
   } = useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState });
 
   // Calculate session statistics for activeTodo
-  const activeSessionStats = useMemo(() => {
+  const activeSessionCount = useMemo(() => {
     if (!activeTodo?.sessions || activeTodo.sessions.length === 0) return null;
-
-    const focused = activeTodo.sessions
-      .filter((s) => s.deepFocus)
-      .reduce((sum, s) => sum + s.minutes, 0);
-
-    const distracted = activeTodo.sessions
-      .filter((s) => !s.deepFocus)
-      .reduce((sum, s) => sum + s.minutes, 0);
-
-    return { focused, distracted };
+    return activeTodo.sessions.length;
   }, [activeTodo]);
 
   // Format relative time for activeTodo
   const activeRelativeTime = useMemo(() => {
     if (!activeTodo?.updatedAt) return "";
 
-    const diffMs = currentTime.getTime() - activeTodo.updatedAt.getTime();
+    const diffMs = Date.now() - activeTodo.updatedAt.getTime();
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
@@ -141,7 +130,7 @@ export default function Calendar({
 
     // Show date for older items
     return activeTodo.updatedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  }, [activeTodo, currentTime]);
+  }, [activeTodo]);
 
   // Wrapper for onAddTodo that selects the newly added todo
   const handleAddTodo = useCallback((todo: Omit<Todo, "id" | "position"> & { position?: string }) => {
@@ -487,21 +476,11 @@ export default function Calendar({
                   <span className="text-gray-400">
                     {activeRelativeTime}
                   </span>
-                  {activeSessionStats && (
-                    <div className="flex gap-2">
-                      {activeSessionStats.focused > 0 && (
-                        <span className="flex items-center gap-1 text-yellow-500 font-medium">
-                          <LightBulbIcon className="size-3" />
-                          {activeSessionStats.focused}min
-                        </span>
-                      )}
-                      {activeSessionStats.distracted > 0 && (
-                        <span className="flex items-center gap-1 text-gray-400">
-                          <ClockIcon className="size-3" />
-                          {activeSessionStats.distracted}min
-                        </span>
-                      )}
-                    </div>
+                  {activeSessionCount && (
+                    <span className="flex items-center gap-1 text-gray-400">
+                      <ClockIcon className="size-3" />
+                      {activeSessionCount}
+                    </span>
                   )}
                 </div>
               </div>
