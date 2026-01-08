@@ -4,6 +4,7 @@ import path from 'node:path'
 import crypto from 'node:crypto'
 
 let win: BrowserWindow | null = null
+let lastUpdateCheck: number = 0
 
 // Session storage for auth flows
 interface AuthSessionStore {
@@ -160,16 +161,22 @@ async function createWindow() {
   // Check for updates after app loads (only in production)
   if (app.isPackaged) {
     setTimeout(() => {
+      lastUpdateCheck = Date.now()
       autoUpdater.checkForUpdates()
     }, 3000) // Wait 3 seconds after launch
   }
 
-  // Check for updates when window becomes visible/focused
+  // Check for updates when window becomes visible/focused (throttled to 15 minutes)
   win.on('focus', () => {
     if (app.isPackaged) {
-      // Don't reset state - if update is already downloaded, keep button visible
-      // while checking for potentially newer updates in the background
-      autoUpdater.checkForUpdates()
+      const now = Date.now()
+      const fifteenMinutes = 15 * 60 * 1000 // 15 minutes in milliseconds
+
+      // Only check if 15 minutes have passed since last check
+      if (now - lastUpdateCheck >= fifteenMinutes) {
+        lastUpdateCheck = now
+        autoUpdater.checkForUpdates()
+      }
     }
   })
 }

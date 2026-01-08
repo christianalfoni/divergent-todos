@@ -18,7 +18,6 @@ import { useTheme } from "./hooks/useTheme";
 import { useFontSize } from "./hooks/useFontSize";
 import { useOnboarding } from "./contexts/OnboardingContext";
 import { OnboardingProvider } from "./contexts/OnboardingContext";
-import { TimeProvider } from "./contexts/TimeContext";
 import { useMarkAppInstalled } from "./hooks/useMarkAppInstalled";
 import { useTodosData } from "./hooks/useTodosData";
 import { useTodoOperations } from "./hooks/useTodoOperations";
@@ -669,9 +668,7 @@ export default function App() {
     return (
       <CacheProvider>
         <OnboardingProvider>
-          <TimeProvider>
-            <AppContent />
-          </TimeProvider>
+          <AppContent />
         </OnboardingProvider>
       </CacheProvider>
     );
@@ -681,12 +678,10 @@ export default function App() {
     <BrowserRouter>
       <CacheProvider>
         <OnboardingProvider>
-          <TimeProvider>
-            <Routes>
-              <Route path="/" element={<AppContent />} />
-              <Route path="/terms" element={<Terms />} />
-            </Routes>
-          </TimeProvider>
+          <Routes>
+            <Route path="/" element={<AppContent />} />
+            <Route path="/terms" element={<Terms />} />
+          </Routes>
         </OnboardingProvider>
       </CacheProvider>
     </BrowserRouter>
