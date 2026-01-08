@@ -7,7 +7,7 @@ import {
   PencilSquareIcon,
   ArrowsRightLeftIcon,
   TrashIcon,
-  ClockIcon,
+  LightBulbIcon,
   CheckCircleIcon,
   ClipboardIcon,
   ClipboardDocumentCheckIcon,
@@ -46,7 +46,7 @@ export default function OnboardingNotification() {
       case "workdays":
         return {
           icon: (
-            <CalendarDaysIcon aria-hidden="true" className="size-6 text-blue-500 dark:text-blue-400" />
+            <CalendarDaysIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Toggle between view modes",
           message: "Press TAB to flip between different calendar views. Try it now to see how it works!",
@@ -56,7 +56,7 @@ export default function OnboardingNotification() {
       case "add-todo":
         return {
           icon: (
-            <PlusCircleIcon aria-hidden="true" className="size-6 text-green-500 dark:text-green-400" />
+            <PlusCircleIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Let's add your first todo",
           message:
@@ -67,7 +67,7 @@ export default function OnboardingNotification() {
       case "add-todo-with-tag":
         return {
           icon: (
-            <HashtagIcon aria-hidden="true" className="size-6 text-teal-500 dark:text-teal-400" />
+            <HashtagIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Add a todo with a tag",
           message:
@@ -78,7 +78,7 @@ export default function OnboardingNotification() {
       case "add-todo-with-url":
         return {
           icon: (
-            <LinkIcon aria-hidden="true" className="size-6 text-purple-500 dark:text-purple-400" />
+            <LinkIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Add a todo with a URL",
           message:
@@ -90,7 +90,7 @@ export default function OnboardingNotification() {
       case "edit-todo":
         return {
           icon: (
-            <PencilSquareIcon aria-hidden="true" className="size-6 text-orange-500 dark:text-orange-400" />
+            <PencilSquareIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Select and edit todos",
           message:
@@ -101,7 +101,7 @@ export default function OnboardingNotification() {
       case "move-todo":
         return {
           icon: (
-            <ArrowsRightLeftIcon aria-hidden="true" className="size-6 text-indigo-500 dark:text-indigo-400" />
+            <ArrowsRightLeftIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Move todos around",
           message:
@@ -112,7 +112,7 @@ export default function OnboardingNotification() {
       case "copy-todo":
         return {
           icon: (
-            <DocumentDuplicateIcon aria-hidden="true" className="size-6 text-cyan-500 dark:text-cyan-400" />
+            <DocumentDuplicateIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Copy todo by dragging",
           message:
@@ -123,7 +123,7 @@ export default function OnboardingNotification() {
       case "delete-todo":
         return {
           icon: (
-            <TrashIcon aria-hidden="true" className="size-6 text-red-500 dark:text-red-400" />
+            <TrashIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Delete todo",
           message:
@@ -134,29 +134,29 @@ export default function OnboardingNotification() {
       case "timebox":
         return {
           icon: (
-            <ClockIcon aria-hidden="true" className="size-6 text-pink-500 dark:text-pink-400" />
+            <LightBulbIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Focus on your work",
           message:
-            "Double-click a todo or select it and press F to open the Focus dialog. The timer tracks how long you work. When done, click 'Without distraction' for calm, uninterrupted work or 'With distraction' if you got interrupted.",
+            "Double-click a todo or select it and press F to open the Focus dialog. Track your focus sessions and toggle 'No distractions' if you stayed focused. Click 'End Session' when you're done to save the session. Your weekly reflection will help you track your ability to focus without distractions.",
           actionLabel: "Open and close Focus dialog",
           requiresTimebox: true,
         };
       case "reflection":
         return {
           icon: (
-            <ChartBarIcon aria-hidden="true" className="size-6 text-violet-500 dark:text-violet-400" />
+            <ChartBarIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Weekly reflection",
           message:
-            "Every week, a summary of your work is automatically created. It highlights your focus sessions and shows the average time you're able to spend in calm, uninterrupted work. Click the Reflection tab above to explore it!",
+            "Every week, a summary of your work is automatically created. It highlights your focused work and helps you see patterns in your distraction time, so you can improve your ability to stay focused. Click the Reflection tab above to explore it!",
           actionLabel: "Open Reflection view",
           requiresActivityView: true,
         };
       case "congratulations":
         return {
           icon: (
-            <CheckCircleIcon aria-hidden="true" className="size-6 text-green-500 dark:text-green-400" />
+            <CheckCircleIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
           ),
           title: "Congratulations!",
           message:
@@ -220,7 +220,7 @@ export default function OnboardingNotification() {
                         type="button"
                         onClick={previousStep}
                         disabled={currentStepIndex === 0}
-                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30  dark:hover:text-white dark:focus:outline-indigo-500"
+                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-accent-primary)] disabled:opacity-30 dark:hover:text-white"
                         title="Previous step"
                       >
                         <span className="sr-only">Previous step</span>
@@ -233,7 +233,7 @@ export default function OnboardingNotification() {
                         type="button"
                         onClick={nextStep}
                         disabled={currentStepIndex === totalSteps - 1}
-                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 disabled:opacity-30  dark:hover:text-white dark:focus:outline-indigo-500"
+                        className="inline-flex items-center justify-center rounded-md p-1 text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-accent-primary)] disabled:opacity-30 dark:hover:text-white"
                         title="Next step"
                       >
                         <span className="sr-only">Next step</span>
@@ -248,7 +248,7 @@ export default function OnboardingNotification() {
                           type="button"
                           onClick={handleDismiss}
                           disabled={isEditing}
-                          className="rounded-md text-sm font-medium text-indigo-600 hover:text-indigo-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 dark:focus:outline-indigo-400 disabled:opacity-50 "
+                          className="rounded-md text-sm font-medium text-[var(--color-accent-primary)] hover:text-[var(--color-accent-hover)] focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-accent-primary)] disabled:opacity-50"
                         >
                           {isEditing ? "Loading..." : "Complete"}
                         </button>
@@ -257,7 +257,7 @@ export default function OnboardingNotification() {
                           type="button"
                           onClick={handleDismiss}
                           disabled={isEditing}
-                          className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-500 dark:text-gray-300 dark:hover:text-white dark:focus:outline-indigo-400 disabled:opacity-50 "
+                          className="rounded-md text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-accent-primary)] dark:text-gray-300 dark:hover:text-white disabled:opacity-50"
                         >
                           Skip tutorial
                         </button>
@@ -269,7 +269,7 @@ export default function OnboardingNotification() {
                   <button
                     type="button"
                     onClick={currentStep === "congratulations" ? handleDismiss : completeOnboarding}
-                    className="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-indigo-600 dark:hover:text-white dark:focus:outline-indigo-500"
+                    className="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-accent-primary)] dark:hover:text-white"
                   >
                     <span className="sr-only">Close</span>
                     <XMarkIcon aria-hidden="true" className="size-5" />

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { TrashIcon, PencilIcon, ClockIcon } from "@heroicons/react/20/solid";
+import { TrashIcon, PencilIcon } from "@heroicons/react/20/solid";
+import { LightBulbIcon } from "@heroicons/react/24/outline";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import ContextMenu from "./ContextMenu";
 import type { Todo } from "./App";
@@ -220,7 +221,7 @@ export default function TodoItem({
   const contextMenuItems = [
     {
       label: 'Focus',
-      icon: <ClockIcon className="size-4" />,
+      icon: <LightBulbIcon className="size-4" />,
       onClick: () => {
         if (!todo.completed) {
           onOpenFocus?.(todo);
@@ -304,14 +305,16 @@ export default function TodoItem({
               />
             </div>
           </div>
-          <div
-            className={`flex-1 min-w-0 text-xs/5 select-none ${
-              todo.completed
-                ? "line-through text-[var(--color-text-secondary)]"
-                : "text-[var(--color-text-primary)]"
-            }`}
-          >
-            <SmartEditor html={todo.text} editing={false} />
+          <div className="flex-1 min-w-0 text-xs/5 select-none">
+            <div
+              className={`${
+                todo.completed
+                  ? "line-through text-[var(--color-text-secondary)]"
+                  : "text-[var(--color-text-primary)]"
+              }`}
+            >
+              <SmartEditor html={todo.text} editing={false} />
+            </div>
             {/* Footer: updated time on left, session stats on right */}
             <div className="mt-1 flex items-center justify-between text-xs">
               <span className="text-gray-400">
@@ -319,7 +322,7 @@ export default function TodoItem({
               </span>
               {sessionCount && (
                 <span className="flex items-center gap-1 text-gray-400">
-                  <ClockIcon className="size-3" />
+                  <LightBulbIcon className="size-3" />
                   {sessionCount}
                 </span>
               )}

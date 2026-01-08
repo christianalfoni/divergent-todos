@@ -1,4 +1,4 @@
-import { CalendarIcon, ChartBarIcon, LockClosedIcon, ClockIcon } from "@heroicons/react/24/outline";
+import { CalendarIcon, ChartBarIcon, LockClosedIcon, LightBulbIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../firebase";
 
 interface NavigationProps {
@@ -39,7 +39,7 @@ export default function Navigation({
           onClick={onRestoreFocus}
           className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium bg-[var(--color-accent-primary)] text-white shadow-sm hover:bg-[var(--color-accent-hover)] transition-colors"
         >
-          <ClockIcon className="size-4" />
+          <LightBulbIcon className="size-4" />
           Focus
         </button>
       )}
