@@ -372,16 +372,27 @@ export default function Calendar({
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [authentication.user, profile?.isOnboarded]);
 
-  // Restore focus dialog on every focus if it's minimized
+  // Restore focus dialog when app loses focus (if minimized)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (!document.hidden && isFocusMinimized && focusTodoId) {
+      if (document.hidden && isFocusMinimized && focusTodoId) {
+        setIsFocusMinimized(false);
+      }
+    };
+
+    const handleBlur = () => {
+      if (isFocusMinimized && focusTodoId) {
         setIsFocusMinimized(false);
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+    };
   }, [isFocusMinimized, focusTodoId]);
 
   // Keyboard shortcut for CMD+SHIFT+K to open weekend dialog
