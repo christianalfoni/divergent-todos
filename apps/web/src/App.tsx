@@ -53,7 +53,7 @@ export interface Todo {
   createdAt?: Date;
   updatedAt?: Date;
   completedAt?: Date;
-  sessions?: Array<{ minutes: number; deepFocus: boolean }>;
+  sessions?: Array<{ minutes: number; deepFocus: boolean; createdAt: Date }>;
 }
 
 function AppContent() {

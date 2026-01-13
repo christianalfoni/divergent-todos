@@ -5,6 +5,7 @@ import TodoItem from './TodoItem'
 import TodosLoadingPlaceholder from './TodosLoadingPlaceholder'
 import SmartEditor, { type SmartEditorRef } from './SmartEditor'
 import { useOnboarding } from './contexts/OnboardingContext'
+import { getShadowTodosForDate } from './utils/shadowTodos'
 import type { Todo } from './App'
 
 interface DayCellProps {
@@ -55,6 +56,9 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
   const { setNodeRef } = useDroppable({
     id: dayId,
   })
+
+  // Get shadow todos for this date (from todos with sessions on this date but different actual date)
+  const shadowTodos = getShadowTodosForDate(date, allTodos)
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
@@ -180,31 +184,51 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         {isLoading ? (
           <TodosLoadingPlaceholder />
         ) : (
-          <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
-            {todos.map((todo) => (
+          <>
+            {/* Render shadow todos first (non-draggable) */}
+            {shadowTodos.map((shadowTodo) => (
               <TodoItem
-                key={todo.id}
-                todo={todo}
+                key={`shadow-${shadowTodo.id}`}
+                todo={shadowTodo}
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
                 onOpenFocus={onOpenFocus}
                 onOpenBreakDown={onOpenBreakDown}
                 availableTags={availableTags}
-                isSelected={todo.id === selectedTodoId}
-                onSelect={() => onSelectTodo(todo.id)}
-                shouldEnterEditMode={todo.id === editModeTodoId}
-                onEditModeEntered={onEditModeEntered}
-                todoRef={(el) => {
-                  if (el) {
-                    todoRefs.current.set(todo.id, el);
-                  } else {
-                    todoRefs.current.delete(todo.id);
-                  }
-                }}
+                isSelected={false}
+                onSelect={() => {}}
+                isShadow={true}
+                shadowDate={date}
               />
             ))}
-          </SortableContext>
+            {/* Render regular todos (draggable) */}
+            <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {todos.map((todo) => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  onToggleTodoComplete={onToggleTodoComplete}
+                  onUpdateTodo={onUpdateTodo}
+                  onDeleteTodo={onDeleteTodo}
+                  onOpenFocus={onOpenFocus}
+                  onOpenBreakDown={onOpenBreakDown}
+                  availableTags={availableTags}
+                  isSelected={todo.id === selectedTodoId}
+                  onSelect={() => onSelectTodo(todo.id)}
+                  shouldEnterEditMode={todo.id === editModeTodoId}
+                  onEditModeEntered={onEditModeEntered}
+                  todoRef={(el) => {
+                    if (el) {
+                      todoRefs.current.set(todo.id, el);
+                    } else {
+                      todoRefs.current.delete(todo.id);
+                    }
+                  }}
+                />
+              ))}
+            </SortableContext>
+          </>
         )}
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
           <button

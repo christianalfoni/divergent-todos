@@ -20,6 +20,8 @@ interface TodoItemProps {
   shouldEnterEditMode?: boolean;
   onEditModeEntered?: () => void;
   todoRef?: (el: HTMLDivElement | null) => void;
+  isShadow?: boolean; // Indicates this is a shadow todo from a different day
+  shadowDate?: Date; // The date to filter sessions by (for shadow todos)
 }
 
 // Helper function to check if HTML content is empty
@@ -44,6 +46,8 @@ export default function TodoItem({
   shouldEnterEditMode = false,
   onEditModeEntered,
   todoRef,
+  isShadow = false,
+  shadowDate,
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
@@ -55,13 +59,37 @@ export default function TodoItem({
     useSortable({
       id: todo.id,
       animateLayoutChanges: () => false,
+      disabled: isShadow, // Disable dragging for shadow todos
     });
 
   // Calculate session statistics
   const sessionCount = useMemo(() => {
     if (!todo.sessions || todo.sessions.length === 0) return null;
-    return todo.sessions.length;
-  }, [todo.sessions]);
+
+    // Determine the target date: shadowDate for shadow todos, todo.date for regular todos
+    const targetDateStr = isShadow && shadowDate
+      ? shadowDate.toISOString().split('T')[0]
+      : todo.date;
+
+    // Count sessions on the specific date
+    const sessionsOnDate = todo.sessions.filter(session => {
+      const sessionDateStr = session.createdAt instanceof Date
+        ? session.createdAt.toISOString().split('T')[0]
+        : new Date(session.createdAt).toISOString().split('T')[0];
+      return sessionDateStr === targetDateStr;
+    });
+
+    const countOnDate = sessionsOnDate.length;
+
+    // For shadow todos, only show count for that day
+    if (isShadow) {
+      return countOnDate > 0 ? { display: countOnDate.toString() } : null;
+    }
+
+    // For regular todos, show "today (total)" format
+    const totalCount = todo.sessions.length;
+    return { display: `${countOnDate} (${totalCount})` };
+  }, [todo.sessions, todo.date, isShadow, shadowDate]);
 
   // Format relative time
   const relativeTime = useMemo(() => {
@@ -116,13 +144,13 @@ export default function TodoItem({
   }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo, onDeleteTodo]);
 
   useEffect(() => {
-    if (shouldEnterEditMode && !isEditing) {
+    if (shouldEnterEditMode && !isEditing && !isShadow) {
       originalHtmlRef.current = todo.text;
       setEditingHtml(todo.text);
       setIsEditing(true);
       onEditModeEntered?.();
     }
-  }, [shouldEnterEditMode, isEditing, todo.text, onEditModeEntered]);
+  }, [shouldEnterEditMode, isEditing, todo.text, onEditModeEntered, isShadow]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
@@ -248,9 +276,8 @@ export default function TodoItem({
     },
   ];
 
-  return (
-    <ContextMenu items={contextMenuItems}>
-      {(isContextMenuOpen) => (
+  // Shadow todos don't need context menu
+  const TodoContent = (isContextMenuOpen?: boolean) => (
         <div
           ref={(el) => {
             setNodeRef(el);
@@ -263,53 +290,61 @@ export default function TodoItem({
           <div
             {...attributes}
             {...listeners}
-            onClick={handleContainerClick}
-            onDoubleClick={handleContainerDoubleClick}
-            onMouseDown={() => setIsPressed(true)}
-            onMouseUp={() => setIsPressed(false)}
-            onMouseLeave={() => setIsPressed(false)}
-            className={`group/todo relative flex gap-3 text-xs/5 px-3 py-2 select-none focus:outline-none cursor-default hover:bg-[var(--color-bg-hover)] ${
-              isPressed || isContextMenuOpen || isSelected ? "bg-[var(--color-bg-hover)]" : ""
-            } ${
-              isSelected ? "[box-shadow:inset_0_0_0_1px_var(--color-accent-primary)]" : ""
-            } ${todo.completed ? "opacity-60" : ""}`}
+            onClick={isShadow ? undefined : handleContainerClick}
+            onDoubleClick={isShadow ? undefined : handleContainerDoubleClick}
+            onMouseDown={isShadow ? undefined : () => setIsPressed(true)}
+            onMouseUp={isShadow ? undefined : () => setIsPressed(false)}
+            onMouseLeave={isShadow ? undefined : () => setIsPressed(false)}
+            className={`group/todo relative flex gap-3 text-xs/5 px-3 py-2 select-none focus:outline-none cursor-default ${
+              isShadow ? "opacity-60" : `hover:bg-[var(--color-bg-hover)] ${
+                isPressed || isContextMenuOpen || isSelected ? "bg-[var(--color-bg-hover)]" : ""
+              } ${
+                isSelected ? "[box-shadow:inset_0_0_0_1px_var(--color-accent-primary)]" : ""
+              } ${todo.completed ? "opacity-60" : ""}`
+            }`}
           >
           <div className="flex h-5 shrink-0 items-center" onClick={(e) => e.stopPropagation()} onDoubleClick={(e) => e.stopPropagation()}>
-            <div className="group/checkbox relative grid size-4 grid-cols-1">
-              <input
-                id={`todo-${todo.id}`}
-                name="todo"
-                type="checkbox"
-                checked={todo.completed}
-                onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
-                className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
-              />
-              <svg
-                fill="none"
-                viewBox="0 0 14 14"
-                className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
-              >
-                <path
-                  d="M3 8L6 11L11 3.5"
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="opacity-0 group-has-checked/checkbox:opacity-100"
+            {isShadow ? (
+              <LightBulbIcon className="size-4 text-[var(--color-text-secondary)]" />
+            ) : (
+              <div className="group/checkbox relative grid size-4 grid-cols-1">
+                <input
+                  id={`todo-${todo.id}`}
+                  name="todo"
+                  type="checkbox"
+                  checked={todo.completed}
+                  onChange={(e) => handleCheckboxClick(e as unknown as React.MouseEvent)}
+                  className="col-start-1 row-start-1 appearance-none rounded-sm border border-[var(--color-border-secondary)] bg-[var(--color-bg-primary)] checked:border-[var(--color-accent-primary)] checked:bg-[var(--color-accent-primary)] indeterminate:border-[var(--color-accent-primary)] indeterminate:bg-[var(--color-accent-primary)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-accent-primary)] disabled:border-[var(--color-border-secondary)] disabled:bg-[var(--color-bg-secondary)] disabled:checked:bg-[var(--color-bg-secondary)] forced-colors:appearance-auto"
                 />
-              </svg>
-              {/* Larger click target overlay */}
-              <div
-                className="absolute inset-0 -m-2 cursor-default"
-                onClick={handleCheckboxClick}
-                aria-hidden="true"
-              />
-            </div>
+                <svg
+                  fill="none"
+                  viewBox="0 0 14 14"
+                  className="pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled/checkbox:stroke-[var(--color-text-secondary)]"
+                >
+                  <path
+                    d="M3 8L6 11L11 3.5"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="opacity-0 group-has-checked/checkbox:opacity-100"
+                  />
+                </svg>
+                {/* Larger click target overlay */}
+                <div
+                  className="absolute inset-0 -m-2 cursor-default"
+                  onClick={handleCheckboxClick}
+                  aria-hidden="true"
+                />
+              </div>
+            )}
           </div>
           <div className="flex-1 min-w-0 text-xs/5 select-none">
             <div
               className={`${
                 todo.completed
                   ? "line-through text-[var(--color-text-secondary)]"
+                  : isShadow
+                  ? "text-[var(--color-text-secondary)]"
                   : "text-[var(--color-text-primary)]"
               }`}
             >
@@ -323,14 +358,23 @@ export default function TodoItem({
               {sessionCount && (
                 <span className="flex items-center gap-1 text-gray-400">
                   <LightBulbIcon className="size-3" />
-                  {sessionCount}
+                  {sessionCount.display}
                 </span>
               )}
             </div>
           </div>
         </div>
       </div>
-      )}
+  );
+
+  // Shadow todos don't have context menu
+  if (isShadow) {
+    return TodoContent();
+  }
+
+  return (
+    <ContextMenu items={contextMenuItems}>
+      {(isContextMenuOpen) => TodoContent(isContextMenuOpen)}
     </ContextMenu>
   );
 }
