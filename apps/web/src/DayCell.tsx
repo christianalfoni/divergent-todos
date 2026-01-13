@@ -185,23 +185,6 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           <TodosLoadingPlaceholder />
         ) : (
           <>
-            {/* Render shadow todos first (non-draggable) */}
-            {shadowTodos.map((shadowTodo) => (
-              <TodoItem
-                key={`shadow-${shadowTodo.id}`}
-                todo={shadowTodo}
-                onToggleTodoComplete={onToggleTodoComplete}
-                onUpdateTodo={onUpdateTodo}
-                onDeleteTodo={onDeleteTodo}
-                onOpenFocus={onOpenFocus}
-                onOpenBreakDown={onOpenBreakDown}
-                availableTags={availableTags}
-                isSelected={false}
-                onSelect={() => {}}
-                isShadow={true}
-                shadowDate={date}
-              />
-            ))}
             {/* Render regular todos (draggable) */}
             <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
               {todos.map((todo) => (
@@ -228,6 +211,23 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 />
               ))}
             </SortableContext>
+            {/* Render shadow todos at the bottom (non-draggable) */}
+            {shadowTodos.map((shadowTodo) => (
+              <TodoItem
+                key={`shadow-${shadowTodo.id}`}
+                todo={shadowTodo}
+                onToggleTodoComplete={onToggleTodoComplete}
+                onUpdateTodo={onUpdateTodo}
+                onDeleteTodo={onDeleteTodo}
+                onOpenFocus={onOpenFocus}
+                onOpenBreakDown={onOpenBreakDown}
+                availableTags={availableTags}
+                isSelected={false}
+                onSelect={() => {}}
+                isShadow={true}
+                shadowDate={date}
+              />
+            ))}
           </>
         )}
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
