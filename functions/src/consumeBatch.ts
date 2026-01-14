@@ -131,6 +131,21 @@ export const consumeBatch = onCall(
             year
           );
 
+          // Calculate focus metrics
+          let totalFocusTime = 0;
+          let sessionsWithoutDistractions = 0;
+
+          completedTodos.forEach((todo) => {
+            if (todo.sessions) {
+              todo.sessions.forEach((session) => {
+                if (session.deepFocus) {
+                  totalFocusTime += session.minutes;
+                  sessionsWithoutDistractions++;
+                }
+              });
+            }
+          });
+
           // Write reflection document
           const reflectionDocId = `${userId}_${year}_${week}`;
           await db
@@ -146,6 +161,8 @@ export const consumeBatch = onCall(
               notes: result.notes,
               notesGeneratedAt: Timestamp.now(),
               updatedAt: Timestamp.now(),
+              sessionsWithoutDistractions: sessionsWithoutDistractions > 0 ? sessionsWithoutDistractions : undefined,
+              totalFocusTime: totalFocusTime > 0 ? totalFocusTime : undefined,
             });
 
           successCount++;

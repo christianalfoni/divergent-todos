@@ -349,6 +349,7 @@ export default function Activity({ year, activityWeeks, loading, onLoaded }: Act
         year={selectedWeek.year}
         todoCount={selectedWeek.completedTodos.length}
         dailyCounts={calculateDailyCounts(selectedWeek)}
+        totalFocusTime={selectedWeek.totalFocusTime}
         onClose={() => setSelectedWeek(null)}
       />
     )}

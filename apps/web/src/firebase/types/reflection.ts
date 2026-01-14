@@ -25,6 +25,8 @@ export interface ReflectionWeek {
   notes: WeekNote[]; // AI-generated notes grouping related work
   notesGeneratedAt?: Date;
   updatedAt: Date;
+  sessionsWithoutDistractions?: number; // Number of focus sessions completed without distractions
+  totalFocusTime?: number; // Total accumulated focus time in minutes (all sessions without distractions)
 }
 
 // Firestore data format (with Timestamps instead of Dates)
@@ -38,6 +40,8 @@ interface ReflectionWeekFirestore {
   notes: WeekNote[];
   notesGeneratedAt?: Timestamp;
   updatedAt: Timestamp;
+  sessionsWithoutDistractions?: number;
+  totalFocusTime?: number;
 }
 
 // Firestore converter for ReflectionWeek
@@ -55,6 +59,8 @@ export const reflectionWeekConverter: FirestoreDataConverter<ReflectionWeek> = {
         ? Timestamp.fromDate(reflectionWeek.notesGeneratedAt)
         : undefined,
       updatedAt: Timestamp.fromDate(reflectionWeek.updatedAt),
+      sessionsWithoutDistractions: reflectionWeek.sessionsWithoutDistractions,
+      totalFocusTime: reflectionWeek.totalFocusTime,
     };
   },
   fromFirestore: (
@@ -73,6 +79,8 @@ export const reflectionWeekConverter: FirestoreDataConverter<ReflectionWeek> = {
       notes: data.notes || [],
       notesGeneratedAt: data.notesGeneratedAt?.toDate(),
       updatedAt: data.updatedAt.toDate(),
+      sessionsWithoutDistractions: data.sessionsWithoutDistractions,
+      totalFocusTime: data.totalFocusTime,
     };
   },
 };

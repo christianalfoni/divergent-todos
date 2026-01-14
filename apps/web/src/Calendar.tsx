@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { DndContext, DragOverlay, pointerWithin } from "@dnd-kit/core";
-import { LightBulbIcon } from "@heroicons/react/24/outline";
 import DayCell from "./DayCell";
 import SmartEditor from "./SmartEditor";
 import FocusDialog from "./FocusDialog";
@@ -111,30 +110,6 @@ export default function Calendar({
     handleDragOver,
     handleDragEnd,
   } = useTodoDragAndDrop({ todos, onMoveTodo, onCopyTodo, onResetTodoForCopy, onAddTodoWithState });
-
-  // Calculate session statistics for activeTodo
-  const activeSessionCount = useMemo(() => {
-    if (!activeTodo?.sessions || activeTodo.sessions.length === 0) return null;
-    return activeTodo.sessions.length;
-  }, [activeTodo]);
-
-  // Format relative time for activeTodo
-  const activeRelativeTime = useMemo(() => {
-    if (!activeTodo?.updatedAt) return "";
-
-    const diffMs = Date.now() - activeTodo.updatedAt.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    // Show date for older items
-    return activeTodo.updatedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  }, [activeTodo]);
 
   // Wrapper for onAddTodo that selects the newly added todo
   const handleAddTodo = useCallback((todo: Omit<Todo, "id" | "position"> & { position?: string }) => {
@@ -498,18 +473,6 @@ export default function Calendar({
                 }`}
               >
                 <SmartEditor html={activeTodo.text} editing={false} />
-                {/* Footer: updated time on left, session stats on right */}
-                <div className="mt-1 flex items-center justify-between text-xs">
-                  <span className="text-gray-400">
-                    {activeRelativeTime}
-                  </span>
-                  {activeSessionCount && (
-                    <span className="flex items-center gap-1 text-gray-400">
-                      <LightBulbIcon className="size-3" />
-                      {activeSessionCount}
-                    </span>
-                  )}
-                </div>
               </div>
             </div>
           </div>

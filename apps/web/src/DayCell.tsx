@@ -116,18 +116,18 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
 
   const handleAddTodoClick = () => {
     setIsAddingTodo(true)
-    // Scroll to bottom after state update
+    // Scroll to top after state update (since add todo is at the top now)
     setTimeout(() => {
       if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+        scrollContainerRef.current.scrollTop = 0
       }
     }, 0)
   }
 
-  // Keep scroll at bottom while editing new todo
+  // Keep scroll at top while editing new todo
   useEffect(() => {
     if (isAddingTodo && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+      scrollContainerRef.current.scrollTop = 0
     }
   }, [isAddingTodo, newTodoHtml])
 
@@ -181,55 +181,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
         </button>
       )}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
-        {isLoading ? (
-          <TodosLoadingPlaceholder />
-        ) : (
-          <>
-            {/* Render regular todos (draggable) */}
-            <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
-              {todos.map((todo) => (
-                <TodoItem
-                  key={todo.id}
-                  todo={todo}
-                  onToggleTodoComplete={onToggleTodoComplete}
-                  onUpdateTodo={onUpdateTodo}
-                  onDeleteTodo={onDeleteTodo}
-                  onOpenFocus={onOpenFocus}
-                  onOpenBreakDown={onOpenBreakDown}
-                  availableTags={availableTags}
-                  isSelected={todo.id === selectedTodoId}
-                  onSelect={() => onSelectTodo(todo.id)}
-                  shouldEnterEditMode={todo.id === editModeTodoId}
-                  onEditModeEntered={onEditModeEntered}
-                  todoRef={(el) => {
-                    if (el) {
-                      todoRefs.current.set(todo.id, el);
-                    } else {
-                      todoRefs.current.delete(todo.id);
-                    }
-                  }}
-                />
-              ))}
-            </SortableContext>
-            {/* Render shadow todos at the bottom (non-draggable) */}
-            {shadowTodos.map((shadowTodo) => (
-              <TodoItem
-                key={`shadow-${shadowTodo.id}`}
-                todo={shadowTodo}
-                onToggleTodoComplete={onToggleTodoComplete}
-                onUpdateTodo={onUpdateTodo}
-                onDeleteTodo={onDeleteTodo}
-                onOpenFocus={onOpenFocus}
-                onOpenBreakDown={onOpenBreakDown}
-                availableTags={availableTags}
-                isSelected={false}
-                onSelect={() => {}}
-                isShadow={true}
-                shadowDate={date}
-              />
-            ))}
-          </>
-        )}
+        {/* Add todo button/input at the top */}
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
           <button
             onClick={handleAddTodoClick}
@@ -300,6 +252,55 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
               </div>
             </div>
           </div>
+        )}
+        {/* Todos list */}
+        {isLoading ? (
+          <TodosLoadingPlaceholder />
+        ) : (
+          <>
+            {/* Render regular todos (draggable) */}
+            <SortableContext items={todos.map(t => t.id)} strategy={verticalListSortingStrategy}>
+              {todos.map((todo) => (
+                <TodoItem
+                  key={todo.id}
+                  todo={todo}
+                  onToggleTodoComplete={onToggleTodoComplete}
+                  onUpdateTodo={onUpdateTodo}
+                  onDeleteTodo={onDeleteTodo}
+                  onOpenFocus={onOpenFocus}
+                  onOpenBreakDown={onOpenBreakDown}
+                  availableTags={availableTags}
+                  isSelected={todo.id === selectedTodoId}
+                  onSelect={() => onSelectTodo(todo.id)}
+                  shouldEnterEditMode={todo.id === editModeTodoId}
+                  onEditModeEntered={onEditModeEntered}
+                  todoRef={(el) => {
+                    if (el) {
+                      todoRefs.current.set(todo.id, el);
+                    } else {
+                      todoRefs.current.delete(todo.id);
+                    }
+                  }}
+                />
+              ))}
+            </SortableContext>
+            {/* Render shadow todos at the bottom (non-draggable) */}
+            {shadowTodos.map((shadowTodo) => (
+              <TodoItem
+                key={`shadow-${shadowTodo.id}`}
+                todo={shadowTodo}
+                onToggleTodoComplete={onToggleTodoComplete}
+                onUpdateTodo={onUpdateTodo}
+                onDeleteTodo={onDeleteTodo}
+                onOpenFocus={onOpenFocus}
+                onOpenBreakDown={onOpenBreakDown}
+                availableTags={availableTags}
+                isSelected={false}
+                onSelect={() => {}}
+                isShadow={true}
+              />
+            ))}
+          </>
         )}
       </div>
     </div>

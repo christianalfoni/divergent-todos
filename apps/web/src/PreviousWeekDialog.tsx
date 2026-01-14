@@ -14,6 +14,7 @@ interface PreviousWeekDialogProps {
   year: number;
   todoCount: number;
   dailyCounts: [number, number, number, number, number]; // [Mon, Tue, Wed, Thu, Fri]
+  totalFocusTime?: number; // Total accumulated focus time in minutes
   onClose: () => void;
 }
 
@@ -22,6 +23,7 @@ export default function PreviousWeekDialog({
   week,
   todoCount,
   dailyCounts,
+  totalFocusTime,
   onClose,
 }: PreviousWeekDialogProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -31,6 +33,19 @@ export default function PreviousWeekDialog({
     const timer = setTimeout(() => setIsVisible(true), 50);
     return () => clearTimeout(timer);
   }, []);
+
+  // Format minutes to "1h30m" or just "45m"
+  const formatTime = (minutes: number): string => {
+    if (minutes < 60) {
+      return `${minutes}m`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours}h`;
+    }
+    return `${hours}h${remainingMinutes}m`;
+  };
 
   return (
     <div
@@ -59,7 +74,8 @@ export default function PreviousWeekDialog({
         </div>
         <div className="previous-week-dialog-content">
           {/* Stats section */}
-          <div className="previous-week-dialog-stats">
+          <div className="previous-week-dialog-stats flex items-center justify-center">
+            {/* Left side: Todo count */}
             <div className="previous-week-dialog-stat">
               <span className="previous-week-dialog-stat-value">{todoCount}</span>
               <span className="previous-week-dialog-stat-label">
@@ -67,7 +83,7 @@ export default function PreviousWeekDialog({
               </span>
             </div>
 
-            {/* Daily activity heatmap */}
+            {/* Center: Daily activity heatmap */}
             <div className="previous-week-dialog-daily-activity">
               <div className="previous-week-dialog-day-labels">
                 {['M', 'T', 'W', 'T', 'F'].map((label, index) => (
@@ -85,6 +101,18 @@ export default function PreviousWeekDialog({
                 ))}
               </div>
             </div>
+
+            {/* Right side: Focus time metric */}
+            {totalFocusTime !== undefined && totalFocusTime > 0 && (
+              <div className="previous-week-dialog-stat">
+                <span className="previous-week-dialog-stat-value !text-yellow-500">
+                  {formatTime(totalFocusTime)}
+                </span>
+                <span className="previous-week-dialog-stat-label">
+                  without distractions
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Week Reflection Notes Section */}
