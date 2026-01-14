@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TrashIcon, PencilIcon } from "@heroicons/react/20/solid";
@@ -21,7 +21,6 @@ interface TodoItemProps {
   onEditModeEntered?: () => void;
   todoRef?: (el: HTMLDivElement | null) => void;
   isShadow?: boolean; // Indicates this is a shadow todo from a different day
-  shadowDate?: Date; // The date to filter sessions by (for shadow todos)
 }
 
 // Helper function to check if HTML content is empty
@@ -47,7 +46,6 @@ export default function TodoItem({
   onEditModeEntered,
   todoRef,
   isShadow = false,
-  shadowDate,
 }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
@@ -61,53 +59,6 @@ export default function TodoItem({
       animateLayoutChanges: () => false,
       disabled: isShadow, // Disable dragging for shadow todos
     });
-
-  // Calculate session statistics
-  const sessionCount = useMemo(() => {
-    if (!todo.sessions || todo.sessions.length === 0) return null;
-
-    // Determine the target date: shadowDate for shadow todos, todo.date for regular todos
-    const targetDateStr = isShadow && shadowDate
-      ? shadowDate.toISOString().split('T')[0]
-      : todo.date;
-
-    // Count sessions on the specific date
-    const sessionsOnDate = todo.sessions.filter(session => {
-      const sessionDateStr = session.createdAt instanceof Date
-        ? session.createdAt.toISOString().split('T')[0]
-        : new Date(session.createdAt).toISOString().split('T')[0];
-      return sessionDateStr === targetDateStr;
-    });
-
-    const countOnDate = sessionsOnDate.length;
-
-    // For shadow todos, only show count for that day
-    if (isShadow) {
-      return countOnDate > 0 ? { display: countOnDate.toString() } : null;
-    }
-
-    // For regular todos, show "today (total)" format
-    const totalCount = todo.sessions.length;
-    return { display: `${countOnDate} (${totalCount})` };
-  }, [todo.sessions, todo.date, isShadow, shadowDate]);
-
-  // Format relative time
-  const relativeTime = useMemo(() => {
-    if (!todo.updatedAt) return "";
-
-    const diffMs = Date.now() - todo.updatedAt.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "just now";
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-
-    // Show date for older items
-    return todo.updatedAt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  }, [todo.updatedAt]);
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -349,18 +300,6 @@ export default function TodoItem({
               }`}
             >
               <SmartEditor html={todo.text} editing={false} />
-            </div>
-            {/* Footer: updated time on left, session stats on right */}
-            <div className="mt-1 flex items-center justify-between text-xs">
-              <span className="text-gray-400">
-                {relativeTime}
-              </span>
-              {sessionCount && (
-                <span className="flex items-center gap-1 text-gray-400">
-                  <LightBulbIcon className="size-3" />
-                  {sessionCount.display}
-                </span>
-              )}
             </div>
           </div>
         </div>

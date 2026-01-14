@@ -84,6 +84,8 @@ function AppContent() {
     todoCount: number;
     dailyCounts: [number, number, number, number, number];
     userId: string;
+    sessionsWithoutDistractions?: number;
+    totalFocusTime?: number;
   } | null>(null);
   const [createMomentumDialog, setCreateMomentumDialog] = useState<{
     show: boolean;
@@ -304,6 +306,8 @@ function AppContent() {
               todoCount: reflectionDoc.completedTodos.length,
               dailyCounts,
               userId: authentication.user.uid,
+              sessionsWithoutDistractions: reflectionDoc.sessionsWithoutDistractions,
+              totalFocusTime: reflectionDoc.totalFocusTime,
             });
 
             // Mark as seen for this week
@@ -410,6 +414,8 @@ function AppContent() {
                 todoCount: reflectionDoc.completedTodos.length,
                 dailyCounts,
                 userId: authentication.user.uid,
+                sessionsWithoutDistractions: reflectionDoc.sessionsWithoutDistractions,
+                totalFocusTime: reflectionDoc.totalFocusTime,
               });
             } else {
               console.log("No notes found for previous week");
@@ -631,6 +637,7 @@ function AppContent() {
           year={previousWeekDialog.year}
           todoCount={previousWeekDialog.todoCount}
           dailyCounts={previousWeekDialog.dailyCounts}
+          totalFocusTime={previousWeekDialog.totalFocusTime}
           onClose={handleStartWeek}
         />
       )}
