@@ -34,19 +34,19 @@ export function useAddTodo() {
   profileRef.current = authentication.profile;
 
   return pipe<
-    { description: string; date: Date; lastPosition?: string | null; position?: string; docId?: string; completed?: boolean },
+    { description: string; date: Date; firstPosition?: string | null; position?: string; docId?: string; completed?: boolean },
     AddTodoState
   >()
     .setState({ isAdding: true, error: null })
-    .async(({ description, date, lastPosition, position: providedPosition, docId, completed }) => {
+    .async(({ description, date, firstPosition, position: providedPosition, docId, completed }) => {
       const todoDoc = docId ? doc(todosCollection, docId) : doc(todosCollection);
 
       if (!userRef.current) {
         throw new Error("can not add todo without a user");
       }
 
-      // Use provided position or generate position for new todo at the end of the day
-      const position = providedPosition || generateKeyBetween(lastPosition || null, null);
+      // Use provided position or generate position for new todo at the top of the day
+      const position = providedPosition || generateKeyBetween(null, firstPosition || null);
 
       // Check if user has an active subscription
       const hasActiveSubscription =
