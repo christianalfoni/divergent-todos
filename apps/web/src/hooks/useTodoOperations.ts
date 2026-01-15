@@ -59,15 +59,15 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       const todoDoc = doc(todosCollection);
       const docId = todoDoc.id;
 
-      // Find last position for this date (including pending todos)
+      // Find first position for this date (including pending todos)
       const allTodosForDate = [
         ...firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === todo.date),
         ...getPendingAsTodos().filter((t) => t.date === todo.date)
       ];
       const todosForDate = sortTodosByPosition(allTodosForDate);
 
-      const lastPosition = todosForDate.length > 0 ? todosForDate[todosForDate.length - 1].position : null;
-      const newPosition = generateKeyBetween(lastPosition, null);
+      const firstPosition = todosForDate.length > 0 ? todosForDate[0].position : null;
+      const newPosition = generateKeyBetween(null, firstPosition);
 
       // Add to pending immediately for optimistic update
       addPending({
@@ -464,15 +464,15 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         // Use the provided position directly
         newPosition = todo.position;
       } else {
-        // Find last position for this date (including pending todos)
+        // Find first position for this date (including pending todos)
         const allTodosForDate = [
           ...firebaseTodos.filter((t) => t.date.toISOString().split("T")[0] === todo.date),
           ...getPendingAsTodos().filter((t) => t.date === todo.date)
         ];
         const todosForDate = sortTodosByPosition(allTodosForDate);
 
-        const lastPosition = todosForDate.length > 0 ? todosForDate[todosForDate.length - 1].position : null;
-        newPosition = generateKeyBetween(lastPosition, null);
+        const firstPosition = todosForDate.length > 0 ? todosForDate[0].position : null;
+        newPosition = generateKeyBetween(null, firstPosition);
       }
 
       // Add to pending immediately for optimistic update

@@ -297,14 +297,12 @@ export default function Calendar({
         onDeleteTodo(selectedTodoId);
         // Find next todo to select after deletion
         const currentIndex = orderedTodos.findIndex(t => t.id === selectedTodoId);
-        if (currentIndex >= 0) {
-          if (currentIndex < orderedTodos.length - 1) {
-            setSelectedTodoId(orderedTodos[currentIndex + 1].id);
-          } else if (currentIndex > 0) {
-            setSelectedTodoId(orderedTodos[currentIndex - 1].id);
-          } else {
-            setSelectedTodoId(null);
-          }
+        if (currentIndex >= 0 && currentIndex < orderedTodos.length - 1) {
+          // Select next todo if available
+          setSelectedTodoId(orderedTodos[currentIndex + 1].id);
+        } else {
+          // No next todo available, deselect
+          setSelectedTodoId(null);
         }
       }
     };
