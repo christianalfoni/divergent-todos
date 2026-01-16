@@ -156,7 +156,10 @@ export default function Calendar({
       .sort((a, b) => {
         const dateCompare = a.date.localeCompare(b.date);
         if (dateCompare !== 0) return dateCompare;
-        return a.position.localeCompare(b.position);
+        // Use standard string comparison, not localeCompare, to match fractional-indexing library
+        if (a.position < b.position) return -1;
+        if (a.position > b.position) return 1;
+        return 0;
       });
   }, [todos]);
 

@@ -22,6 +22,7 @@ export type SmartEditorRef = {
   setHtml: (html: string) => void;
   getHtml: () => string;
   convertPendingTags: () => void;
+  blur: () => void;
 };
 
 const URL_REGEX = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/i;
@@ -82,6 +83,11 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor(
     },
     getHtml: () => {
       return ref.current?.innerHTML || "";
+    },
+    blur: () => {
+      if (ref.current) {
+        ref.current.blur();
+      }
     },
     convertPendingTags: () => {
       if (!ref.current) return;
