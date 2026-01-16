@@ -63,6 +63,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape') {
       editorRef.current?.clear()
+      editorRef.current?.blur()
       setNewTodoHtml('')
       setIsAddingTodo(false)
     } else if (e.key === 'Enter' && !e.shiftKey) {
@@ -81,6 +82,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
           date: date.toISOString().split('T')[0],
         })
         editorRef.current?.clear()
+        editorRef.current?.blur()
         setNewTodoHtml('')
         setIsAddingTodo(false)
       }
