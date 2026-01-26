@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { DndContext, DragOverlay, pointerWithin } from "@dnd-kit/core";
-import DayCell from "./DayCell";
+import DayCell, { type DayCellHandle } from "./DayCell";
 import SmartEditor from "./SmartEditor";
 import FocusDialog from "./FocusDialog";
 import WeekendDialog from "./WeekendDialog";
@@ -66,13 +66,14 @@ export default function Calendar({
   const [focusTodoId, setFocusTodoId] = useState<string | null>(null);
   const focusTodo = useMemo(() =>
     focusTodoId ? todos.find(t => t.id === focusTodoId) ?? null : null
-  , [todos, focusTodoId]);
+    , [todos, focusTodoId]);
   const [isFocusMinimized, setIsFocusMinimized] = useState(false);
   const [showWeekendDialog, setShowWeekendDialog] = useState(false);
   const [visibilityTrigger, setVisibilityTrigger] = useState(0);
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   const [editModeTodoId, setEditModeTodoId] = useState<string | null>(null);
   const todoRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const dayCellRefs = useRef<Map<string, DayCellHandle>>(new Map());
   const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), [visibilityTrigger]);
 
   // Wrap setFocusTodo to track analytics imperatively
@@ -314,6 +315,45 @@ export default function Calendar({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedTodoId, orderedTodos, datesWithTodos, todos, focusTodo, handleOpenFocus, onDeleteTodo, onToggleTodoComplete, onCopyTodo, scrollTodoIntoView]);
 
+  // Keyboard shortcut for 'n' to add new todo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check for 'n' or 'N'
+      if (e.key === 'n' || e.key === 'N') {
+        // Skip if currently editing
+        if (document.activeElement?.hasAttribute('contenteditable')) return;
+        if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '')) return;
+
+        e.preventDefault();
+
+        // Get today's date
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        let targetDate: Date;
+        if (isWeekend) {
+          // If it's weekend, target next Monday (first visible day)
+          const daysUntilMonday = dayOfWeek === 0 ? 1 : 2; // Sunday: 1 day, Saturday: 2 days
+          targetDate = new Date(today);
+          targetDate.setDate(today.getDate() + daysUntilMonday);
+        } else {
+          // Otherwise, target today
+          targetDate = today;
+        }
+
+        const targetDateString = targetDate.toISOString().split('T')[0];
+        const dayCellHandle = dayCellRefs.current.get(targetDateString);
+        if (dayCellHandle) {
+          dayCellHandle.startAddingTodo();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Handle app focus when day changes
   const handleDayChange = useCallback(() => {
     // Force re-render when day changes
@@ -344,8 +384,18 @@ export default function Calendar({
       }
     };
 
+    const handleWindowFocus = () => {
+      if (isWeekend() && authentication.user && profile?.isOnboarded) {
+        setShowWeekendDialog(true);
+      }
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
   }, [authentication.user, profile?.isOnboarded]);
 
   // Restore focus dialog when app loses focus (if minimized)
@@ -405,9 +455,8 @@ export default function Calendar({
       )}
       <div className="flex-1 w-full flex flex-col overflow-hidden" onClick={handleCalendarClick}>
         <div
-          className={`grid grid-cols-5 ${
-            viewMode === "two-weeks" ? "grid-rows-2" : "grid-rows-1"
-          } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
+          className={`grid grid-cols-5 ${viewMode === "two-weeks" ? "grid-rows-2" : "grid-rows-1"
+            } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
         >
           {weekdays.map((date, index) => {
             return (
@@ -433,6 +482,13 @@ export default function Calendar({
                 editModeTodoId={editModeTodoId}
                 onEditModeEntered={() => setEditModeTodoId(null)}
                 todoRefs={todoRefs}
+                ref={(el) => {
+                  if (el) {
+                    dayCellRefs.current.set(date.toISOString().split('T')[0], el);
+                  } else {
+                    dayCellRefs.current.delete(date.toISOString().split('T')[0]);
+                  }
+                }}
               />
             );
           })}
@@ -467,11 +523,10 @@ export default function Calendar({
                 </div>
               </div>
               <div
-                className={`flex-1 min-w-0 ${
-                  activeTodo.completed
-                    ? "line-through text-[var(--color-text-secondary)]"
-                    : "text-[var(--color-text-primary)]"
-                }`}
+                className={`flex-1 min-w-0 ${activeTodo.completed
+                  ? "line-through text-[var(--color-text-secondary)]"
+                  : "text-[var(--color-text-primary)]"
+                  }`}
               >
                 <SmartEditor html={activeTodo.text} editing={false} />
               </div>

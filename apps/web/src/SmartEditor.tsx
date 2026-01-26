@@ -23,6 +23,7 @@ export type SmartEditorRef = {
   getHtml: () => string;
   convertPendingTags: () => void;
   blur: () => void;
+  focus: () => void;
 };
 
 const URL_REGEX = /^(https?:\/\/)?([\w.-]+)(:\d+)?(\/[^\s]*)?$/i;
@@ -120,6 +121,11 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor(
 
           emitChange();
         }
+      }
+    },
+    focus: () => {
+      if (ref.current) {
+        ref.current.focus();
       }
     },
   }));

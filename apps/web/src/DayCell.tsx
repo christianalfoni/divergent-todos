@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TodoItem from './TodoItem'
@@ -31,7 +31,11 @@ interface DayCellProps {
   todoRefs: React.MutableRefObject<Map<string, HTMLDivElement>>
 }
 
-export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, todoRefs }: DayCellProps) {
+export interface DayCellHandle {
+  startAddingTodo: () => void
+}
+
+const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, todoRefs }, ref) => {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -126,12 +130,26 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
     }, 0)
   }
 
+  // Focus the editor when entering add mode
+  useEffect(() => {
+    if (isAddingTodo && editorRef.current) {
+      // Small timeout to ensure the editor is mounted and ready
+      setTimeout(() => {
+        editorRef.current?.focus()
+      }, 10)
+    }
+  }, [isAddingTodo])
+
   // Keep scroll at top while editing new todo
   useEffect(() => {
     if (isAddingTodo && scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0
     }
   }, [isAddingTodo, newTodoHtml])
+
+  useImperativeHandle(ref, () => ({
+    startAddingTodo: handleAddTodoClick
+  }))
 
   const dayNumber = date.getDate()
   const month = date.toLocaleDateString('en-US', { month: 'short' })
@@ -145,11 +163,10 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
       <div className="flex justify-between items-start mb-2 px-3">
         <time
           dateTime={date.toISOString().split('T')[0]}
-          className={`text-xs font-semibold w-fit shrink-0 ${
-            isToday
-              ? 'text-[var(--color-accent-primary)]'
-              : 'text-[var(--color-text-primary)]'
-          }`}
+          className={`text-xs font-semibold w-fit shrink-0 ${isToday
+            ? 'text-[var(--color-accent-primary)]'
+            : 'text-[var(--color-text-primary)]'
+            }`}
         >
           {`${month} ${dayNumber}`}
         </time>
@@ -298,7 +315,7 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
                 onOpenBreakDown={onOpenBreakDown}
                 availableTags={availableTags}
                 isSelected={false}
-                onSelect={() => {}}
+                onSelect={() => { }}
                 isShadow={true}
               />
             ))}
@@ -307,4 +324,6 @@ export default function DayCell({ date, isToday, isNextMonday, isAuthenticated, 
       </div>
     </div>
   )
-}
+})
+
+export default DayCell
