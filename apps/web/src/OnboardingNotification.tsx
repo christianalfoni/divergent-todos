@@ -60,7 +60,7 @@ export default function OnboardingNotification() {
           ),
           title: "Let's add your first todo",
           message:
-            "Try adding a todo by clicking on any day.",
+            "Try adding a todo by clicking on any day. You can also press N to quickly add a todo to today.",
           actionLabel: "Add a todo",
           requiresAddTodo: true,
         };
