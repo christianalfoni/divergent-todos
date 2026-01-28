@@ -30,12 +30,32 @@ export default function FocusDialog({
 }: FocusDialogProps) {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
   const onboarding = useOnboarding();
 
-  // Track start time when dialog opens
+  // Play heartbeat sound when focus is activated, starting at 200ms mark
+  const playHeartbeatSound = () => {
+    try {
+      const audio = new Audio('/heartbeat.mp3');
+      audio.volume = 0.8; // Adjust volume (0.0 to 1.0)
+      audio.currentTime = 0.2; // Start playing from 200ms (0.2 seconds) in
+      audio.play().catch(err => {
+        console.debug('Audio playback failed:', err);
+      });
+    } catch (error) {
+      console.debug('Audio not available:', error);
+    }
+  };
+
+  // Track start time when dialog opens and play heartbeat immediately
   useEffect(() => {
     if (open) {
       setStartTime(new Date());
+      setShowDialog(true);
+      // Play heartbeat sound immediately
+      playHeartbeatSound();
+    } else {
+      setShowDialog(false);
     }
   }, [open]);
 
@@ -61,18 +81,20 @@ export default function FocusDialog({
 
   return (
     <>
-      <Dialog open={open} onClose={onMinimize} className="relative z-[60]">
+      <Dialog open={showDialog} onClose={onMinimize} className="relative z-[60]">
       <DialogBackdrop
         transition
-        className="fixed inset-0 backdrop-blur-md bg-[var(--color-overlay)] transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        className="fixed inset-0 backdrop-blur-sm bg-black/30 transition-opacity data-closed:opacity-0 data-enter:duration-400 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
       />
 
       <div className="fixed inset-0 z-[60] w-screen overflow-y-auto">
         <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
           <DialogPanel
             transition
-            className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95 dark:bg-gray-800 dark:outline dark:-outline-offset-1 dark:outline-white/10"
+            className="relative transform transition-all data-closed:scale-95 data-closed:opacity-0 data-enter:duration-500 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg"
           >
+            <div className="focus-breathing-border">
+              <div className="relative overflow-hidden rounded-lg bg-white text-left shadow-xl dark:bg-gray-800">
             {/* Header */}
             <div className="px-6 pt-6 pb-4">
               <DialogTitle
@@ -160,6 +182,8 @@ export default function FocusDialog({
               >
                 End Session
               </button>
+            </div>
+              </div>
             </div>
           </DialogPanel>
         </div>
