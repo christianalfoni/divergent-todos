@@ -68,6 +68,46 @@
   animation: pulsate 1.5s ease-in-out infinite;
 }
 
+@keyframes wavyGradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.focus-breathing-border {
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-primary) 0%,
+    white 25%,
+    var(--color-accent-primary) 50%,
+    white 75%,
+    var(--color-accent-primary) 100%
+  );
+  background-size: 300% 100%;
+  animation: wavyGradient 6s ease-in-out infinite;
+  padding: 2px;
+  border-radius: 0.5rem;
+  will-change: background-position;
+}
+
+.dark .focus-breathing-border {
+  background: linear-gradient(
+    90deg,
+    var(--color-accent-primary) 0%,
+    rgb(31 41 55) 25%,
+    var(--color-accent-primary) 50%,
+    rgb(31 41 55) 75%,
+    var(--color-accent-primary) 100%
+  );
+  background-size: 300% 100%;
+}
+
 /* Current week indicator - unified container */
 .activity-week-in-progress {
   background: var(--color-bg-primary);
