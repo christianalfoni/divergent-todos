@@ -22,8 +22,15 @@ import { useEditProfile } from "./hooks/useEditProfile";
 import { useState } from "react";
 
 export default function OnboardingNotification() {
-  const { isOnboarding, currentStep, currentStepIndex, totalSteps, previousStep, nextStep, completeOnboarding } =
-    useOnboarding();
+  const {
+    isOnboarding,
+    currentStep,
+    currentStepIndex,
+    totalSteps,
+    previousStep,
+    nextStep,
+    completeOnboarding,
+  } = useOnboarding();
   const [{ isEditing }, editProfile] = useEditProfile();
   const [copiedUrl, setCopiedUrl] = useState(false);
 
@@ -46,17 +53,24 @@ export default function OnboardingNotification() {
       case "workdays":
         return {
           icon: (
-            <CalendarDaysIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <CalendarDaysIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Toggle between view modes",
-          message: "Press TAB to flip between different calendar views. Try it now to see how it works!",
+          message:
+            "Press TAB to flip between different calendar views. Try it now to see how it works!",
           actionLabel: "Press TAB",
           requiresTab: true,
         };
       case "add-todo":
         return {
           icon: (
-            <PlusCircleIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <PlusCircleIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Let's add your first todo",
           message:
@@ -67,7 +81,10 @@ export default function OnboardingNotification() {
       case "add-todo-with-tag":
         return {
           icon: (
-            <HashtagIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <HashtagIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Add a todo with a tag",
           message:
@@ -78,7 +95,10 @@ export default function OnboardingNotification() {
       case "add-todo-with-url":
         return {
           icon: (
-            <LinkIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <LinkIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Add a todo with a URL",
           message:
@@ -90,7 +110,10 @@ export default function OnboardingNotification() {
       case "edit-todo":
         return {
           icon: (
-            <PencilSquareIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <PencilSquareIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Select and edit todos",
           message:
@@ -101,18 +124,24 @@ export default function OnboardingNotification() {
       case "move-todo":
         return {
           icon: (
-            <ArrowsRightLeftIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <ArrowsRightLeftIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Move todos around",
           message:
-            "Drag and drop todos to reorder them within a day or move them to different days.",
+            "Drag and drop todos to reorder them within a day or move them to different days. Try moving the todo you just focused on - if you don't complete it, you'll see a 'shadow todo' creating a feeling of momentum on unfinished todos!",
           actionLabel: "Move a todo",
           requiresMoveTodo: true,
         };
       case "copy-todo":
         return {
           icon: (
-            <DocumentDuplicateIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <DocumentDuplicateIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Copy todo by dragging",
           message:
@@ -123,7 +152,10 @@ export default function OnboardingNotification() {
       case "delete-todo":
         return {
           icon: (
-            <TrashIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <TrashIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Delete todo",
           message:
@@ -134,18 +166,24 @@ export default function OnboardingNotification() {
       case "timebox":
         return {
           icon: (
-            <LightBulbIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <LightBulbIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Focus on your work",
           message:
-            "Double-click a todo or select it and press F to open the Focus dialog. Track your focus sessions and toggle 'No distractions' if you stayed focused. Click 'End Session' when you're done to save the session. Your weekly reflection will help you track your ability to focus without distractions.",
-          actionLabel: "Open and close Focus dialog",
+            "Double-click a todo or select it and press F to open the Focus dialog. For now, just click 'End Session' to continue. You can toggle 'No distractions' to track focused work sessions. Your weekly reflection will show how much time you spent in deep focus.",
+          actionLabel: "Open Focus and end session",
           requiresTimebox: true,
         };
       case "reflection":
         return {
           icon: (
-            <ChartBarIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <ChartBarIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Weekly reflection",
           message:
@@ -156,7 +194,10 @@ export default function OnboardingNotification() {
       case "congratulations":
         return {
           icon: (
-            <CheckCircleIcon aria-hidden="true" className="size-6 text-[var(--color-accent-primary)]" />
+            <CheckCircleIcon
+              aria-hidden="true"
+              className="size-6 text-[var(--color-accent-primary)]"
+            />
           ),
           title: "Congratulations!",
           message:
@@ -196,7 +237,10 @@ export default function OnboardingNotification() {
                     </p>
                     {!content.hideActionLabel && content.actionLabel && (
                       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <ClipboardDocumentCheckIcon aria-hidden="true" className="size-4 text-gray-500 dark:text-gray-400 shrink-0" />
+                        <ClipboardDocumentCheckIcon
+                          aria-hidden="true"
+                          className="size-4 text-gray-500 dark:text-gray-400 shrink-0"
+                        />
                         <span className="text-sm font-bold text-gray-900 dark:text-white">
                           {content.actionLabel}
                         </span>
@@ -206,7 +250,10 @@ export default function OnboardingNotification() {
                             onClick={handleCopyUrl}
                             className="inline-flex items-center gap-x-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 hover:bg-indigo-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 dark:bg-indigo-400/10 dark:text-indigo-400 dark:hover:bg-indigo-400/20 dark:focus-visible:outline-indigo-500"
                           >
-                            <ClipboardIcon aria-hidden="true" className="size-3" />
+                            <ClipboardIcon
+                              aria-hidden="true"
+                              className="size-3"
+                            />
                             {copiedUrl ? "Copied!" : "Copy URL"}
                           </button>
                         )}
@@ -224,7 +271,10 @@ export default function OnboardingNotification() {
                         title="Previous step"
                       >
                         <span className="sr-only">Previous step</span>
-                        <ChevronLeftIcon aria-hidden="true" className="size-5" />
+                        <ChevronLeftIcon
+                          aria-hidden="true"
+                          className="size-5"
+                        />
                       </button>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
                         {currentStepIndex + 1} / {totalSteps}
@@ -237,7 +287,10 @@ export default function OnboardingNotification() {
                         title="Next step"
                       >
                         <span className="sr-only">Next step</span>
-                        <ChevronRightIcon aria-hidden="true" className="size-5" />
+                        <ChevronRightIcon
+                          aria-hidden="true"
+                          className="size-5"
+                        />
                       </button>
                     </div>
 
@@ -268,7 +321,11 @@ export default function OnboardingNotification() {
                 <div className="ml-4 flex shrink-0">
                   <button
                     type="button"
-                    onClick={currentStep === "congratulations" ? handleDismiss : completeOnboarding}
+                    onClick={
+                      currentStep === "congratulations"
+                        ? handleDismiss
+                        : completeOnboarding
+                    }
                     className="inline-flex rounded-md text-gray-400 hover:text-gray-500 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--color-accent-primary)] dark:hover:text-white"
                   >
                     <span className="sr-only">Close</span>

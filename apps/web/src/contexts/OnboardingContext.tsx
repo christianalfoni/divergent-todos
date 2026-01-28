@@ -53,10 +53,10 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   "add-todo-with-tag",
   "add-todo-with-url",
   "edit-todo",
+  "timebox",
   "move-todo",
   "copy-todo",
   "delete-todo",
-  "timebox",
   "reflection",
   "congratulations",
 ];
