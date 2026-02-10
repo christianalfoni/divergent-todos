@@ -3,8 +3,9 @@ import {
   signInWithPopup,
   signInWithCustomToken,
 } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { pipe } from "pipesy";
-import { auth } from "../firebase";
+import { auth, profilesCollection } from "../firebase";
 import { trackSignIn } from "../firebase/analytics";
 
 export type SignInState =
@@ -25,6 +26,8 @@ export function useSignIn() {
   const [signInState, signIn] = pipe<unknown, SignInState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
+      let userId: string;
+
       // Check if running in Electron
       if (window.native?.auth) {
         try {
@@ -32,7 +35,8 @@ export function useSignIn() {
           const customToken = await window.native.auth.startGoogleSignIn();
 
           // Sign in with the custom token
-          await signInWithCustomToken(auth, customToken);
+          const userCredential = await signInWithCustomToken(auth, customToken);
+          userId = userCredential.user.uid;
         } catch (error) {
           throw new Error(
             `Electron auth failed: ${
@@ -42,11 +46,16 @@ export function useSignIn() {
         }
       } else {
         const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
+        const userCredential = await signInWithPopup(auth, provider);
+        userId = userCredential.user.uid;
       }
 
       // Track successful sign-in
       trackSignIn("google");
+
+      // Initialize profile document if it doesn't exist
+      const profileDoc = doc(profilesCollection, userId);
+      await setDoc(profileDoc, { freeTodoCount: 0 }, { merge: true });
 
       // We keep signing in as we are waiting for auth to go through
       return { isSigningIn: true, error: null };

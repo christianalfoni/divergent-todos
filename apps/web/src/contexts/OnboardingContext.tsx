@@ -18,7 +18,6 @@ export type OnboardingStep =
   | "delete-todo"
   | "timebox"
   | "reflection"
-  | "congratulations"
   | null;
 
 interface OnboardingContextValue {
@@ -58,7 +57,6 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
   "copy-todo",
   "delete-todo",
   "reflection",
-  "congratulations",
 ];
 
 interface OnboardingProviderProps {
@@ -107,7 +105,7 @@ export function OnboardingProvider({ children }: OnboardingProviderProps) {
 
   const completeOnboarding = () => {
     // Track if onboarding was skipped or completed
-    if (currentStep === "congratulations") {
+    if (currentStep === "reflection") {
       trackOnboardingCompleted();
     } else if (currentStep) {
       trackOnboardingSkipped(currentStep);

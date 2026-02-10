@@ -28,6 +28,7 @@ interface DayCellProps {
   onSelectTodo: (todoId: string) => void
   editModeTodoId: string | null
   onEditModeEntered: () => void
+  onEditingChange: (isEditing: boolean) => void
   todoRefs: React.MutableRefObject<Map<string, HTMLDivElement>>
 }
 
@@ -35,7 +36,7 @@ export interface DayCellHandle {
   startAddingTodo: () => void
 }
 
-const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, todoRefs }, ref) => {
+const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, onEditingChange, todoRefs }, ref) => {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -293,6 +294,7 @@ const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNext
                   onSelect={() => onSelectTodo(todo.id)}
                   shouldEnterEditMode={todo.id === editModeTodoId}
                   onEditModeEntered={onEditModeEntered}
+                  onEditingChange={onEditingChange}
                   todoRef={(el) => {
                     if (el) {
                       todoRefs.current.set(todo.id, el);

@@ -7,7 +7,7 @@ import {
   downloadBatchOutput,
   parseBatchResponse,
 } from "./lib/openai-batch.js";
-import { getTodosForWeek, getWeekDateRange } from "./lib/activity-data.js";
+import { getTodosForWeek, getWeekDateRange, calculateFocusMetrics } from "./lib/activity-data.js";
 import {
   getBatchJob,
   updateBatchJobStatus,
@@ -131,42 +131,48 @@ export const consumeBatch = onCall(
             year
           );
 
-          // Calculate focus metrics
-          let totalFocusTime = 0;
-          let sessionsWithoutDistractions = 0;
+          logger.info(`📊 Processing ${customId}: Found ${completedTodos.length} completed todos`);
 
-          completedTodos.forEach((todo) => {
-            if (todo.sessions) {
-              todo.sessions.forEach((session) => {
-                if (session.deepFocus) {
-                  totalFocusTime += session.minutes;
-                  sessionsWithoutDistractions++;
-                }
-              });
-            }
-          });
+          // Calculate focus metrics using shared logic
+          const {
+            totalFocusTime,
+            sessionsWithoutDistractions,
+            averageFocusTime,
+            completedTodosWithoutSessions,
+          } = calculateFocusMetrics(completedTodos, logger);
 
           // Write reflection document
           const reflectionDocId = `${userId}_${year}_${week}`;
+
+          const reflectionData = {
+            userId,
+            year,
+            week,
+            month,
+            completedTodos: completedTodosWithoutSessions,
+            incompleteCount: incompleteTodos.length,
+            notes: result.notes,
+            notesGeneratedAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+            sessionsWithoutDistractions: sessionsWithoutDistractions > 0 ? sessionsWithoutDistractions : undefined,
+            totalFocusTime: totalFocusTime > 0 ? totalFocusTime : undefined,
+            averageFocusTime: averageFocusTime > 0 ? averageFocusTime : undefined,
+          };
+
+          logger.info(`💾 Writing reflection document: reflections/${reflectionDocId}`, {
+            totalFocusTime: reflectionData.totalFocusTime,
+            sessionsWithoutDistractions: reflectionData.sessionsWithoutDistractions,
+            averageFocusTime: reflectionData.averageFocusTime,
+            completedTodosCount: completedTodos.length,
+          });
+
           await db
             .collection("reflections")
             .doc(reflectionDocId)
-            .set({
-              userId,
-              year,
-              week,
-              month,
-              completedTodos,
-              incompleteCount: incompleteTodos.length,
-              notes: result.notes,
-              notesGeneratedAt: Timestamp.now(),
-              updatedAt: Timestamp.now(),
-              sessionsWithoutDistractions: sessionsWithoutDistractions > 0 ? sessionsWithoutDistractions : undefined,
-              totalFocusTime: totalFocusTime > 0 ? totalFocusTime : undefined,
-            });
+            .set(reflectionData);
 
           successCount++;
-          logger.info(`✓ Successfully wrote reflection for ${customId}`);
+          logger.info(`✅ Successfully wrote reflection for ${customId}`);
         } catch (error) {
           const errorMsg =
             error instanceof Error ? error.message : String(error);

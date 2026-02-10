@@ -104,6 +104,7 @@ export default function UserMenu({
             onFeedbackClick={onFeedbackClick}
             onCreateAccountClick={onCreateAccountClick}
             onDownloadAppClick={onDownloadAppClick}
+            onOpenOnboarding={onOpenOnboarding}
             onSignOut={onSignOut}
             onMenuItemClick={onMenuItemClick}
           />
@@ -151,9 +152,10 @@ function AnonymousUserMenu({
   onFeedbackClick,
   onCreateAccountClick,
   onDownloadAppClick,
+  onOpenOnboarding,
   onSignOut,
   onMenuItemClick,
-}: MenuSectionProps & { onCreateAccountClick: () => void }) {
+}: MenuSectionProps & { onCreateAccountClick: () => void; onOpenOnboarding?: () => void }) {
   return (
     <>
       <MenuItem>
@@ -180,6 +182,24 @@ function AnonymousUserMenu({
               className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
             />
             Download app
+          </button>
+        </MenuItem>
+      )}
+
+      {onOpenOnboarding && (
+        <MenuItem>
+          <button
+            onClick={() => {
+              onMenuItemClick("restart_onboarding");
+              onOpenOnboarding();
+            }}
+            className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
+          >
+            <AcademicCapIcon
+              aria-hidden="true"
+              className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
+            />
+            Tutorial
           </button>
         </MenuItem>
       )}

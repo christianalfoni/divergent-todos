@@ -8,7 +8,6 @@ import {
   ArrowsRightLeftIcon,
   TrashIcon,
   LightBulbIcon,
-  CheckCircleIcon,
   ClipboardIcon,
   ClipboardDocumentCheckIcon,
   ChevronLeftIcon,
@@ -145,7 +144,7 @@ export default function OnboardingNotification() {
           ),
           title: "Copy todo by dragging",
           message:
-            "Hold SHIFT while dragging a todo to create a copy instead of moving it. This is great for recurring tasks!",
+            "Hold SHIFT while dragging a todo to create a copy instead of moving it.",
           actionLabel: "Hold SHIFT and drag to copy",
           requiresCopyTodo: true,
         };
@@ -187,21 +186,7 @@ export default function OnboardingNotification() {
           ),
           title: "Weekly reflection",
           message:
-            "Every week, a summary of your work is automatically created. It highlights your focused work and helps you see patterns in your distraction time, so you can improve your ability to stay focused. Click the Reflection tab above to explore it!",
-          actionLabel: "Open Reflection view",
-          requiresActivityView: true,
-        };
-      case "congratulations":
-        return {
-          icon: (
-            <CheckCircleIcon
-              aria-hidden="true"
-              className="size-6 text-[var(--color-accent-primary)]"
-            />
-          ),
-          title: "Congratulations!",
-          message:
-            "You've completed the onboarding. You now know all the core features of Divergent Todos. Take back your attention by planning it!",
+            "Every week, a summary of your work is automatically created. It highlights your focused work and helps you see patterns in your distraction time, so you can improve your ability to stay focused. You've now completed the onboarding and know all the core features of Divergent Todos. Take back your attention by planning it!",
           actionLabel: "",
           hideActionLabel: true,
         };
@@ -296,7 +281,7 @@ export default function OnboardingNotification() {
 
                     {/* Action buttons on the right */}
                     <div className="flex items-center gap-x-2">
-                      {currentStep === "congratulations" ? (
+                      {currentStep === "reflection" ? (
                         <button
                           type="button"
                           onClick={handleDismiss}
@@ -322,7 +307,7 @@ export default function OnboardingNotification() {
                   <button
                     type="button"
                     onClick={
-                      currentStep === "congratulations"
+                      currentStep === "reflection"
                         ? handleDismiss
                         : completeOnboarding
                     }

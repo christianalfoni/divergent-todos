@@ -72,6 +72,7 @@ export default function Calendar({
   const [visibilityTrigger, setVisibilityTrigger] = useState(0);
   const [selectedTodoId, setSelectedTodoId] = useState<string | null>(null);
   const [editModeTodoId, setEditModeTodoId] = useState<string | null>(null);
+  const isEditingRef = useRef(false);
   const todoRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const dayCellRefs = useRef<Map<string, DayCellHandle>>(new Map());
   const allWeekdays = useMemo(() => getWeekdaysForThreeWeeks(), [visibilityTrigger]);
@@ -120,6 +121,11 @@ export default function Calendar({
     }
     return newTodoId;
   }, [onAddTodo]);
+
+  // Callback to notify Calendar when editing state changes
+  const handleEditingChange = useCallback((isEditing: boolean) => {
+    isEditingRef.current = isEditing;
+  }, []);
 
   const getTodosForDate = (date: Date): Todo[] => {
     const dateString = date.toISOString().split("T")[0];
@@ -176,11 +182,25 @@ export default function Calendar({
     }
   }, []);
 
-  const handleCalendarClick = useCallback((e: React.MouseEvent) => {
-    // Check if click is outside any todo item
-    if (!(e.target as HTMLElement).closest('[data-todo-item]')) {
-      setSelectedTodoId(null);
-    }
+  // Handle clicks outside todos to deselect
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      // Don't deselect if we just exited edit mode - but reset the flag
+      if (isEditingRef.current) {
+        isEditingRef.current = false;
+        return;
+      }
+
+      // Check if click is outside any todo item
+      if (!(e.target as HTMLElement).closest('[data-todo-item]')) {
+        setSelectedTodoId(null);
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -453,7 +473,7 @@ export default function Calendar({
           }
         `}</style>
       )}
-      <div className="flex-1 w-full flex flex-col overflow-hidden" onClick={handleCalendarClick}>
+      <div className="flex-1 w-full flex flex-col overflow-hidden">
         <div
           className={`grid grid-cols-5 ${viewMode === "two-weeks" ? "grid-rows-2" : "grid-rows-1"
             } flex-1 divide-x divide-y divide-[var(--color-border-primary)] min-h-0`}
@@ -481,6 +501,7 @@ export default function Calendar({
                 onSelectTodo={setSelectedTodoId}
                 editModeTodoId={editModeTodoId}
                 onEditModeEntered={() => setEditModeTodoId(null)}
+                onEditingChange={handleEditingChange}
                 todoRefs={todoRefs}
                 ref={(el) => {
                   if (el) {

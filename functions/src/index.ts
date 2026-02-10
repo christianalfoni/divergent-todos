@@ -1103,6 +1103,7 @@ export const stripeWebhook = onRequest(
 import {
   getTodosForWeek,
   getWeekDateRange,
+  calculateFocusMetrics,
 } from "./lib/activity-data.js";
 import { generateNotesSync } from "./lib/openai-sync-notes.js";
 
@@ -1185,6 +1186,14 @@ export const generateWeekNotes = onCall(
         notesCount: result.notes.length,
       });
 
+      // Calculate focus metrics using shared logic
+      const {
+        totalFocusTime,
+        sessionsWithoutDistractions,
+        averageFocusTime,
+        completedTodosWithoutSessions,
+      } = calculateFocusMetrics(completedTodos, logger);
+
       // Calculate month from week start date
       const month = weekStart.getMonth();
 
@@ -1199,11 +1208,14 @@ export const generateWeekNotes = onCall(
         year: targetYear,
         week,
         month,
-        completedTodos,
+        completedTodos: completedTodosWithoutSessions,
         incompleteCount: incompleteTodos.length,
         notes: result.notes,
         notesGeneratedAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
+        sessionsWithoutDistractions: sessionsWithoutDistractions > 0 ? sessionsWithoutDistractions : undefined,
+        totalFocusTime: totalFocusTime > 0 ? totalFocusTime : undefined,
+        averageFocusTime: averageFocusTime > 0 ? averageFocusTime : undefined,
       });
 
       logger.info("Successfully created/updated reflection document");
