@@ -27,6 +27,7 @@ export interface ReflectionWeek {
   updatedAt: Date;
   sessionsWithoutDistractions?: number; // Number of focus sessions completed without distractions
   totalFocusTime?: number; // Total accumulated focus time in minutes (all sessions without distractions)
+  averageFocusTime?: number; // Average minutes per deep focus session (rounded)
 }
 
 // Firestore data format (with Timestamps instead of Dates)
@@ -42,6 +43,7 @@ interface ReflectionWeekFirestore {
   updatedAt: Timestamp;
   sessionsWithoutDistractions?: number;
   totalFocusTime?: number;
+  averageFocusTime?: number;
 }
 
 // Firestore converter for ReflectionWeek
@@ -61,6 +63,7 @@ export const reflectionWeekConverter: FirestoreDataConverter<ReflectionWeek> = {
       updatedAt: Timestamp.fromDate(reflectionWeek.updatedAt),
       sessionsWithoutDistractions: reflectionWeek.sessionsWithoutDistractions,
       totalFocusTime: reflectionWeek.totalFocusTime,
+      averageFocusTime: reflectionWeek.averageFocusTime,
     };
   },
   fromFirestore: (
@@ -81,6 +84,7 @@ export const reflectionWeekConverter: FirestoreDataConverter<ReflectionWeek> = {
       updatedAt: data.updatedAt.toDate(),
       sessionsWithoutDistractions: data.sessionsWithoutDistractions,
       totalFocusTime: data.totalFocusTime,
+      averageFocusTime: data.averageFocusTime,
     };
   },
 };

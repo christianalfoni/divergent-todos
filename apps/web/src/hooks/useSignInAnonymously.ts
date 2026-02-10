@@ -1,6 +1,7 @@
 import { signInAnonymously } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 import { pipe } from "pipesy";
-import { auth } from "../firebase";
+import { auth, profilesCollection } from "../firebase";
 import { trackSignIn } from "../firebase/analytics";
 
 export type SignInAnonymouslyState =
@@ -21,10 +22,14 @@ export function useSignInAnonymously() {
   const [signInState, setSignInState] = pipe<unknown, SignInAnonymouslyState>()
     .setState({ isSigningIn: true, error: null })
     .async(async () => {
-      await signInAnonymously(auth);
+      const userCredential = await signInAnonymously(auth);
 
       // Track anonymous sign-in
       trackSignIn("anonymous");
+
+      // Initialize profile document for anonymous user
+      const profileDoc = doc(profilesCollection, userCredential.user.uid);
+      await setDoc(profileDoc, { freeTodoCount: 0 }, { merge: true });
 
       // We keep signing in as we are waiting for auth to go through
       return { isSigningIn: true, error: null };

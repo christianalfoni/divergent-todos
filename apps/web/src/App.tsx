@@ -24,6 +24,7 @@ import { useTodoOperations } from "./hooks/useTodoOperations";
 import { useEditProfile } from "./hooks/useEditProfile";
 import { useActivity } from "./hooks/useActivity";
 import { useSurvey } from "./hooks/useSurvey";
+import { useFirestoreConnection } from "./hooks/useFirestoreConnection";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import {
   trackAppOpened,
@@ -231,6 +232,9 @@ function AppContent() {
   // Initialize font size system
   useFontSize();
 
+  // Initialize Firestore connection management
+  useFirestoreConnection();
+
   // Mark app as installed when running in desktop app (only when authenticated)
   useMarkAppInstalled();
 
@@ -308,6 +312,7 @@ function AppContent() {
               userId: authentication.user.uid,
               sessionsWithoutDistractions: reflectionDoc.sessionsWithoutDistractions,
               totalFocusTime: reflectionDoc.totalFocusTime,
+              averageFocusTime: reflectionDoc.averageFocusTime,
             });
 
             // Mark as seen for this week
@@ -392,6 +397,11 @@ function AppContent() {
 
           if (!querySnapshot.empty) {
             const reflectionDoc = querySnapshot.docs[0].data();
+            const reflectionDocId = querySnapshot.docs[0].id;
+
+            console.log('📊 Reflection document ID:', reflectionDocId);
+            console.log('📊 Document path: reflections/' + reflectionDocId);
+            console.log('📊 Reflection data:', reflectionDoc);
 
             if (reflectionDoc.notes && reflectionDoc.notes.length > 0) {
               // Calculate daily counts (Mon-Fri)
@@ -416,6 +426,7 @@ function AppContent() {
                 userId: authentication.user.uid,
                 sessionsWithoutDistractions: reflectionDoc.sessionsWithoutDistractions,
                 totalFocusTime: reflectionDoc.totalFocusTime,
+                averageFocusTime: reflectionDoc.averageFocusTime,
               });
             } else {
               console.log("No notes found for previous week");
@@ -515,8 +526,6 @@ function AppContent() {
     if (pendingView === "activity") {
       setCurrentView("activity");
       setPendingView(null);
-      // Notify onboarding that activity view was opened
-      onboarding.notifyActivityViewOpened();
     }
     setIsLoadingActivity(false);
   };
@@ -638,6 +647,7 @@ function AppContent() {
           todoCount={previousWeekDialog.todoCount}
           dailyCounts={previousWeekDialog.dailyCounts}
           totalFocusTime={previousWeekDialog.totalFocusTime}
+          averageFocusTime={previousWeekDialog.averageFocusTime}
           onClose={handleStartWeek}
         />
       )}

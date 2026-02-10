@@ -15,6 +15,7 @@ interface PreviousWeekDialogProps {
   todoCount: number;
   dailyCounts: [number, number, number, number, number]; // [Mon, Tue, Wed, Thu, Fri]
   totalFocusTime?: number; // Total accumulated focus time in minutes
+  averageFocusTime?: number; // Average minutes per deep focus session
   onClose: () => void;
 }
 
@@ -24,6 +25,7 @@ export default function PreviousWeekDialog({
   todoCount,
   dailyCounts,
   totalFocusTime,
+  averageFocusTime,
   onClose,
 }: PreviousWeekDialogProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -102,14 +104,14 @@ export default function PreviousWeekDialog({
               </div>
             </div>
 
-            {/* Right side: Focus time metric */}
+            {/* Right side: Total focus time metric */}
             {totalFocusTime !== undefined && totalFocusTime > 0 && (
               <div className="previous-week-dialog-stat">
                 <span className="previous-week-dialog-stat-value !text-yellow-500">
                   {formatTime(totalFocusTime)}
                 </span>
                 <span className="previous-week-dialog-stat-label">
-                  without distractions
+                  focused without distractions
                 </span>
               </div>
             )}

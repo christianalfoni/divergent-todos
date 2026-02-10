@@ -19,6 +19,7 @@ interface TodoItemProps {
   onSelect?: () => void;
   shouldEnterEditMode?: boolean;
   onEditModeEntered?: () => void;
+  onEditingChange?: (isEditing: boolean) => void;
   todoRef?: (el: HTMLDivElement | null) => void;
   isShadow?: boolean; // Indicates this is a shadow todo from a different day
 }
@@ -44,6 +45,7 @@ export default function TodoItem({
   onSelect,
   shouldEnterEditMode = false,
   onEditModeEntered,
+  onEditingChange,
   todoRef,
   isShadow = false,
 }: TodoItemProps) {
@@ -82,6 +84,9 @@ export default function TodoItem({
           onDeleteTodo?.(todo.id);
         }
         setIsEditing(false);
+        // Keep the todo selected when exiting edit mode
+        onSelect?.();
+        // Note: ref stays true, Calendar's click handler will reset it
       }
     };
 
@@ -92,23 +97,29 @@ export default function TodoItem({
     return () => {
       document.removeEventListener("mousedown", handleClickOutside, true);
     };
-  }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo, onDeleteTodo]);
+  }, [isEditing, todo.id, todo.text, editingHtml, onUpdateTodo, onDeleteTodo, onSelect, onEditingChange]);
 
   useEffect(() => {
     if (shouldEnterEditMode && !isEditing && !isShadow) {
       originalHtmlRef.current = todo.text;
       setEditingHtml(todo.text);
       setIsEditing(true);
+      onEditingChange?.(true);
       onEditModeEntered?.();
     }
-  }, [shouldEnterEditMode, isEditing, todo.text, onEditModeEntered, isShadow]);
+  }, [shouldEnterEditMode, isEditing, todo.text, onEditModeEntered, onEditingChange, isShadow]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
+      // Prevent Calendar's ESC handler from deselecting
+      e.stopPropagation();
       // Revert to original content
       editorRef.current?.setHtml(originalHtmlRef.current);
       setEditingHtml(originalHtmlRef.current);
       setIsEditing(false);
+      onEditingChange?.(false);
+      // Keep the todo selected when exiting edit mode
+      onSelect?.();
     } else if (e.key === "Enter" && !e.shiftKey) {
       // Only save on Enter without Shift (SHIFT + ENTER allows newlines)
       e.preventDefault();
@@ -117,6 +128,9 @@ export default function TodoItem({
       if (!isHtmlEmpty(currentHtml)) {
         onUpdateTodo?.(todo.id, currentHtml);
         setIsEditing(false);
+        onEditingChange?.(false);
+        // Keep the todo selected when exiting edit mode
+        onSelect?.();
       } else {
         // Delete todo if content is empty
         onDeleteTodo?.(todo.id);
@@ -215,6 +229,7 @@ export default function TodoItem({
         originalHtmlRef.current = todo.text;
         setEditingHtml(todo.text);
         setIsEditing(true);
+        onEditingChange?.(true);
       },
       shortcut: 'E',
     },
