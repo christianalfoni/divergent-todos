@@ -8,7 +8,6 @@ import {
   ArrowsRightLeftIcon,
   TrashIcon,
   LightBulbIcon,
-  CheckCircleIcon,
   ClipboardIcon,
   ClipboardDocumentCheckIcon,
   ChevronLeftIcon,

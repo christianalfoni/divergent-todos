@@ -25,7 +25,7 @@ export default function PreviousWeekDialog({
   todoCount,
   dailyCounts,
   totalFocusTime,
-  averageFocusTime,
+  averageFocusTime: _averageFocusTime,
   onClose,
 }: PreviousWeekDialogProps) {
   const [isVisible, setIsVisible] = useState(false);

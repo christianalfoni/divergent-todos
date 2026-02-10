@@ -87,6 +87,7 @@ function AppContent() {
     userId: string;
     sessionsWithoutDistractions?: number;
     totalFocusTime?: number;
+    averageFocusTime?: number;
   } | null>(null);
   const [createMomentumDialog, setCreateMomentumDialog] = useState<{
     show: boolean;
