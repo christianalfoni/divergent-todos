@@ -593,6 +593,9 @@ function AppContent() {
             onDeleteTodo={
               authentication.user ? todoOperations.handleDeleteTodo : () => {}
             }
+            onSortTodosByCompletion={
+              authentication.user ? todoOperations.sortTodosByCompletion : () => {}
+            }
             onOpenBreakDown={(todo) => setCreateMomentumDialog({ show: true, todo })}
             onMoveIncompleteTodosToToday={
               authentication.user ? moveOldTodosToNextWorkday : () => {}

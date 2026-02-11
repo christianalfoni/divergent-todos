@@ -499,6 +499,50 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     [onboarding, firebaseTodos, profile, addTodo, onShowSubscriptionDialog, addPending, getPendingAsTodos]
   );
 
+  const sortTodosByCompletion = useCallback(
+    (dateString: string) => {
+      // Get all todos for this specific date
+      const todosForDate = firebaseTodos.filter(
+        (t) => t.date.toISOString().split("T")[0] === dateString
+      );
+
+      if (todosForDate.length === 0) return;
+
+      // Sort: incomplete todos first, then completed todos, maintaining position order within each group
+      const sortedTodos = sortTodosByPosition(todosForDate).sort((a, b) => {
+        // Incomplete todos first
+        if (a.completed !== b.completed) {
+          return a.completed ? 1 : -1;
+        }
+        // Keep original position order within each group
+        if (a.position < b.position) return -1;
+        if (a.position > b.position) return 1;
+        return 0;
+      });
+
+      // Regenerate positions for all todos in sorted order
+      let previousPosition: string | null = null;
+      const updates = sortedTodos.map((todo) => {
+        const newPosition = generateKeyBetween(previousPosition, null);
+        previousPosition = newPosition;
+
+        return {
+          id: todo.id,
+          description: todo.description,
+          completed: todo.completed,
+          date: todo.date,
+          position: newPosition,
+        };
+      });
+
+      // Execute batch update
+      if (updates.length > 0) {
+        batchEditTodos(updates);
+      }
+    },
+    [firebaseTodos, batchEditTodos]
+  );
+
   return {
     handleAddTodo,
     toggleTodoComplete,
@@ -511,6 +555,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
     setTodoCompleted,
     resetTodoForCopy,
     addTodoWithState,
+    sortTodosByCompletion,
     getPendingAsTodos,
     removePending,
   };
