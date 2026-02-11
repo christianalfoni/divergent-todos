@@ -205,10 +205,10 @@ const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNext
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
         {/* Add todo button/input at the top */}
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
-          <div className="px-3 py-2 flex items-center justify-between gap-2">
+          <div className="px-3 py-2 flex items-start justify-between gap-2">
             <button
               onClick={handleAddTodoClick}
-              className="flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              className="flex items-start gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
               style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
             >
               <div className="flex h-5 w-4 shrink-0 items-center justify-center">
@@ -231,10 +231,10 @@ const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNext
             </button>
             <button
               onClick={() => onSortTodosByCompletion(dayId)}
-              className="p-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors shrink-0"
               title="Sort incomplete todos first"
             >
-              <ListBulletIcon className="w-4 h-4" />
+              <ListBulletIcon className="w-5 h-5" />
             </button>
           </div>
         )}
