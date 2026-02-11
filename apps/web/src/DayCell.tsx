@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { ListBulletIcon } from '@heroicons/react/24/outline'
 import TodoItem from './TodoItem'
 import TodosLoadingPlaceholder from './TodosLoadingPlaceholder'
 import SmartEditor, { type SmartEditorRef } from './SmartEditor'
@@ -20,6 +21,7 @@ interface DayCellProps {
   onToggleTodoComplete: (todoId: string) => void
   onUpdateTodo: (todoId: string, text: string) => void
   onDeleteTodo: (todoId: string) => void
+  onSortTodosByCompletion: (dateString: string) => void
   onOpenFocus: (todo: Todo) => void
   onOpenBreakDown: (todo: Todo) => void
   onMoveIncompleteTodosToToday: () => void
@@ -36,7 +38,7 @@ export interface DayCellHandle {
   startAddingTodo: () => void
 }
 
-const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, onEditingChange, todoRefs }, ref) => {
+const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNextMonday, isAuthenticated, isLoading, todos, allTodos, onAddTodo, onToggleTodoComplete, onUpdateTodo, onDeleteTodo, onSortTodosByCompletion, onOpenFocus, onOpenBreakDown, onMoveIncompleteTodosToToday, hasOldUncompletedTodos, selectedTodoId, onSelectTodo, editModeTodoId, onEditModeEntered, onEditingChange, todoRefs }, ref) => {
   const [newTodoHtml, setNewTodoHtml] = useState<string>('')
   const [isAddingTodo, setIsAddingTodo] = useState(false)
   const editorRef = useRef<SmartEditorRef>(null)
@@ -203,29 +205,38 @@ const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNext
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0 pb-16">
         {/* Add todo button/input at the top */}
         {isAuthenticated && !isAddingTodo && !isLoading && canAddTodo && (
-          <button
-            onClick={handleAddTodoClick}
-            className="px-3 py-2 flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors w-full"
-            style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
-          >
-            <div className="flex h-5 w-4 shrink-0 items-center justify-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-4 h-4"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 4.5v15m7.5-7.5h-15"
-                />
-              </svg>
-            </div>
-            <span>Add todo</span>
-          </button>
+          <div className="px-3 py-2 flex items-center justify-between gap-2">
+            <button
+              onClick={handleAddTodoClick}
+              className="flex items-center gap-3 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              style={{ fontSize: 'var(--todo-text-size)', lineHeight: '1.25rem' }}
+            >
+              <div className="flex h-5 w-4 shrink-0 items-center justify-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 4.5v15m7.5-7.5h-15"
+                  />
+                </svg>
+              </div>
+              <span>Add todo</span>
+            </button>
+            <button
+              onClick={() => onSortTodosByCompletion(dayId)}
+              className="p-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+              title="Sort incomplete todos first"
+            >
+              <ListBulletIcon className="w-4 h-4" />
+            </button>
+          </div>
         )}
         {isAuthenticated && isAddingTodo && canAddTodo && (
           <div className="px-3 py-2">

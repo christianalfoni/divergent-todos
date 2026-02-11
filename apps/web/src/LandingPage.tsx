@@ -414,6 +414,7 @@ export default function LandingPage({ onAuthenticated }: LandingPageProps) {
                     onAddTodoWithState={() => {}}
                     onUpdateTodo={() => {}}
                     onDeleteTodo={() => {}}
+                    onSortTodosByCompletion={() => {}}
                     onOpenBreakDown={() => {}}
                     onMoveIncompleteTodosToToday={() => {}}
                     hasOldUncompletedTodos={false}

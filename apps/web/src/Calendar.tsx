@@ -30,6 +30,7 @@ interface CalendarProps {
   onAddTodoWithState: (todo: { text: string; date: string; completed: boolean; position?: string }) => void;
   onUpdateTodo: (todoId: string, text: string) => void;
   onDeleteTodo: (todoId: string) => void;
+  onSortTodosByCompletion: (dateString: string) => void;
   onOpenBreakDown: (todo: Todo) => void;
   onMoveIncompleteTodosToToday: () => void;
   hasOldUncompletedTodos: boolean;
@@ -54,6 +55,7 @@ export default function Calendar({
   onAddTodoWithState,
   onUpdateTodo,
   onDeleteTodo,
+  onSortTodosByCompletion,
   onOpenBreakDown,
   onMoveIncompleteTodosToToday,
   hasOldUncompletedTodos,
@@ -493,6 +495,7 @@ export default function Calendar({
                 onToggleTodoComplete={onToggleTodoComplete}
                 onUpdateTodo={onUpdateTodo}
                 onDeleteTodo={onDeleteTodo}
+                onSortTodosByCompletion={onSortTodosByCompletion}
                 onOpenFocus={handleOpenFocus}
                 onOpenBreakDown={onOpenBreakDown}
                 onMoveIncompleteTodosToToday={onMoveIncompleteTodosToToday}
