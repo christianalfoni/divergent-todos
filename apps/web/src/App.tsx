@@ -25,6 +25,7 @@ import { useEditProfile } from "./hooks/useEditProfile";
 import { useActivity } from "./hooks/useActivity";
 import { useSurvey } from "./hooks/useSurvey";
 import { useFirestoreConnection } from "./hooks/useFirestoreConnection";
+import DisconnectedNotification from "./DisconnectedNotification";
 import { getOldUncompletedTodos, getNextWorkday } from "./utils/todos";
 import {
   trackAppOpened,
@@ -59,7 +60,7 @@ export interface Todo {
 
 function AppContent() {
   const [authentication] = useAuthentication();
-  const { todos: firebaseTodos, isLoading } = useTodosData();
+  const { todos: firebaseTodos, isLoading, connectionStatus } = useTodosData();
   const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false);
   const [authModalState, setAuthModalState] = useState(false);
   const [hasLeftLandingPage, setHasLeftLandingPage] = useState(() => {
@@ -544,6 +545,7 @@ function AppContent() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
+      <DisconnectedNotification isDisconnected={connectionStatus === 'disconnected'} />
       <div className="flex-1 flex flex-col overflow-hidden">
         <TopBar
           profile={profile}
@@ -560,6 +562,7 @@ function AppContent() {
           isFocusMinimized={focusState.isMinimized}
           onRestoreFocus={focusState.onRestore}
           shouldPulsate={shouldPulsate}
+          connectionStatus={connectionStatus}
         />
         {authentication.user && <OnboardingNotification />}
         {currentView === "calendar" ? (

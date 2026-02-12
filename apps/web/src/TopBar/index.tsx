@@ -17,6 +17,8 @@ import Navigation from "./Navigation";
 import YearNavigation from "./YearNavigation";
 import SubscriptionNotices from "./SubscriptionNotices";
 import UserMenu from "./UserMenu";
+import ConnectionStatusBadge from "./ConnectionStatusBadge";
+import type { ConnectionStatus } from "../hooks/useTodos";
 
 function getDownloadUrl(): string | null {
   if (window.navigator.userAgent.includes("Electron")) {
@@ -56,6 +58,7 @@ interface TopBarProps {
   activeFocusTodo?: any;
   isFocusMinimized?: boolean;
   onRestoreFocus?: () => void;
+  connectionStatus?: ConnectionStatus;
 }
 
 export default function TopBar({
@@ -73,6 +76,7 @@ export default function TopBar({
   activeFocusTodo,
   isFocusMinimized = false,
   onRestoreFocus,
+  connectionStatus = 'connected',
 }: TopBarProps) {
   const [authentication] = useAuthentication();
   const { theme, setTheme } = useTheme();
@@ -160,6 +164,9 @@ export default function TopBar({
               )}
 
             <div className="hidden sm:ml-6 sm:flex sm:items-center gap-3">
+              {/* Connection status badge - always show as first item */}
+              <ConnectionStatusBadge status={connectionStatus} />
+
               {/* Show skeleton during loading */}
               {isLoading && !authentication.user && onViewChange && (
                 <>

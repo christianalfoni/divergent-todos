@@ -38,9 +38,10 @@ export function useEditTodo() {
     .setState({ isEditing: true, error: null })
     .map((updates) => {
       // Optimistic update
-      setTodos(({ data }) => ({
+      setTodos((state) => ({
+        ...state,
         isLoading: false,
-        data: data.map((todo) =>
+        data: state.data.map((todo) =>
           todo.id === updates.id ? { ...todo, ...updates } : todo
         ),
       }));

@@ -30,9 +30,10 @@ export function useDeleteTodo() {
     .setState({ isDeleting: true, error: null })
     .map(({ id }) => {
       // Optimistic delete
-      setTodos(({ data }) => ({
+      setTodos((state) => ({
+        ...state,
         isLoading: false,
-        data: data.filter((todo) => todo.id !== id),
+        data: state.data.filter((todo) => todo.id !== id),
       }));
       return { id };
     })

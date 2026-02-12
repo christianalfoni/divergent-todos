@@ -38,9 +38,10 @@ export function useBatchEditTodos() {
     .setState({ isEditing: true, error: null })
     .map((updates) => {
       // Optimistic update - apply all changes at once
-      setTodos(({ data }) => ({
+      setTodos((state) => ({
+        ...state,
         isLoading: false,
-        data: data.map((todo) => {
+        data: state.data.map((todo) => {
           const update = updates.find((u) => u.id === todo.id);
           return update ? { ...todo, ...update } : todo;
         }),

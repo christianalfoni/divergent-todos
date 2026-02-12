@@ -4,7 +4,7 @@ import { convertFirebaseTodoToAppTodo } from "../utils/todos";
 import type { Todo } from "../App";
 
 export function useTodosData() {
-  const { isLoading: todosLoading, data: firebaseTodos } = useTodos();
+  const { isLoading: todosLoading, data: firebaseTodos, connectionStatus, connectionError } = useTodos();
 
   const todos: Todo[] = useMemo(() => {
     return firebaseTodos.map(convertFirebaseTodoToAppTodo);
@@ -13,5 +13,7 @@ export function useTodosData() {
   return {
     todos,
     isLoading: todosLoading,
+    connectionStatus,
+    connectionError,
   };
 }
