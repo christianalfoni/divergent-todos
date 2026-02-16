@@ -2,6 +2,8 @@
 
 Todos for those that feel overwhelmed
 
+> Why don't programmers like nature? It has too many bugs! 🐛
+
 An Electron + Vite + React + Firebase + Tailwind CSS application for managing todos.
 
 ## Architecture
