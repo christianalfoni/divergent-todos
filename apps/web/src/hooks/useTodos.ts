@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { pipe } from "pipesy";
-import { todosCollection, type Todo } from "../firebase";
+import { todosCollection, type Todo, db } from "../firebase";
 import {
   onSnapshot,
   query,
@@ -9,6 +9,8 @@ import {
   Timestamp,
   or,
   and,
+  disableNetwork,
+  enableNetwork,
 } from "firebase/firestore";
 import { useAuthentication } from "./useAuthentication";
 import { getCurrentWeekStart, getNextWeekEnd } from "../utils/calendar";
@@ -22,12 +24,16 @@ export type TodosState = {
   connectionError: string | null;
 };
 
-// How long to wait for server data before showing "disconnected"
-const DISCONNECT_TIMEOUT_MS = 3000;
+// How long to wait for server data before attempting reconnect
+const STALE_TIMEOUT_MS = 10000; // 10 seconds
+// How long to wait after reconnect attempt before showing disconnected
+const RECONNECT_TIMEOUT_MS = 5000; // 5 seconds
 
 export function useTodos() {
   const [authentication] = useAuthentication();
-  const disconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const staleTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptedRef = useRef<boolean>(false);
+  const isReconnectingRef = useRef<boolean>(false);
 
   const [{ isLoading, data, connectionStatus, connectionError }, setTodos] = pipe<
     (todos: TodosState) => TodosState,
@@ -76,51 +82,107 @@ export function useTodos() {
         return onSnapshot(
           q,
           { includeMetadataChanges: true },
-          (snapshot) => {
-            if (!snapshot.metadata.fromCache) {
+          async (snapshot) => {
+            const isFromCache = snapshot.metadata.fromCache;
+
+            if (!isFromCache) {
               // Got server data - we're connected!
-              console.log('[Todos] Data synced from server - online');
+              console.log('[Todos] Data synced from server - connection healthy');
 
-              // Clear any pending disconnect timeout
-              if (disconnectTimeoutRef.current) {
-                clearTimeout(disconnectTimeoutRef.current);
-                disconnectTimeoutRef.current = null;
+              // Clear any pending stale detection timeout
+              if (staleTimeoutRef.current) {
+                clearTimeout(staleTimeoutRef.current);
+                staleTimeoutRef.current = null;
               }
-            } else {
-              // Cached data - start timeout to show disconnected if we don't get server data
-              console.log('[Todos] Data from cache - waiting for server confirmation');
 
-              if (!disconnectTimeoutRef.current) {
-                disconnectTimeoutRef.current = setTimeout(() => {
-                  console.warn('[Todos] No server data received - showing disconnected');
-                  setTodos((state) => ({
-                    ...state,
-                    connectionStatus: 'disconnected',
-                  }));
-                  disconnectTimeoutRef.current = null;
-                }, DISCONNECT_TIMEOUT_MS);
+              // Reset reconnect attempt flag when we get server data
+              reconnectAttemptedRef.current = false;
+              isReconnectingRef.current = false;
+
+              // Update state to show we're connected
+              setTodos(() => ({
+                isLoading: false,
+                data: snapshot.docs.map((doc) =>
+                  doc.data({ serverTimestamps: "estimate" })
+                ),
+                connectionStatus: 'connected',
+                connectionError: null,
+              }));
+            } else {
+              // Cached data - start monitoring for stale connection
+              console.log('[Todos] Data from cache - monitoring connection health');
+
+              // Always update the data immediately (from cache)
+              setTodos((state) => ({
+                isLoading: false,
+                data: snapshot.docs.map((doc) =>
+                  doc.data({ serverTimestamps: "estimate" })
+                ),
+                connectionStatus: state.connectionStatus, // Keep current status
+                connectionError: null,
+              }));
+
+              // Only start stale detection if we don't already have a timeout running
+              if (!staleTimeoutRef.current && !isReconnectingRef.current) {
+                const timeoutDuration = reconnectAttemptedRef.current
+                  ? RECONNECT_TIMEOUT_MS
+                  : STALE_TIMEOUT_MS;
+
+                staleTimeoutRef.current = setTimeout(async () => {
+                  if (!reconnectAttemptedRef.current) {
+                    // First timeout - attempt reconnect
+                    console.warn('[Todos] No server data received - attempting reconnect');
+                    reconnectAttemptedRef.current = true;
+                    isReconnectingRef.current = true;
+
+                    try {
+                      // Cycle the network connection
+                      console.log('[Todos] Disabling network...');
+                      await disableNetwork(db);
+                      await new Promise(resolve => setTimeout(resolve, 100)); // Brief pause
+                      console.log('[Todos] Re-enabling network...');
+                      await enableNetwork(db);
+                      console.log('[Todos] Reconnect cycle complete - waiting for server data');
+                      isReconnectingRef.current = false;
+
+                      // Start another timeout to see if reconnect worked
+                      staleTimeoutRef.current = null;
+                    } catch (error) {
+                      console.error('[Todos] Reconnect failed:', error);
+                      isReconnectingRef.current = false;
+                      setTodos((state) => ({
+                        ...state,
+                        connectionStatus: 'disconnected',
+                        connectionError: 'Reconnection failed',
+                      }));
+                      staleTimeoutRef.current = null;
+                    }
+                  } else {
+                    // Second timeout after reconnect - show disconnected
+                    console.error('[Todos] Reconnect attempt did not restore connection');
+                    setTodos((state) => ({
+                      ...state,
+                      connectionStatus: 'disconnected',
+                      connectionError: 'Unable to connect to server',
+                    }));
+                    staleTimeoutRef.current = null;
+                  }
+                }, timeoutDuration);
               }
             }
-
-            // Always show connected unless timeout expires
-            setTodos(() => ({
-              isLoading: false,
-              data: snapshot.docs.map((doc) =>
-                doc.data({ serverTimestamps: "estimate" })
-              ),
-              connectionStatus: 'connected',
-              connectionError: null,
-            }));
           },
           (error) => {
             // Handle Firestore listener errors
             console.error('[Todos] Firestore listener error:', error);
 
             // Clear timeout on error
-            if (disconnectTimeoutRef.current) {
-              clearTimeout(disconnectTimeoutRef.current);
-              disconnectTimeoutRef.current = null;
+            if (staleTimeoutRef.current) {
+              clearTimeout(staleTimeoutRef.current);
+              staleTimeoutRef.current = null;
             }
+
+            reconnectAttemptedRef.current = false;
+            isReconnectingRef.current = false;
 
             setTodos((state) => ({
               ...state,
@@ -134,13 +196,16 @@ export function useTodos() {
       [authentication.user]
     );
 
-  // Clear timeout when app goes hidden (user tabbed away during grace period)
+  // Clear timeout when app goes hidden (user tabbed away during monitoring)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && disconnectTimeoutRef.current) {
-        console.log('[Todos] App hidden - clearing disconnect timeout');
-        clearTimeout(disconnectTimeoutRef.current);
-        disconnectTimeoutRef.current = null;
+      if (document.hidden && staleTimeoutRef.current) {
+        console.log('[Todos] App hidden - clearing stale detection timeout');
+        clearTimeout(staleTimeoutRef.current);
+        staleTimeoutRef.current = null;
+        // Reset reconnect state when user tabs away
+        reconnectAttemptedRef.current = false;
+        isReconnectingRef.current = false;
       }
     };
 
@@ -149,8 +214,8 @@ export function useTodos() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       // Clean up timeout on unmount
-      if (disconnectTimeoutRef.current) {
-        clearTimeout(disconnectTimeoutRef.current);
+      if (staleTimeoutRef.current) {
+        clearTimeout(staleTimeoutRef.current);
       }
     };
   }, []);
