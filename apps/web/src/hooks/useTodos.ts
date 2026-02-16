@@ -84,20 +84,29 @@ export function useTodos() {
           { includeMetadataChanges: true },
           async (snapshot) => {
             const isFromCache = snapshot.metadata.fromCache;
+            const docCount = snapshot.docs.length;
+
+            console.log(`[Todos] Snapshot received: fromCache=${isFromCache}, docs=${docCount}, hasPendingWrites=${snapshot.metadata.hasPendingWrites}`);
 
             if (!isFromCache) {
               // Got server data - we're connected!
-              console.log('[Todos] Data synced from server - connection healthy');
+              console.log('[Todos] ✅ Server data received - connection healthy');
 
               // Clear any pending stale detection timeout
               if (staleTimeoutRef.current) {
+                console.log('[Todos] Clearing stale timeout - server confirmed');
                 clearTimeout(staleTimeoutRef.current);
                 staleTimeoutRef.current = null;
               }
 
-              // Reset reconnect attempt flag when we get server data
+              // Reset reconnect flags when we get server data
+              const wasReconnecting = reconnectAttemptedRef.current;
               reconnectAttemptedRef.current = false;
               isReconnectingRef.current = false;
+
+              if (wasReconnecting) {
+                console.log('[Todos] ✅ Reconnect successful!');
+              }
 
               // Update state to show we're connected
               setTodos(() => ({
@@ -109,65 +118,80 @@ export function useTodos() {
                 connectionError: null,
               }));
             } else {
-              // Cached data - start monitoring for stale connection
-              console.log('[Todos] Data from cache - monitoring connection health');
+              // Cached data - monitor for stale connection
+              console.log('[Todos] ⚠️  Cache data received - monitoring connection');
 
-              // Always update the data immediately (from cache)
+              // Update data but keep monitoring status
               setTodos((state) => ({
                 isLoading: false,
                 data: snapshot.docs.map((doc) =>
                   doc.data({ serverTimestamps: "estimate" })
                 ),
-                connectionStatus: state.connectionStatus, // Keep current status
+                // Keep 'connected' if we just got data, but not if we're already monitoring
+                connectionStatus: state.connectionStatus === 'connecting' ? 'connecting' : state.connectionStatus,
                 connectionError: null,
               }));
 
               // Only start stale detection if we don't already have a timeout running
               if (!staleTimeoutRef.current && !isReconnectingRef.current) {
-                const timeoutDuration = reconnectAttemptedRef.current
-                  ? RECONNECT_TIMEOUT_MS
-                  : STALE_TIMEOUT_MS;
+                const isFirstAttempt = !reconnectAttemptedRef.current;
+                const timeoutDuration = isFirstAttempt ? STALE_TIMEOUT_MS : RECONNECT_TIMEOUT_MS;
+
+                console.log(`[Todos] 🕐 Starting ${isFirstAttempt ? 'stale' : 'reconnect'} timeout (${timeoutDuration}ms)`);
 
                 staleTimeoutRef.current = setTimeout(async () => {
+                  staleTimeoutRef.current = null;
+
                   if (!reconnectAttemptedRef.current) {
                     // First timeout - attempt reconnect
-                    console.warn('[Todos] No server data received - attempting reconnect');
+                    console.warn('[Todos] ⏰ Stale timeout fired - no server data received');
+                    console.log('[Todos] 🔄 Attempting reconnect...');
+
                     reconnectAttemptedRef.current = true;
                     isReconnectingRef.current = true;
 
                     try {
                       // Cycle the network connection
-                      console.log('[Todos] Disabling network...');
+                      console.log('[Todos] 📴 Disabling network...');
                       await disableNetwork(db);
-                      await new Promise(resolve => setTimeout(resolve, 100)); // Brief pause
-                      console.log('[Todos] Re-enabling network...');
+
+                      console.log('[Todos] ⏳ Waiting 100ms...');
+                      await new Promise(resolve => setTimeout(resolve, 100));
+
+                      console.log('[Todos] 📡 Re-enabling network...');
                       await enableNetwork(db);
-                      console.log('[Todos] Reconnect cycle complete - waiting for server data');
+
+                      console.log('[Todos] ✅ Network cycle complete');
                       isReconnectingRef.current = false;
 
-                      // Start another timeout to see if reconnect worked
-                      staleTimeoutRef.current = null;
+                      // Start the second timeout immediately
+                      console.log(`[Todos] 🕐 Starting post-reconnect timeout (${RECONNECT_TIMEOUT_MS}ms)`);
+                      staleTimeoutRef.current = setTimeout(() => {
+                        console.error('[Todos] ⏰ Post-reconnect timeout fired - still no server data');
+                        console.error('[Todos] ❌ Showing disconnected notification');
+
+                        setTodos((state) => ({
+                          ...state,
+                          connectionStatus: 'disconnected',
+                          connectionError: 'Unable to connect to server',
+                        }));
+
+                        staleTimeoutRef.current = null;
+                      }, RECONNECT_TIMEOUT_MS);
+
                     } catch (error) {
-                      console.error('[Todos] Reconnect failed:', error);
+                      console.error('[Todos] ❌ Reconnect attempt failed:', error);
                       isReconnectingRef.current = false;
                       setTodos((state) => ({
                         ...state,
                         connectionStatus: 'disconnected',
                         connectionError: 'Reconnection failed',
                       }));
-                      staleTimeoutRef.current = null;
                     }
-                  } else {
-                    // Second timeout after reconnect - show disconnected
-                    console.error('[Todos] Reconnect attempt did not restore connection');
-                    setTodos((state) => ({
-                      ...state,
-                      connectionStatus: 'disconnected',
-                      connectionError: 'Unable to connect to server',
-                    }));
-                    staleTimeoutRef.current = null;
                   }
                 }, timeoutDuration);
+              } else {
+                console.log(`[Todos] ⏭️  Skipping timeout creation - already have one or reconnecting (timeout=${!!staleTimeoutRef.current}, reconnecting=${isReconnectingRef.current})`);
               }
             }
           },
@@ -199,13 +223,21 @@ export function useTodos() {
   // Clear timeout when app goes hidden (user tabbed away during monitoring)
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden && staleTimeoutRef.current) {
-        console.log('[Todos] App hidden - clearing stale detection timeout');
-        clearTimeout(staleTimeoutRef.current);
-        staleTimeoutRef.current = null;
+      if (document.hidden) {
+        console.log('[Todos] 👁️  App hidden');
+        if (staleTimeoutRef.current) {
+          console.log('[Todos] 🧹 Clearing stale detection timeout');
+          clearTimeout(staleTimeoutRef.current);
+          staleTimeoutRef.current = null;
+        }
         // Reset reconnect state when user tabs away
-        reconnectAttemptedRef.current = false;
-        isReconnectingRef.current = false;
+        if (reconnectAttemptedRef.current || isReconnectingRef.current) {
+          console.log('[Todos] 🔄 Resetting reconnect state');
+          reconnectAttemptedRef.current = false;
+          isReconnectingRef.current = false;
+        }
+      } else {
+        console.log('[Todos] 👁️  App visible');
       }
     };
 
@@ -215,6 +247,7 @@ export function useTodos() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       // Clean up timeout on unmount
       if (staleTimeoutRef.current) {
+        console.log('[Todos] 🧹 Cleanup: clearing timeout on unmount');
         clearTimeout(staleTimeoutRef.current);
       }
     };
