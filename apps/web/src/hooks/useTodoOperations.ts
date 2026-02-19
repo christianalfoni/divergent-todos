@@ -22,6 +22,7 @@ import {
   trackTodoCopied,
   trackFreeLimitReached,
 } from "../firebase/analytics";
+import { extractTags } from "../utils/activity";
 
 interface UseTodoOperationsProps {
   profile: Profile | null;
@@ -509,7 +510,7 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
       if (todosForDate.length === 0) return;
 
       // Sort: incomplete todos first, then completed todos, maintaining position order within each group
-      const sortedTodos = sortTodosByPosition(todosForDate).sort((a, b) => {
+      const sortedByCompletion = sortTodosByPosition(todosForDate).sort((a, b) => {
         // Incomplete todos first
         if (a.completed !== b.completed) {
           return a.completed ? 1 : -1;
@@ -519,6 +520,60 @@ export function useTodoOperations({ profile, onShowSubscriptionDialog }: UseTodo
         if (a.position > b.position) return 1;
         return 0;
       });
+
+      // Helper function to group todos by matching tags within a list
+      const groupByMatchingTags = (todos: typeof todosForDate) => {
+        if (todos.length === 0) return [];
+
+        const grouped: typeof todosForDate[] = [];
+        const remaining = [...todos];
+
+        // Extract tags for all todos
+        const todoTags = new Map(
+          todos.map(todo => [todo.id, extractTags(todo.description)])
+        );
+
+        while (remaining.length > 0) {
+          const currentGroup: typeof todosForDate = [];
+          const startTodo = remaining.shift()!;
+          currentGroup.push(startTodo);
+
+          const groupTags = new Set(todoTags.get(startTodo.id) || []);
+
+          // Find all todos that share at least one tag with current group
+          let foundMatch = true;
+          while (foundMatch) {
+            foundMatch = false;
+            for (let i = remaining.length - 1; i >= 0; i--) {
+              const candidateTags = todoTags.get(remaining[i].id) || [];
+              const hasSharedTag = candidateTags.some(tag => groupTags.has(tag));
+
+              if (hasSharedTag) {
+                const matchedTodo = remaining.splice(i, 1)[0];
+                currentGroup.push(matchedTodo);
+                // Add this todo's tags to the group
+                candidateTags.forEach(tag => groupTags.add(tag));
+                foundMatch = true;
+              }
+            }
+          }
+
+          grouped.push(currentGroup);
+        }
+
+        return grouped.flat();
+      };
+
+      // Separate into incomplete and completed groups
+      const incompleteTodos = sortedByCompletion.filter(t => !t.completed);
+      const completedTodos = sortedByCompletion.filter(t => t.completed);
+
+      // Apply tag-based grouping within each completion group
+      const sortedIncompleteTodos = groupByMatchingTags(incompleteTodos);
+      const sortedCompletedTodos = groupByMatchingTags(completedTodos);
+
+      // Combine: incomplete with tag grouping first, then completed with tag grouping
+      const sortedTodos = [...sortedIncompleteTodos, ...sortedCompletedTodos];
 
       // Regenerate positions for all todos in sorted order
       let previousPosition: string | null = null;

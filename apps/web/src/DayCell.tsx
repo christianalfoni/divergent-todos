@@ -232,7 +232,7 @@ const DayCell = forwardRef<DayCellHandle, DayCellProps>(({ date, isToday, isNext
             <button
               onClick={() => onSortTodosByCompletion(dayId)}
               className="text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors shrink-0"
-              title="Sort incomplete todos first"
+              title="Sort incomplete todos first, then group by matching tags"
             >
               <ListBulletIcon className="w-5 h-5" />
             </button>

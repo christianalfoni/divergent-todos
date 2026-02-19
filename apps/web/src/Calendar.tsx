@@ -348,23 +348,40 @@ export default function Calendar({
 
         e.preventDefault();
 
-        // Get today's date
-        const today = new Date();
-        const dayOfWeek = today.getDay();
-        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        let targetDateString: string | null = null;
 
-        let targetDate: Date;
-        if (isWeekend) {
-          // If it's weekend, target next Monday (first visible day)
-          const daysUntilMonday = dayOfWeek === 0 ? 1 : 2; // Sunday: 1 day, Saturday: 2 days
-          targetDate = new Date(today);
-          targetDate.setDate(today.getDate() + daysUntilMonday);
-        } else {
-          // Otherwise, target today
-          targetDate = today;
+        // First priority: if a todo is selected, check if its date is valid (visible in calendar)
+        if (selectedTodoId) {
+          const selectedTodo = todos.find(t => t.id === selectedTodoId);
+          if (selectedTodo) {
+            const selectedDate = selectedTodo.date;
+            // Check if this date is in the visible weekdays
+            const isValidDate = weekdays.some(date => date.toISOString().split('T')[0] === selectedDate);
+            if (isValidDate) {
+              targetDateString = selectedDate;
+            }
+          }
         }
 
-        const targetDateString = targetDate.toISOString().split('T')[0];
+        // Second priority: fall back to first active day (today or next Monday if weekend)
+        if (!targetDateString) {
+          const today = new Date();
+          const dayOfWeek = today.getDay();
+          const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+          let targetDate: Date;
+          if (isWeekend) {
+            // If it's weekend, target next Monday (first visible day)
+            const daysUntilMonday = dayOfWeek === 0 ? 1 : 2; // Sunday: 1 day, Saturday: 2 days
+            targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + daysUntilMonday);
+          } else {
+            // Otherwise, target today
+            targetDate = today;
+          }
+          targetDateString = targetDate.toISOString().split('T')[0];
+        }
+
         const dayCellHandle = dayCellRefs.current.get(targetDateString);
         if (dayCellHandle) {
           dayCellHandle.startAddingTodo();
@@ -374,7 +391,7 @@ export default function Calendar({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectedTodoId, todos, weekdays]);
 
   // Handle app focus when day changes
   const handleDayChange = useCallback(() => {
