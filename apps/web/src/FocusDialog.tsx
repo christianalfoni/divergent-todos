@@ -136,7 +136,7 @@ export default function FocusDialog({
                   />
                 </div>
                 <div className="text-sm">
-                  <label id="no-distractions-label" className="font-medium text-[var(--color-text-primary)]">
+                  <label id="no-distractions-label" htmlFor="no-distractions" className="font-medium text-[var(--color-text-primary)] cursor-default">
                     No distractions
                   </label>
                 </div>

@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { TrashIcon, PencilIcon } from "@heroicons/react/20/solid";
-import { LightBulbIcon } from "@heroicons/react/24/outline";
+import { LightBulbIcon, ChevronDownIcon, Bars2Icon } from "@heroicons/react/24/outline";
 import SmartEditor, { type SmartEditorRef } from "./SmartEditor";
 import ContextMenu from "./ContextMenu";
+import { analyzeCollapsibleContent } from "./utils/collapsibleTodo";
 import type { Todo } from "./App";
 
 interface TodoItemProps {
@@ -52,9 +53,15 @@ export default function TodoItem({
   const [isEditing, setIsEditing] = useState(false);
   const [editingHtml, setEditingHtml] = useState<string>(todo.text);
   const [isPressed, setIsPressed] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<SmartEditorRef>(null);
   const originalHtmlRef = useRef<string>(todo.text);
+
+  // Analyze if todo content is collapsible
+  const collapsibleInfo = useMemo(() => {
+    return analyzeCollapsibleContent(todo.text);
+  }, [todo.text]);
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useSortable({
       id: todo.id,
@@ -104,10 +111,36 @@ export default function TodoItem({
       originalHtmlRef.current = todo.text;
       setEditingHtml(todo.text);
       setIsEditing(true);
+      setIsExpanded(false); // Reset expand state when entering edit mode
       onEditingChange?.(true);
       onEditModeEntered?.();
     }
   }, [shouldEnterEditMode, isEditing, todo.text, onEditModeEntered, onEditingChange, isShadow]);
+
+  // Handle T key to toggle expand/collapse when selected but not editing
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle T key if this todo is selected, not editing, and is collapsible
+      if (
+        isSelected &&
+        !isEditing &&
+        collapsibleInfo.isCollapsible &&
+        (e.key === 't' || e.key === 'T') &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !e.shiftKey
+      ) {
+        e.preventDefault();
+        setIsExpanded((prev) => !prev);
+      }
+    };
+
+    if (isSelected && !isEditing && collapsibleInfo.isCollapsible) {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isSelected, isEditing, collapsibleInfo.isCollapsible]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "Escape") {
@@ -229,6 +262,7 @@ export default function TodoItem({
         originalHtmlRef.current = todo.text;
         setEditingHtml(todo.text);
         setIsEditing(true);
+        setIsExpanded(false); // Reset expand state when entering edit mode
         onEditingChange?.(true);
       },
       shortcut: 'E',
@@ -304,9 +338,9 @@ export default function TodoItem({
               </div>
             )}
           </div>
-          <div className="flex-1 min-w-0 text-xs/5 select-none">
+          <div className="flex-1 min-w-0 text-xs/5 select-none flex items-start gap-2">
             <div
-              className={`${
+              className={`flex-1 min-w-0 ${
                 todo.completed
                   ? "line-through text-[var(--color-text-secondary)]"
                   : isShadow
@@ -314,8 +348,30 @@ export default function TodoItem({
                   : "text-[var(--color-text-primary)]"
               }`}
             >
-              <SmartEditor html={todo.text} editing={false} />
+              <SmartEditor
+                html={collapsibleInfo.isCollapsible && !isExpanded
+                  ? collapsibleInfo.firstPart
+                  : todo.text
+                }
+                editing={false}
+              />
             </div>
+            {collapsibleInfo.isCollapsible && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsExpanded((prev) => !prev);
+                }}
+                className="shrink-0 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
+                title={isExpanded ? "Collapse (T)" : "Expand (T)"}
+              >
+                {isExpanded ? (
+                  <ChevronDownIcon className="w-4 h-4" />
+                ) : (
+                  <Bars2Icon className="w-4 h-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

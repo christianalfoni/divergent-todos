@@ -73,7 +73,7 @@ export default function OnboardingNotification() {
           ),
           title: "Let's add your first todo",
           message:
-            "Try adding a todo by clicking on any day. You can also press N to quickly add a todo to today.",
+            "Try adding a todo by clicking on any day. You can also press N to quickly add a todo to active day. Tip: Add empty line (SHIFT+ENTER twice) and the text will be collapsed. Select and press T to toggle collapse.",
           actionLabel: "Add a todo",
           requiresAddTodo: true,
         };
