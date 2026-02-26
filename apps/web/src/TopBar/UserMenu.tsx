@@ -2,7 +2,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
   AcademicCapIcon,
   ArrowDownTrayIcon,
-  ArrowRightStartOnRectangleIcon,
+  ArrowLeftOnRectangleIcon,
   BanknotesIcon,
   CheckIcon,
   DocumentTextIcon,
@@ -160,14 +160,14 @@ function AnonymousUserMenu({
     <>
       <MenuItem>
         <button
-          onClick={onCreateAccountClick}
+          onClick={onSignOut}
           className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
         >
-          <UserCircleIcon
+          <ArrowLeftOnRectangleIcon
             aria-hidden="true"
             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
           />
-          Create account
+          Sign out
         </button>
       </MenuItem>
 
@@ -316,7 +316,7 @@ function AnonymousUserMenu({
           onClick={onSignOut}
           className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
         >
-          <ArrowRightStartOnRectangleIcon
+          <ArrowLeftOnRectangleIcon
             aria-hidden="true"
             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
           />
@@ -504,7 +504,7 @@ function AuthenticatedUserMenu({
           onClick={onSignOut}
           className="group flex items-center w-full text-left px-4 py-2 text-sm text-[var(--color-text-menu)] data-focus:bg-[var(--color-bg-menu-hover)] data-focus:outline-hidden"
         >
-          <ArrowRightStartOnRectangleIcon
+          <ArrowLeftOnRectangleIcon
             aria-hidden="true"
             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
           />
