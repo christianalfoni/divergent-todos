@@ -38,23 +38,27 @@ app.on('open-url', (event, url) => {
 })
 
 // Handle the protocol on Windows
-const gotTheLock = app.requestSingleInstanceLock()
-if (!gotTheLock) {
-  app.quit()
-} else {
-  app.on('second-instance', (event, commandLine) => {
-    // Someone tried to run a second instance, focus our window
-    if (win) {
-      if (win.isMinimized()) win.restore()
-      win.focus()
-    }
+// Only enforce single instance when packaged — in dev mode, Electron uses the
+// binary name ("Electron") as userData dir, causing conflicts between apps.
+if (app.isPackaged) {
+  const gotTheLock = app.requestSingleInstanceLock()
+  if (!gotTheLock) {
+    app.quit()
+  } else {
+    app.on('second-instance', (event, commandLine) => {
+      // Someone tried to run a second instance, focus our window
+      if (win) {
+        if (win.isMinimized()) win.restore()
+        win.focus()
+      }
 
-    // Handle protocol URL on Windows
-    const url = commandLine.find((arg) => arg.startsWith('divergent-todos://'))
-    if (url) {
-      handleAuthCallback(url)
-    }
-  })
+      // Handle protocol URL on Windows
+      const url = commandLine.find((arg) => arg.startsWith('divergent-todos://'))
+      if (url) {
+        handleAuthCallback(url)
+      }
+    })
+  }
 }
 
 function handleAuthCallback(url: string) {
