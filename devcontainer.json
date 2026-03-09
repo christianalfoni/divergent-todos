@@ -1,0 +1,7 @@
+{
+  "name": "Divergent Todos",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "postCreateCommand": "pnpm install",
+  "postAttachCommand": "pnpm dev:web",
+  "forwardPorts": [5173]
+}
