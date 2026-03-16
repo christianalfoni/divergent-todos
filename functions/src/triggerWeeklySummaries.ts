@@ -6,6 +6,7 @@ import {
   getTodosForWeek,
   getUsersWithActiveSubscription,
   getWeekDateRange,
+  calculateFocusMetrics,
 } from "./lib/activity-data.js";
 import {
   createBatchRequest,
@@ -187,6 +188,14 @@ export const triggerWeeklySummaries = onCall(
                 year
               );
 
+              // Calculate focus metrics using shared logic
+              const {
+                totalFocusTime,
+                sessionsWithoutDistractions,
+                averageFocusTime,
+                completedTodosWithoutSessions,
+              } = calculateFocusMetrics(completedTodos, logger);
+
               // Write reflection document
               const reflectionDocId = `${userId}_${year}_${week}`;
               await db
@@ -197,11 +206,14 @@ export const triggerWeeklySummaries = onCall(
                   year,
                   week,
                   month,
-                  completedTodos,
+                  completedTodos: completedTodosWithoutSessions,
                   incompleteCount: incompleteTodos.length,
                   notes: result.notes,
                   notesGeneratedAt: Timestamp.now(),
                   updatedAt: Timestamp.now(),
+                  sessionsWithoutDistractions: sessionsWithoutDistractions > 0 ? sessionsWithoutDistractions : undefined,
+                  totalFocusTime: totalFocusTime > 0 ? totalFocusTime : undefined,
+                  averageFocusTime: averageFocusTime > 0 ? averageFocusTime : undefined,
                 });
 
               successCount++;
