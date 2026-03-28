@@ -1,0 +1,23 @@
+{
+  "$schema": "https://schemas.codesandbox.io/tasks.json",
+  "setupTasks": [
+    {
+      "name": "Install tmux",
+      "command": "apt-get update && apt-get install -y tmux"
+    },
+    {
+      "name": "Install Agent Dependencies",
+      "command": "cd .agent && npm install"
+    }
+  ],
+  "tasks": {
+    "agent": {
+      "name": "Agent Server",
+      "command": "PI_CODING_AGENT_DIR=/project/workspace/.pi/agent node .agent/dist/agent/index.js",
+      "preview": {
+        "port": 3000
+      },
+      "runAtStart": true
+    }
+  }
+}
