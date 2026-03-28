@@ -157,9 +157,8 @@ export interface AgentTask {
 export interface AgentInfo {
     sandboxId: string;
     sessionId: string;
-    hostToken: string;
 }
-export type AgentModeId = 'research' | 'plan' | 'kanban' | 'pull_request' | 'review' | 'guide' | 'testing_strategy' | 'linear_issues' | 'visualizer';
+export type AgentModeId = 'research' | 'plan' | 'kanban' | 'pull_request' | 'review' | 'guide' | 'testing_strategy' | 'linear_issues' | 'visualizer' | 'repository_setup';
 export interface AgentModeConfig {
     id: AgentModeId;
     title: string;

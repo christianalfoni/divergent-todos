@@ -3,16 +3,28 @@
 // ============================================================================
 export class AgentClient {
     sandboxId;
-    hostToken;
+    previewToken;
     port;
     constructor(options) {
         this.sandboxId = options.sandboxId;
-        this.hostToken = options.hostToken;
+        this.previewToken = options.previewToken;
         this.port = options.port ?? 3000;
     }
     buildUrl(path = '') {
-        const url = new URL(`https://${this.sandboxId}-${this.port}.csb.app${path}`);
-        url.searchParams.set('preview_token', this.hostToken);
+        let url;
+        // In development, proxy through vite to avoid CORS issues
+        if (typeof globalThis !== 'undefined' && 'location' in globalThis) {
+            const loc = globalThis.location;
+            if (loc?.hostname === 'localhost') {
+                url = new URL(`/sandbox-proxy/${this.sandboxId}-${this.port}${path}`, loc.origin);
+                if (this.previewToken)
+                    url.searchParams.set('preview_token', this.previewToken);
+                return url;
+            }
+        }
+        url = new URL(`https://${this.sandboxId}-${this.port}.csb.app${path}`);
+        if (this.previewToken)
+            url.searchParams.set('preview_token', this.previewToken);
         return url;
     }
     /**
@@ -20,14 +32,18 @@ export class AgentClient {
      */
     getPortUrl(port) {
         const url = new URL(`https://${this.sandboxId}-${port}.csb.app`);
-        url.searchParams.set('preview_token', this.hostToken);
+        if (this.previewToken)
+            url.searchParams.set('preview_token', this.previewToken);
         return url.toString();
     }
     /**
      * Get the authenticated URL for an artifact path (file or folder) served by the agent
      */
     getArtifactUrl(artifactPath) {
-        return this.buildUrl(`/artifacts/${artifactPath}`).toString();
+        const url = new URL(`https://${this.sandboxId}-${this.port}.csb.app/artifacts/${artifactPath}`);
+        if (this.previewToken)
+            url.searchParams.set('preview_token', this.previewToken);
+        return url.toString();
     }
     /**
      * Send a prompt to the agent (fire and forget — processing happens in the background)
@@ -64,6 +80,19 @@ export class AgentClient {
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Switch-mode request failed: ${response.status} ${errorText}`);
+        }
+        const result = await response.json();
+        return { sessionId: result.sessionId };
+    }
+    async reset() {
+        const url = this.buildUrl('/reset');
+        const response = await fetch(url.toString(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Reset request failed: ${response.status} ${errorText}`);
         }
         const result = await response.json();
         return { sessionId: result.sessionId };
@@ -125,7 +154,7 @@ export class AgentClient {
         if (options?.lastMessageId !== undefined) {
             url.searchParams.set('lastMessageId', String(options.lastMessageId));
         }
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), {});
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to get messages: ${response.status} ${errorText}`);
@@ -139,7 +168,7 @@ export class AgentClient {
     async readFile(filePath) {
         const url = this.buildUrl('/file');
         url.searchParams.set('path', filePath);
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), {});
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to read file: ${response.status} ${errorText}`);
@@ -152,7 +181,7 @@ export class AgentClient {
      */
     async getBranch() {
         const url = this.buildUrl('/branch');
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), {});
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`Failed to get branch: ${response.status} ${errorText}`);
@@ -161,7 +190,7 @@ export class AgentClient {
         return result.branch;
     }
     /**
-     * Write a file to the agent's working directory
+     * Execute a command in the agent's sandbox
      */
     async *execCommand(command, options) {
         const url = this.buildUrl('/exec');

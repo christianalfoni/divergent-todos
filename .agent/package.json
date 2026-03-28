@@ -9,10 +9,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./server": {
-      "types": "./dist/server-sdk.d.ts",
-      "default": "./dist/server-sdk.js"
-    },
     "./client": {
       "types": "./dist/client-sdk.d.ts",
       "default": "./dist/client-sdk.js"
@@ -31,7 +27,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@codesandbox/sdk": "^2.4.2",
     "@mariozechner/pi-coding-agent": "^0.57.1",
     "@sinclair/typebox": "^0.34.48",
     "dotenv": "^17.3.1"

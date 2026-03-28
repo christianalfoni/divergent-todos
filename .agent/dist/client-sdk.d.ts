@@ -11,11 +11,11 @@ export type ExecEvent = {
 };
 export declare class AgentClient {
     readonly sandboxId: string;
-    readonly hostToken: string;
+    readonly previewToken: string;
     private readonly port;
     constructor(options: {
         sandboxId: string;
-        hostToken: string;
+        previewToken: string;
         port?: number;
     });
     private buildUrl;
@@ -49,6 +49,9 @@ export declare class AgentClient {
     switchMode(systemPrompt: string, agentMode: string | null): Promise<{
         sessionId: string;
     }>;
+    reset(): Promise<{
+        sessionId: string;
+    }>;
     /**
      * Connect to the agent's SSE stream, receiving historical events followed by live ones
      */
@@ -71,7 +74,7 @@ export declare class AgentClient {
      */
     getBranch(): Promise<string | undefined>;
     /**
-     * Write a file to the agent's working directory
+     * Execute a command in the agent's sandbox
      */
     execCommand(command: string, options?: {
         signal?: AbortSignal;
