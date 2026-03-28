@@ -1,15 +1,10 @@
 {
   "$schema": "https://schemas.codesandbox.io/tasks.json",
-  "setupTasks": [
-    {
-      "name": "Install Agent Dependencies",
-      "command": "cd .agent && npm install"
-    }
-  ],
+  "setupTasks": [],
   "tasks": {
     "agent": {
       "name": "Agent Server",
-      "command": "PI_CODING_AGENT_DIR=/project/workspace/.pi/agent node .agent/dist/agent/index.js",
+      "command": "cd .agent && npm install && cd .. && PI_CODING_AGENT_DIR=/project/workspace/.pi/agent node .agent/dist/agent/index.js",
       "preview": {
         "port": 3000
       },
