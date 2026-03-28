@@ -62,6 +62,13 @@ export const AGENT_MODES = [
         description: 'Creates interactive HTML visualizations to explain concepts',
         artifactReference: 'visualizer',
     },
+    {
+        id: 'repository_setup',
+        title: 'Repository Setup',
+        color: '#14b8a6',
+        description: 'Analyzes a repository and suggests sandbox configuration',
+        artifactReference: 'REPO_SETUP.json',
+    },
 ];
 const MODE_PROMPTS = {
     research: `When given an idea or topic, your ONLY task is to research it and produce a file called RESEARCH.md. Do NOT write any code or create any project scaffolding.
@@ -294,6 +301,68 @@ Issue guidelines:
 - Issues should be logically ordered — dependencies first
 - Be specific about files, functions, and implementation details in descriptions
 - Do NOT create overly granular issues — each should represent meaningful work`,
+    repository_setup: `You are a repository setup agent. Your task is to analyze a repository and produce a REPO_SETUP.json file that configures it for running in a headless cloud sandbox environment (no GUI, no native apps like Electron).
+
+## What to analyze
+
+1. **Package manager and config files**: package.json, Cargo.toml, pyproject.toml, go.mod, Makefile, etc.
+2. **Environment files**: .env.example, .env.template, .env.sample, .env.development, etc.
+3. **Docker files**: Dockerfile, docker-compose.yml
+4. **README**: Look for setup instructions, required environment variables, ports
+5. **Source code**: Look for references to process.env, os.environ, etc. for secret discovery
+6. **Config files**: Look for port configurations, database URLs, API keys
+
+## Output format
+
+The REPO_SETUP.json must have this structure:
+
+\`\`\`json
+{
+  "tasks": [
+    { "name": "Dev Server", "command": "npm run dev", "port": 3000, "runAtStart": true },
+    { "name": "Tests", "command": "npm test" }
+  ],
+  "setupCommands": [
+    "npm install"
+  ],
+  "secrets": [
+    { "key": "DATABASE_URL", "description": "PostgreSQL connection string" }
+  ]
+}
+\`\`\`
+
+### Field guidelines
+
+**tasks**: Commands the user would want to run interactively in the sandbox. Think:
+- Dev servers (npm run dev, cargo watch, python manage.py runserver)
+- Type checkers (tsc --watch, mypy)
+- Test runners (npm test, cargo test, pytest)
+- Linters (eslint, clippy)
+- Do NOT include one-time setup commands here (those go in setupCommands)
+- Do NOT include commands that require a GUI or native display (Electron, desktop apps)
+- Each task needs:
+  - "name": A short descriptive name
+  - "command": The actual command to run
+  - "port" (optional): The network port this task listens on
+  - "runAtStart" (optional): Set to true if this task should start automatically when a sandbox is created
+
+**setupCommands**: Commands to run once to prepare the environment. Think:
+- Package installation (npm install, pip install -r requirements.txt, cargo build)
+- Database migrations
+- Code generation steps
+- Building dependencies
+
+**secrets**: Environment variables and secrets needed to run the project. For each:
+- "key": The exact environment variable name (e.g. DATABASE_URL, STRIPE_SECRET_KEY)
+- "description": Brief explanation of what it is and where to get it
+- Do NOT include variables that have sensible defaults (NODE_ENV, PORT, etc.)
+- Focus on actual secrets: API keys, database URLs, auth tokens, etc.
+
+## Important
+
+- Write ONLY the REPO_SETUP.json artifact file — do not modify any repository files
+- If a category has no items, use an empty array
+- Be practical — only include tasks that make sense in a headless sandbox`,
     visualizer: `You are a visualizer agent. Your task is to create an interactive HTML visualization that explains a concept, architecture, or data in a visually compelling way.
 
 ## Output
@@ -350,7 +419,7 @@ export function generateModeSystemPrompt(mode) {
     const isFolder = FOLDER_ARTIFACT_MODES.has(mode.id);
     const baseContext = `## Branch
 
-Before doing anything else, check if you are on the \`main\` branch. If so, create a descriptive feature branch based on the task (e.g., \`feat/add-kanban-mode\`) and switch to it. If you are already on a feature branch, stay on it.
+You are already on the correct feature branch. Do NOT create or switch branches.
 
 ## Artifacts
 

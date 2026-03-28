@@ -476,6 +476,34 @@ async function main() {
             });
             return;
         }
+        // POST /reset — clear all messages and start a fresh session
+        if (req.method === "POST" && url.pathname === "/reset") {
+            if (!session) {
+                res.writeHead(503, { "Content-Type": "application/json" });
+                res.end(JSON.stringify({ error: "Not initialized" }));
+                return;
+            }
+            (async () => {
+                try {
+                    // Clear in-memory events and persisted messages
+                    allEvents.length = 0;
+                    messageCounter = 0;
+                    writeFileSync(MESSAGES_FILE, "", "utf-8");
+                    // Create fresh session
+                    const agentDir = process.env.PI_CODING_AGENT_DIR ?? "/project/workspace/.pi/agent";
+                    session = await startAgentSession(currentCwd, agentDir, currentSystemPrompt);
+                    console.log("🧹 Agent reset — messages cleared, new session started");
+                    res.writeHead(200, { "Content-Type": "application/json" });
+                    res.end(JSON.stringify({ ok: true, sessionId: currentSessionId }));
+                }
+                catch (err) {
+                    console.error("Reset error:", err);
+                    res.writeHead(500, { "Content-Type": "application/json" });
+                    res.end(JSON.stringify({ error: String(err) }));
+                }
+            })();
+            return;
+        }
         // POST /query
         if (req.method === "POST" && url.pathname === "/query") {
             if (!session) {

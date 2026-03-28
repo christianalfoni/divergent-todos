@@ -1,6 +1,5 @@
 {
   "$schema": "https://schemas.codesandbox.io/tasks.json",
-  "setupTasks": [],
   "tasks": {
     "agent": {
       "name": "Agent Server",
