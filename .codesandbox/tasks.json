@@ -2,10 +2,6 @@
   "$schema": "https://schemas.codesandbox.io/tasks.json",
   "setupTasks": [
     {
-      "name": "Install tmux",
-      "command": "apt-get update && apt-get install -y tmux"
-    },
-    {
       "name": "Install Agent Dependencies",
       "command": "cd .agent && npm install"
     }
