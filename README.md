@@ -1,12 +1,14 @@
 # Divergent Todos
 
-Todos for those that feel overwhelmed
+Todos for those that feel overwhelmed.
+
+> *Named after what your plans inevitably do.*
 
 An Electron + Vite + React + Firebase + Tailwind CSS application for managing todos.
 
 ## Architecture
 
-This project follows a secure architecture pattern:
+This project follows a secure architecture pattern *(built with Electron, so you can experience the full weight of your unfinished tasks)*:
 
 - **Renderer (apps/web)**: Vite React app with Firebase Web SDK, Tailwind CSS
 - **Main Process (apps/desktop)**: Electron main process and preload scripts
