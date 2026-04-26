@@ -19,5 +19,16 @@
     "deploy:rules": "pnpm --filter web deploy:rules",
     "deploy:functions": "pnpm --filter functions deploy:functions"
   },
-  "packageManager": "pnpm@10.9.0"
+  "packageManager": "pnpm@10.9.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "@tailwindcss/oxide",
+      "core-js",
+      "electron",
+      "electron-winstaller",
+      "esbuild",
+      "protobufjs"
+    ]
+  }
 }
