@@ -52,7 +52,7 @@ export function analyzeCollapsibleContent(html: string): {
   // Pattern 3: Check using DOM parsing - find first empty text node or element
   const nodes = Array.from(temp.childNodes);
   let foundEmpty = false;
-  let firstPartNodes: Node[] = [];
+  const firstPartNodes: Node[] = [];
 
   for (const node of nodes) {
     if (foundEmpty) break;

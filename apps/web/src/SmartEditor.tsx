@@ -525,7 +525,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor(
 
       // If caret is right after a chip or tag pill, remove it
       let node: Node | null = sel.anchorNode;
-      let offset = sel.anchorOffset;
+      const offset = sel.anchorOffset;
 
       // If inside a text node and at start, move to previous sibling
       if (node.nodeType === Node.TEXT_NODE && offset === 0) {

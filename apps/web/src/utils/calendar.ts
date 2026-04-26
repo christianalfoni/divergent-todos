@@ -22,7 +22,7 @@ export function getWeekdaysForThreeWeeks() {
 
   // Add 10 weekdays (Monday-Friday for 2 weeks)
   let addedDays = 0
-  let currentDate = new Date(startDate)
+  const currentDate = new Date(startDate)
 
   while (addedDays < 10) {
     const dayOfWeek = currentDate.getDay()
