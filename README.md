@@ -18,7 +18,7 @@ Firebase Web SDK is used in the renderer (not Admin SDK) to maintain security. A
 
 ### Prerequisites
 
-- **Node.js 22** (see `.nvmrc`). The `functions/` workspace requires Node 22 for Firebase deploys; using a different major version will produce an `Unsupported engine` warning on `pnpm install`.
+- **Node.js 22+** (see `.nvmrc`). The `functions/` workspace targets the Node 22 Firebase Functions runtime; the `engines` field is `>=22` so Node 22 and any newer major install cleanly without `Unsupported engine` warnings. If you use `nvm`/`fnm`, run `nvm use` / `fnm use` in the repo root to pick up `.nvmrc`.
 - **pnpm 10+** (see the `packageManager` field in root `package.json`).
 
 1. **Install dependencies:**
@@ -26,7 +26,7 @@ Firebase Web SDK is used in the renderer (not Admin SDK) to maintain security. A
    pnpm install
    ```
 
-   Native postinstall scripts for trusted packages (esbuild, `@tailwindcss/oxide`, etc.) are pre-allowlisted in root `package.json` under `pnpm.onlyBuiltDependencies`. No `pnpm approve-builds` step is required.
+   Native postinstall scripts for trusted packages (electron, esbuild, `@tailwindcss/oxide`, etc.) are pre-allowlisted in `pnpm-workspace.yaml` under `onlyBuiltDependencies`. The transitive `phantomjs-prebuilt` script (pulled in by `electron-icon-builder` for icon generation) is intentionally listed under `ignoredBuiltDependencies` — it is not needed for typecheck/test/build, and pnpm will not prompt for it. **No `pnpm approve-builds` step is ever required for the inner loop.**
 
 2. **Environment variables (optional for build/typecheck):**
 
@@ -59,16 +59,16 @@ Firebase Web SDK is used in the renderer (not Admin SDK) to maintain security. A
 
 ## Testing
 
-The repo has two separate test suites:
+The repo has two separate test suites. **Agents and CI should default to `pnpm test`** — it requires no credentials and runs the Vitest unit suite only. Playwright is opt-in.
 
-- **Unit tests (Vitest)** — fast, no external services required:
+- **Unit tests (Vitest)** — fast, no external services required, the agent-safe entry point:
   ```bash
-  pnpm test                            # CI mode (vitest run)
+  pnpm test                            # CI mode (vitest run) — use this by default
   pnpm --filter web test               # watch mode
   ```
   Unit tests live next to source as `src/**/*.test.ts(x)`. Vitest is configured to ignore the Playwright `tests/e2e/**` directory.
 
-- **End-to-end tests (Playwright)** — require Firebase Functions deployed and `VITE_DEV_MODE_SECRET` set:
+- **End-to-end tests (Playwright)** — require Firebase Functions deployed, real Stripe test credentials, and `VITE_DEV_MODE_SECRET` set. **Do not run blindly**:
   ```bash
   pnpm --filter web exec playwright test
   ```
