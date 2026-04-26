@@ -79,22 +79,37 @@ The repo has two separate test suites. **Agents and CI should default to `pnpm t
 ```
 divergent-todos/
 ├── apps/
-│   ├── web/              # Vite + React + Tailwind (renderer)
+│   ├── web/                   # Vite + React + Tailwind (renderer)
 │   │   ├── src/
-│   │   │   ├── firebase.ts    # Firebase Web SDK initialization
+│   │   │   ├── firebase/      # Firebase Web SDK initialization & helpers
+│   │   │   │   └── index.ts
 │   │   │   ├── App.tsx
 │   │   │   └── main.tsx
 │   │   └── package.json
-│   └── desktop/          # Electron app
-│       ├── src/
-│       │   ├── main/          # Main process
-│       │   ├── preload/       # Preload scripts
-│       │   └── types/         # TypeScript definitions
+│   ├── desktop/               # Electron app
+│   │   ├── src/
+│   │   │   ├── main/          # Main process
+│   │   │   ├── preload/       # Preload scripts
+│   │   │   └── types/         # TypeScript definitions
+│   │   └── package.json
+│   └── video-introduction/    # Remotion video intro (built via `pnpm build:video`)
 │       └── package.json
-├── .env                  # Environment variables (not committed)
-├── .env.example          # Example environment variables
-└── package.json          # Workspace root
+├── functions/                 # Firebase Cloud Functions (TypeScript)
+│   └── package.json
+├── .env.example               # Example environment variables
+└── package.json               # Workspace root
 ```
+
+## Deployment
+
+The root exposes deploy scripts that wrap the Firebase CLI. Both require the user to be authenticated (`firebase login`) and to have access to the `divergent-todos` Firebase project.
+
+```bash
+pnpm deploy:rules       # Deploy Firestore security rules (apps/web/firestore.rules)
+pnpm deploy:functions   # Build & deploy Cloud Functions (functions/)
+```
+
+Indexes are deployed manually with `cd apps/web && firebase deploy --only firestore:indexes`.
 
 ## Security Notes
 
