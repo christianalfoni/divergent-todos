@@ -4,6 +4,7 @@ import { httpsCallable } from "firebase/functions";
 import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import { useAuthentication } from "../hooks/useAuthentication";
 import { auth, functions, type Profile } from "../firebase";
+import type { Todo } from "../firebase/types/todo";
 import { useTheme } from "../hooks/useTheme";
 import { useFontSize } from "../hooks/useFontSize";
 import { useIsTestUser } from "../hooks/useIsTestUser";
@@ -55,7 +56,7 @@ interface TopBarProps {
   isLoading?: boolean;
   isLoadingActivity?: boolean;
   shouldPulsate?: boolean;
-  activeFocusTodo?: any;
+  activeFocusTodo?: Todo | null;
   isFocusMinimized?: boolean;
   onRestoreFocus?: () => void;
   connectionStatus?: ConnectionStatus;

@@ -1,5 +1,6 @@
 import { CalendarIcon, ChartBarIcon, LockClosedIcon, LightBulbIcon } from "@heroicons/react/24/outline";
 import type { Profile } from "../firebase";
+import type { Todo } from "../firebase/types/todo";
 
 interface NavigationProps {
   currentView: "calendar" | "activity";
@@ -10,7 +11,7 @@ interface NavigationProps {
   ChartBarIconComponent?: typeof ChartBarIcon;
   isLoadingActivity?: boolean;
   shouldPulsate?: boolean;
-  activeFocusTodo?: any;
+  activeFocusTodo?: Todo | null;
   isFocusMinimized?: boolean;
   onRestoreFocus?: () => void;
 }

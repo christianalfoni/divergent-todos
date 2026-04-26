@@ -746,6 +746,7 @@ const SmartEditor = forwardRef<SmartEditorRef, Props>(function SmartEditor(
 });
 
 // Hash function to deterministically assign color to tag
+// eslint-disable-next-line react-refresh/only-export-components
 export function getTagColor(tag: string): string {
   let hash = 0;
   for (let i = 0; i < tag.length; i++) {

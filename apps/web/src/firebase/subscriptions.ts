@@ -9,7 +9,10 @@ export async function startSubscription(options?: {
   successUrl?: string;
   cancelUrl?: string;
 }) {
-  const fn = httpsCallable(functions, "createSubscription");
+  const fn = httpsCallable<
+    { successUrl?: string; cancelUrl?: string },
+    { url?: string }
+  >(functions, "createSubscription");
 
   // Check if we're in Electron (non-HTTP origin)
   const isElectron = !window.location.origin.startsWith('http');
@@ -18,7 +21,7 @@ export async function startSubscription(options?: {
     successUrl: options?.successUrl || (isElectron ? undefined : window.location.origin + "/billing/success"),
     cancelUrl: options?.cancelUrl || (isElectron ? undefined : window.location.origin + "/billing/cancel"),
   });
-  const url = (data as any).url;
+  const url = data.url;
   if (url) {
     // Open in BrowserWindow if in Electron, otherwise navigate
     if (window.native?.openInWindow) {
@@ -33,7 +36,10 @@ export async function startSubscription(options?: {
  * Open the Stripe billing portal for managing subscription
  */
 export async function openBillingPortal(options?: { returnUrl?: string }) {
-  const fn = httpsCallable(functions, "createBillingPortal");
+  const fn = httpsCallable<{ returnUrl?: string }, { url?: string }>(
+    functions,
+    "createBillingPortal"
+  );
 
   // Check if we're in Electron (non-HTTP origin)
   const isElectron = !window.location.origin.startsWith('http');
@@ -41,7 +47,7 @@ export async function openBillingPortal(options?: { returnUrl?: string }) {
   const { data } = await fn({
     returnUrl: options?.returnUrl || (isElectron ? undefined : window.location.origin + "/account"),
   });
-  const url = (data as any).url;
+  const url = data.url;
   if (url) {
     // Open in BrowserWindow if in Electron, otherwise navigate
     if (window.native?.openInWindow) {

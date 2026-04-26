@@ -171,9 +171,9 @@ export const admin = {
         }
 
         console.groupEnd();
-      } catch (error: any) {
-        console.error(`❌ Error:`, error.message);
-        if (error.code === "permission-denied") {
+      } catch (error: unknown) {
+        console.error(`❌ Error:`, (error as Error).message);
+        if ((error as { code?: string }).code === "permission-denied") {
           console.error(
             `This script is only available to admin UID: ${ADMIN_UID}`
           );
@@ -222,9 +222,9 @@ export const admin = {
         }
 
         console.groupEnd();
-      } catch (error: any) {
-        console.error(`❌ Error:`, error.message);
-        if (error.code === "permission-denied") {
+      } catch (error: unknown) {
+        console.error(`❌ Error:`, (error as Error).message);
+        if ((error as { code?: string }).code === "permission-denied") {
           console.error(
             `This script is only available to admin UID: ${ADMIN_UID}`
           );
@@ -263,9 +263,9 @@ export const admin = {
         }
 
         console.groupEnd();
-      } catch (error: any) {
-        console.error(`❌ Error:`, error.message);
-        if (error.code === "permission-denied") {
+      } catch (error: unknown) {
+        console.error(`❌ Error:`, (error as Error).message);
+        if ((error as { code?: string }).code === "permission-denied") {
           console.error(
             `This script is only available to admin UID: ${ADMIN_UID}`
           );
