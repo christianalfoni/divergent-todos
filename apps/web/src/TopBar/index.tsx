@@ -4,7 +4,7 @@ import { httpsCallable } from "firebase/functions";
 import { CalendarIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import { useAuthentication } from "../hooks/useAuthentication";
 import { auth, functions, type Profile } from "../firebase";
-import type { Todo } from "../firebase/types/todo";
+import type { Todo } from "../App";
 import { useTheme } from "../hooks/useTheme";
 import { useFontSize } from "../hooks/useFontSize";
 import { useIsTestUser } from "../hooks/useIsTestUser";
