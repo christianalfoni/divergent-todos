@@ -64,7 +64,7 @@ export default function AuthModal({ open, onSignIn }: AuthModalProps) {
                   <p className="text-sm text-[var(--color-text-secondary)]">
                     {isAnonymous
                       ? "Link your Google account to save your todos permanently"
-                      : "Sign in or download the app to start directing your attention"}
+                      : "Log in or download the app to start directing your attention"}
                   </p>
                 </div>
               </div>
@@ -115,10 +115,10 @@ export default function AuthModal({ open, onSignIn }: AuthModalProps) {
                         : "Linking..."
                       : "Link Google Account"
                     : isSigningIn
-                    ? isElectron
-                      ? "Signing in with browser..."
-                      : "Signing in..."
-                    : "Sign in with Google"}
+                      ? isElectron
+                        ? "Signing in with browser..."
+                        : "Signing in..."
+                      : "Sign in with Google"}
                 </span>
               </button>
               {!isAnonymous && (
