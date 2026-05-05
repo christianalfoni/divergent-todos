@@ -27,8 +27,14 @@ interface SubscriptionDialogProps {
   profile: Profile | null;
 }
 
-export default function SubscriptionDialog({ open, onClose, user: _user, profile }: SubscriptionDialogProps) {
-  const [{ isLinking, error: linkError }, linkAccount] = useLinkAnonymousAccount();
+export default function SubscriptionDialog({
+  open,
+  onClose,
+  user: _user,
+  profile,
+}: SubscriptionDialogProps) {
+  const [{ isLinking, error: linkError }, linkAccount] =
+    useLinkAnonymousAccount();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isWaitingForWebhook, setIsWaitingForWebhook] = useState(false);
@@ -66,11 +72,15 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     setError(null);
     try {
       // In Electron, don't pass returnUrl (let server use default)
-      const isElectronEnv = !window.location.origin.startsWith('http');
-      await openBillingPortal(isElectronEnv ? undefined : { returnUrl: window.location.origin });
+      const isElectronEnv = !window.location.origin.startsWith("http");
+      await openBillingPortal(
+        isElectronEnv ? undefined : { returnUrl: window.location.origin },
+      );
       setIsProcessing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to open billing portal");
+      setError(
+        err instanceof Error ? err.message : "Failed to open billing portal",
+      );
       setIsProcessing(false);
     }
   };
@@ -83,17 +93,19 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
       trackSubscriptionStarted();
 
       // In Electron, don't pass URLs (let server use defaults)
-      const isElectronEnv = !window.location.origin.startsWith('http');
+      const isElectronEnv = !window.location.origin.startsWith("http");
       await startSubscription(
         isElectronEnv
           ? undefined
           : {
               successUrl: window.location.origin,
               cancelUrl: window.location.origin,
-            }
+            },
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to start subscription");
+      setError(
+        err instanceof Error ? err.message : "Failed to start subscription",
+      );
       setIsProcessing(false);
     }
   };
@@ -110,7 +122,9 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
       setIsProcessing(false);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to cancel subscription");
+      setError(
+        err instanceof Error ? err.message : "Failed to cancel subscription",
+      );
       setIsProcessing(false);
     }
   };
@@ -127,7 +141,9 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
       setIsProcessing(false);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resume subscription");
+      setError(
+        err instanceof Error ? err.message : "Failed to resume subscription",
+      );
       setIsProcessing(false);
     }
   };
@@ -143,13 +159,15 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
   // Show waiting state when checkout completed but webhook hasn't updated subscription yet
   if (isWaitingForWebhook) {
     title = "Processing subscription...";
-    description = "Your payment was successful! We're activating your subscription now. This usually takes a few seconds.";
+    description =
+      "Your payment was successful! We're activating your subscription now. This usually takes a few seconds.";
     primaryButtonText = "Activating...";
     primaryButtonAction = () => {};
     isPrimaryButtonDisabled = true;
   } else if (isAnonymous) {
-    title = "Sign in required";
-    description = "Please sign in with your Google account to subscribe and unlock unlimited todos. Your existing todos will be preserved.";
+    title = "Log in required";
+    description =
+      "Please sign in with your Google account to subscribe and unlock unlimited todos. Your existing todos will be preserved.";
     primaryButtonText = isLinking ? "Signing in..." : "Sign in with Google";
     primaryButtonAction = () => linkAccount(undefined);
     isPrimaryButtonDisabled = isLinking;
@@ -170,7 +188,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
       secondaryButtonAction = handleOpenBillingPortal;
     } else {
       title = "Active subscription";
-      description = "You have an active subscription with unlimited todos. You can cancel at any time and continue using your subscription until the end of the billing period.";
+      description =
+        "You have an active subscription with unlimited todos. You can cancel at any time and continue using your subscription until the end of the billing period.";
       primaryButtonText = isProcessing ? "Canceling..." : "Cancel subscription";
       primaryButtonAction = handleStopSubscription;
       isPrimaryButtonDisabled = isProcessing;
@@ -179,7 +198,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     }
   } else if (subscriptionStatus === "past_due") {
     title = "Payment past due";
-    description = "Your payment is past due. Please update your payment method to continue using unlimited todos.";
+    description =
+      "Your payment is past due. Please update your payment method to continue using unlimited todos.";
     primaryButtonText = "Update payment";
     primaryButtonAction = handleOpenBillingPortal;
     isPrimaryButtonDisabled = isProcessing;
@@ -187,7 +207,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     secondaryButtonAction = handleStopSubscription;
   } else if (subscriptionStatus === "unpaid") {
     title = "Subscription unpaid";
-    description = "Your subscription payment has failed. Please update your payment method immediately to avoid service interruption.";
+    description =
+      "Your subscription payment has failed. Please update your payment method immediately to avoid service interruption.";
     primaryButtonText = "Update payment";
     primaryButtonAction = handleOpenBillingPortal;
     isPrimaryButtonDisabled = isProcessing;
@@ -195,7 +216,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
     secondaryButtonAction = handleStopSubscription;
   } else if (subscriptionStatus === "canceled") {
     title = "Subscription canceled";
-    description = "Your subscription has been canceled. Resubscribe to get unlimited todos again.";
+    description =
+      "Your subscription has been canceled. Resubscribe to get unlimited todos again.";
     primaryButtonText = isProcessing ? "Starting..." : "Resubscribe - $2/month";
     primaryButtonAction = handleStartSubscription;
     isPrimaryButtonDisabled = isProcessing;
@@ -227,8 +249,18 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
                 as="h2"
                 className="text-xl font-semibold text-[var(--color-text-primary)] m-0 flex items-center gap-2"
               >
-                <svg className="w-6 h-6 text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z" />
+                <svg
+                  className="w-6 h-6 text-[var(--color-accent-primary)]"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M2.25 18.75a60.07 60.07 0 0 1 15.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 0 1 3 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 0 0-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 0 1-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 0 0 3 15h-.75M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm3 0h.008v.008H18V10.5Zm-12 0h.008v.008H6V10.5Z"
+                  />
                 </svg>
                 {title}
               </DialogTitle>
@@ -255,31 +287,73 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
                     <span className="text-5xl font-semibold tracking-tight text-[var(--color-text-primary)]">
                       $2
                     </span>
-                    <span className="text-sm font-semibold text-[var(--color-text-secondary)]">/month</span>
+                    <span className="text-sm font-semibold text-[var(--color-text-secondary)]">
+                      /month
+                    </span>
                   </div>
 
                   <ul className="mt-8 space-y-3 text-sm text-[var(--color-text-primary)]">
                     <li className="flex gap-x-3">
-                      <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="h-6 w-5 flex-none text-[var(--color-accent-primary)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       Unlimited todos
                     </li>
                     <li className="flex gap-x-3">
-                      <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="h-6 w-5 flex-none text-[var(--color-accent-primary)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       Weekly activity tracking
                     </li>
                     <li className="flex gap-x-3">
-                      <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="h-6 w-5 flex-none text-[var(--color-accent-primary)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       AI-generated weekly summaries
                     </li>
                     <li className="flex gap-x-3">
-                      <svg className="h-6 w-5 flex-none text-[var(--color-accent-primary)]" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <svg
+                        className="h-6 w-5 flex-none text-[var(--color-accent-primary)]"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       Hopefully, a stronger sense of owning your attention
                     </li>
@@ -339,7 +413,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
                 </>
               )}
               {/* When past_due or unpaid: Update Payment (left, primary) + Cancel (right, destructive) */}
-              {(subscriptionStatus === "past_due" || subscriptionStatus === "unpaid") && (
+              {(subscriptionStatus === "past_due" ||
+                subscriptionStatus === "unpaid") && (
                 <>
                   <button
                     type="button"
@@ -360,16 +435,18 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
                 </>
               )}
               {/* For other states (sign in, subscribe, etc.): just primary button centered */}
-              {subscriptionStatus !== "active" && subscriptionStatus !== "past_due" && subscriptionStatus !== "unpaid" && (
-                <button
-                  type="button"
-                  onClick={primaryButtonAction}
-                  disabled={isPrimaryButtonDisabled}
-                  className="w-full rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {primaryButtonText}
-                </button>
-              )}
+              {subscriptionStatus !== "active" &&
+                subscriptionStatus !== "past_due" &&
+                subscriptionStatus !== "unpaid" && (
+                  <button
+                    type="button"
+                    onClick={primaryButtonAction}
+                    disabled={isPrimaryButtonDisabled}
+                    className="w-full rounded-md bg-[var(--color-accent-primary)] px-3 py-2 text-sm font-semibold text-white shadow-xs hover:bg-[var(--color-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {primaryButtonText}
+                  </button>
+                )}
             </div>
           </DialogPanel>
         </div>

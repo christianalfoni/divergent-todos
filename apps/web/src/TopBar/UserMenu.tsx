@@ -63,7 +63,9 @@ export default function UserMenu({
   onMenuItemClick,
 }: UserMenuProps) {
   // Get photoURL from user object or fall back to providerData
-  const photoURL = user.photoURL || user.providerData.find(p => p.providerId === 'google.com')?.photoURL;
+  const photoURL =
+    user.photoURL ||
+    user.providerData.find((p) => p.providerId === "google.com")?.photoURL;
 
   return (
     <Menu as="div" className="relative">
@@ -155,7 +157,10 @@ function AnonymousUserMenu({
   onOpenOnboarding,
   onSignOut,
   onMenuItemClick,
-}: MenuSectionProps & { onCreateAccountClick: () => void; onOpenOnboarding?: () => void }) {
+}: MenuSectionProps & {
+  onCreateAccountClick: () => void;
+  onOpenOnboarding?: () => void;
+}) {
   return (
     <>
       <MenuItem>
@@ -320,7 +325,7 @@ function AnonymousUserMenu({
             aria-hidden="true"
             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
           />
-          Sign out
+          Logout
         </button>
       </MenuItem>
     </>
