@@ -33,7 +33,7 @@ const createMockTodos = (): Todo[] => {
 
   // Get 15 workdays (3 weeks)
   const workdays: string[] = [];
-  let currentDate = new Date(startDate);
+  const currentDate = new Date(startDate);
   while (workdays.length < 15) {
     const day = currentDate.getDay();
     if (day !== 0 && day !== 6) { // Not weekend

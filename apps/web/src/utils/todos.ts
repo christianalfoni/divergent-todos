@@ -23,7 +23,7 @@ export function getNextWorkday(): Date {
   const today = new Date();
   const dayOfWeek = today.getDay();
 
-  let targetDate = new Date(today);
+  const targetDate = new Date(today);
 
   // If it's Saturday (6), move to Monday (+2 days)
   // If it's Sunday (0), move to Monday (+1 day)

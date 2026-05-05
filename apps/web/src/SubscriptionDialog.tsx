@@ -69,8 +69,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
       const isElectronEnv = !window.location.origin.startsWith('http');
       await openBillingPortal(isElectronEnv ? undefined : { returnUrl: window.location.origin });
       setIsProcessing(false);
-    } catch (err: any) {
-      setError(err.message || "Failed to open billing portal");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to open billing portal");
       setIsProcessing(false);
     }
   };
@@ -92,8 +92,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
               cancelUrl: window.location.origin,
             }
       );
-    } catch (err: any) {
-      setError(err.message || "Failed to start subscription");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to start subscription");
       setIsProcessing(false);
     }
   };
@@ -109,8 +109,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
 
       setIsProcessing(false);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to cancel subscription");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to cancel subscription");
       setIsProcessing(false);
     }
   };
@@ -126,8 +126,8 @@ export default function SubscriptionDialog({ open, onClose, user: _user, profile
 
       setIsProcessing(false);
       onClose();
-    } catch (err: any) {
-      setError(err.message || "Failed to resume subscription");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to resume subscription");
       setIsProcessing(false);
     }
   };

@@ -15,6 +15,7 @@
     "build:video": "pnpm --filter video-introduction build",
     "start:desktop": "pnpm --filter desktop start",
     "test": "pnpm --filter web test:run",
+    "lint": "pnpm --filter web lint",
     "typecheck": "pnpm --filter web typecheck && pnpm --filter desktop typecheck",
     "deploy:rules": "pnpm --filter web deploy:rules",
     "deploy:functions": "pnpm --filter functions deploy:functions"

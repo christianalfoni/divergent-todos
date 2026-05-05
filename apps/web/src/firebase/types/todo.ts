@@ -40,7 +40,9 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
   toFirestore: (
     todo: Todo & { createdAt: FieldValue; updatedAt: FieldValue }
   ): TodoFirestore => {
-    const result: any = {
+    // serverTimestamp() returns FieldValue, which Firestore accepts in writes
+    // even though TodoFirestore types these fields as Timestamp for reads.
+    const result: TodoFirestore & { createdAt: Timestamp | FieldValue; updatedAt: Timestamp | FieldValue } = {
       userId: todo.userId,
       description: todo.description,
       completed: todo.completed,

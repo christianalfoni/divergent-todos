@@ -1,4 +1,4 @@
-import posthog, { type Survey } from "posthog-js/dist/module.full.no-external";
+import posthog, { type Survey, type Properties } from "posthog-js/dist/module.full.no-external";
 
 const POSTHOG_API_KEY = "phc_xG91hee7fdFy7k06NBDwjAf5a5GRXUzyGHlgiVE2C7g";
 
@@ -19,13 +19,13 @@ const safePosthog = {
       });
     });
   },
-  identify: (distinctId: string, properties?: Record<string, any>) => {
+  identify: (distinctId: string, properties?: Properties) => {
     return posthog.identify(distinctId, properties);
   },
-  capture: (event: string, properties?: Record<string, any>) => {
+  capture: (event: string, properties?: Properties) => {
     return posthog.capture(event, properties);
   },
-  setPersonProperties: (properties: Record<string, any>) => {
+  setPersonProperties: (properties: Properties) => {
     return posthog.setPersonProperties(properties);
   },
 };

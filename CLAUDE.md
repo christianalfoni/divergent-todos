@@ -109,13 +109,39 @@ This project implements a secure Electron architecture:
 From root directory:
 - `pnpm dev:web` - Start web dev server (Vite)
 - `pnpm dev:desktop` - Start Electron app
+- `pnpm dev:video` - Start the Remotion video-introduction app
 - `pnpm build:web` - Build web app for production
-- `pnpm build:desktop` - Build desktop app for production
-- `pnpm typecheck` - Run TypeScript type checking across all packages
+- `pnpm build:desktop` - Build desktop app for production (also runs `build:web` first)
+- `pnpm build:video` - Build the Remotion video-introduction bundle
+- `pnpm typecheck` - Run TypeScript type checking across web + desktop
+- `pnpm test` - Run the Vitest unit suite (CI mode)
+- `pnpm lint` - Run ESLint on the web app
+- `pnpm deploy:rules` - Deploy Firestore security rules from `apps/web/firestore.rules`
+- `pnpm deploy:functions` - Build & deploy Cloud Functions from `functions/`
+
+The two `deploy:*` scripts wrap the Firebase CLI and require the operator to be authenticated (`firebase login`) with access to the `divergent-todos` Firebase project. They are not run by CI — they are intended for manual deploys.
 
 ## Type Checking
 
 When making changes to the codebase, always run `pnpm typecheck` to check for TypeScript errors before committing. Fix any type errors that are reported.
+
+## Linting
+
+`pnpm lint` should report **0 errors** but currently has **5 known `react-hooks/exhaustive-deps` warnings** that are intentionally accepted (they reflect deliberate hook-dependency choices, not bugs):
+
+- `apps/web/src/Activity.tsx:26` — `useMemo` with an unnecessary `visibilityTrigger` dep (used to force recomputation on visibility change)
+- `apps/web/src/App.tsx:330` — `useEffect` missing `editProfile` dep
+- `apps/web/src/Calendar.tsx:80` — `useMemo` with an unnecessary `visibilityTrigger` dep (same pattern as Activity)
+- `apps/web/src/SmartEditor.tsx:214` — `useEffect` with a complex dependency expression
+- `apps/web/src/hooks/useTodoDragAndDrop.ts:242` — `useCallback` with an unnecessary `isCopyMode` dep
+
+If `pnpm lint` reports anything beyond these 5 warnings, treat the new ones as signal — they were introduced by recent changes.
+
+## Testing
+
+The unit-test surface is intentionally minimal — `pnpm test` currently runs a single file (`apps/web/src/utils/todoPositioning.test.ts`, ~20 tests) covering pure positioning logic. There is **no broad unit-test safety net** for components, hooks, or Firestore flows.
+
+Broader behavioral coverage lives in **Playwright** (`apps/web/tests/e2e/`), but it requires deployed Cloud Functions, real Stripe test credentials, and `VITE_DEV_MODE_SECRET` — see `E2E-TESTING.md`. Agents and CI should default to `pnpm test` and not assume passing tests imply feature-level correctness; verify changes by reading the code and (when applicable) asking the user to exercise the UI.
 
 ## Firebase Integration
 

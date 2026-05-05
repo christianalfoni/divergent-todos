@@ -12,7 +12,7 @@
     "generate-summary": "npm run build && node lib/scripts/generateWeekSummary.js"
   },
   "engines": {
-    "node": "22"
+    "node": ">=22"
   },
   "main": "lib/index.js",
   "dependencies": {
