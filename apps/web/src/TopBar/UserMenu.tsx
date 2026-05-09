@@ -320,7 +320,7 @@ function AnonymousUserMenu({
             aria-hidden="true"
             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
           />
-          Sign out
+          Logout
         </button>
       </MenuItem>
     </>
@@ -508,7 +508,7 @@ function AuthenticatedUserMenu({
             aria-hidden="true"
             className="mr-3 size-5 text-[var(--color-text-tertiary)] group-data-focus:text-[var(--color-accent-text-hover)]"
           />
-          Sign out
+          Logout
         </button>
       </MenuItem>
     </>
