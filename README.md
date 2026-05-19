@@ -1,5 +1,15 @@
 # Divergent Todos
 
+> When tasks converge like storm clouds gray,
+> And overwhelm steals the day away,
+> This gentle tool will guide you through,
+> Breaking mountains into steps for you.
+> 
+> Each todo small, a victory won,
+> Progress made when day is done.
+> For scattered minds that need some peace,
+> May your mental chaos find release.
+
 Todos for those that feel overwhelmed
 
 An Electron + Vite + React + Firebase + Tailwind CSS application for managing todos.
