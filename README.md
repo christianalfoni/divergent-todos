@@ -1,5 +1,7 @@
 # Divergent Todos
 
+> Why did the todo app go to therapy? Because it had too many unresolved issues! 😄
+
 Todos for those that feel overwhelmed
 
 An Electron + Vite + React + Firebase + Tailwind CSS application for managing todos.
